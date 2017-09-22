@@ -1,0 +1,15 @@
+language: c
+
+compiler:
+  - clang
+  - gcc
+
+addons:
+  apt:
+    packages:
+      - cmake
+
+script:
+  - mkdir build && cd build
+  - cmake .. && make && CTEST_OUTPUT_ON_FAILURE=1 GTEST_COLOR=1 make test
+
