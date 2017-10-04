@@ -44,4 +44,4 @@ add_custom_command(TARGET ${PROJECT_NAME}_test PRE_BUILD
 
 
 file(GLOB SOURCE_FILES src/*.c)
-add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+add_executable(${PROJECT_NAME} ${SOURCE_FILES} src/debug.h)
