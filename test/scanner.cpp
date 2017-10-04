@@ -7,7 +7,7 @@
  * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
  */
 
-#include <scanner.h>
+#include <cstdio>
 #include "gtest/gtest.h"
 #include "scanner.c"
 
@@ -56,14 +56,34 @@ TEST_F(ScannerTestFixture, FactorialRecursive) {
 					TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
 					TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_LT, TOKEN_INT, TOKEN_KEYWORD, TOKEN_EOL,
 					TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_INT, TOKEN_EOL,
-					TOKEN_KEYWORD, TOKEN_EOL
+					TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_IDENTIFIER, TOKEN_SUB, TOKEN_INT, TOKEN_EOL,
+                    TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_IDENTIFIER, TOKEN_LPAR, TOKEN_IDENTIFIER, TOKEN_RPAR, TOKEN_EOL,
+                    TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_IDENTIFIER, TOKEN_MUL, TOKEN_IDENTIFIER, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_LT, TOKEN_INT, TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_IDENTIFIER, TOKEN_SEMICOLON, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
+                    TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
+                    EOF
 	};
 
 	token_t* token;
 	for (int i = 0; i < sizeof(tokens) / sizeof(int); i++) {
 		token = get_token();
 		ASSERT_NE(token, nullptr);
-		ASSERT_EQ(token, token[i]);
+		ASSERT_EQ(token->id, tokens[i]);
 	}
 }
 
@@ -563,4 +583,11 @@ TEST_F(ScannerTestFixture, FactorialIterative) {
 		token->id,
 		TOKEN_EOL
 	) << "EOL";
+
+    token = get_token();
+    ASSERT_NE(token, nullptr);
+    ASSERT_EQ(
+            token->id,
+            EOF
+    ) << "EOF";
 }
