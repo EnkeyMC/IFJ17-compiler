@@ -36,7 +36,7 @@ endif()
 
 target_link_libraries(${PROJECT_TEST_NAME} ${CMAKE_THREAD_LIBS_INIT})
 
-add_test(Tests --test-command ${PROJECT_TEST_NAME} "${CMAKE_CURRENT_LIST_DIR}")
+add_test(Tests ${PROJECT_TEST_NAME})
 
 add_custom_command(TARGET ${PROJECT_NAME}_test PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
