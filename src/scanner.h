@@ -34,6 +34,7 @@
 #define TOKEN_SEMICOLON     31
 #define TOKEN_LPAR          32
 #define TOKEN_RPAR          33
+#define TOKEN_EOL           34
 
 // STRING TOKENS
 #define TOKEN_IDENTIFIER    40
