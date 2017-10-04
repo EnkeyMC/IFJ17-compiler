@@ -50,11 +50,18 @@
 #define TOKEN_SUB_ASIGN     54
 
 
+/**
+ * Token structure type
+ */
 typedef struct {
-    int id;
-    void* attr;
+    int id;     /// Token ID (see Token ID constants)
+    void* attr; /// Token data attribute
 } token_t;
 
+/**
+ * Set the input stream  for get_token function. Only used for testing.
+ * @param stream Opened file stream
+ */
 void set_input_stream(FILE* stream);
 
 /**

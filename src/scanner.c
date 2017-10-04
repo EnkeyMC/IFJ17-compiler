@@ -11,6 +11,7 @@
 
 #include "scanner.h"
 
+/// Private file stream variable. Used as input stream in get_token()
 static FILE* _stream = NULL;
 
 void set_input_stream(FILE* stream) {
