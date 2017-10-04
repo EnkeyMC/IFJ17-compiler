@@ -39,9 +39,10 @@ TEST_F(ScannerTestFixture, EmptyFile) {
 
 	token_t *token = get_token();
 
+    ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
-		token,
-		nullptr
+		token->id,
+		EOF
 	);
 }
 
