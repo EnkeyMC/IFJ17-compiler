@@ -10,9 +10,8 @@
 
 #include <stdio.h>
 
-#include "superrandom.h"
-
+#include "scanner.h"
 int main() {
-    printf("Randomly generated number is %d\n", superrandom());
+	set_input_stream(stdin);
     return 0;
 }

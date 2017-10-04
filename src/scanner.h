@@ -10,10 +10,19 @@
 #ifndef IFJ17_COMPILER_SCANNER_H
 #define IFJ17_COMPILER_SCANNER_H
 
+#include <stdio.h>
+
+typedef struct {
+    int id;
+    void* attr;
+} token_t;
+
+void set_input_stream(FILE* stream);
+
 /**
  * Get next token
- * @return token type
+ * @return token
  */
-int get_token(char*);
+token_t* get_token();
 
 #endif //IFJ17_COMPILER_SCANNER_H

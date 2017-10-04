@@ -7,9 +7,9 @@
  * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
  */
 
-#include "superrandom.c"
 #include "gtest/gtest.h"
 
-TEST(RandomTest, SuperRandom) {
-    ASSERT_EQ(superrandom(), 5);
+int main(int argc, char** argv) {
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
 }
