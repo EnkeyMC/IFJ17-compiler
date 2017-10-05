@@ -78,7 +78,7 @@ TEST_F(ScannerTestFixture, FactorialRecursive) {
             TOKEN_KEYWORD, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_IDENTIFIER, TOKEN_SEMICOLON, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_EOL,
             TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
             TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
-            EOF
+            TOKEN_EOF
 	};
 
 	token_t* token;
@@ -115,7 +115,7 @@ TEST_F(ScannerTestFixture, Strings) {
             TOKEN_KEYWORD, TOKEN_IDENTIFIER, TOKEN_EOL,
             TOKEN_KEYWORD, TOKEN_EOL,
             TOKEN_KEYWORD, TOKEN_KEYWORD, TOKEN_EOL,
-            EOF
+            TOKEN_EOF
     };
 
     token_t* token;
@@ -627,6 +627,6 @@ TEST_F(ScannerTestFixture, FactorialIterative) {
     ASSERT_NE(token, nullptr);
     ASSERT_EQ(
             token->id,
-            EOF
+            TOKEN_EOF
     ) << "EOF";
 }

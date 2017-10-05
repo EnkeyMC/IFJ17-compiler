@@ -12,50 +12,55 @@
 
 #include <stdio.h>
 
-// Token ID definitions
 
+typedef enum {
 // ARITMETIC OPERATORS
-#define TOKEN_DIVR          10
-#define TOKEN_DIVI          11
-#define TOKEN_MUL           12
-#define TOKEN_ADD           13
-#define TOKEN_SUB           14
-#define TOKEN_EQUAL         15
+    TOKEN_EQUAL,
+    TOKEN_DIVR,
+    TOKEN_DIVI,
+    TOKEN_MUL,
+    TOKEN_ADD,
+    TOKEN_SUB,
 
 // BOOLEAN OPERATORS
-#define TOKEN_LT            20
-#define TOKEN_GT            21
-#define TOKEN_LE            22
-#define TOKEN_GE            23
-#define TOKEN_NE            24
+    TOKEN_LT,
+    TOKEN_GT,
+    TOKEN_LE,
+    TOKEN_GE,
+    TOKEN_NE,
 
 // SPECIAL TOKENS
-#define TOKEN_COMMA         30
-#define TOKEN_SEMICOLON     31
-#define TOKEN_LPAR          32
-#define TOKEN_RPAR          33
-#define TOKEN_EOL           34
+    TOKEN_COMMA,
+    TOKEN_SEMICOLON,
+    TOKEN_LPAR,
+    TOKEN_RPAR,
+    TOKEN_EOL,
 
 // STRING TOKENS
-#define TOKEN_IDENTIFIER    40
-#define TOKEN_KEYWORD       41
-#define TOKEN_STRING        42
-#define TOKEN_INT           43
-#define TOKEN_REAL          44
+    TOKEN_IDENTIFIER,
+    TOKEN_KEYWORD,
+    TOKEN_STRING,
+    TOKEN_INT,
+    TOKEN_REAL,
 
 // EXPANSIONS
-#define TOKEN_DIVR_ASIGN    50
-#define TOKEN_DIVI_ASIGN    51
-#define TOKEN_MUL_ASIGN     52
-#define TOKEN_ADD_ASIGN     53
-#define TOKEN_SUB_ASIGN     54
+    TOKEN_SUB_ASIGN,
+    TOKEN_DIVR_ASIGN,
+    TOKEN_DIVI_ASIGN,
+    TOKEN_MUL_ASIGN,
+    TOKEN_ADD_ASIGN,
+
+// ENDING TOKENS
+    TOKEN_EOF,
+    LEX_ERROR
+} token_e;
 
 
 /**
  * Token structure type
  */
 typedef struct {
-    int id;     /// Token ID (see Token ID constants)
+    token_e id;     /// Type of token
     void* attr; /// Token data attribute
 } token_t;
 
