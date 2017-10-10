@@ -9,9 +9,14 @@
 
 
 #include <stdio.h>
+#include <malloc.h>
 
 #include "scanner.h"
+
 int main() {
-	set_input_stream(stdin);
+	Scanner* scanner = (Scanner*) malloc(sizeof(Scanner));
+    scanner_init(scanner);
+
+    free(scanner);
     return 0;
 }

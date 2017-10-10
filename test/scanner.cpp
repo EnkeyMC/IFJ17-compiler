@@ -18,11 +18,13 @@ protected:
 	FILE* test_file;
 
 	virtual void SetUp() {
+		scanner = (Scanner*) malloc(sizeof(Scanner));
         scanner_init(scanner);
 	}
 
 	virtual void TearDown() {
 		fclose(test_file);
+		free(scanner);
 	}
 
 	void SetInputFile(const char *file) {

@@ -82,6 +82,6 @@ void scanner_init(Scanner* scanner);
  * Get next token
  * @return token
  */
-token_t* get_token(Scanner* scanner);
+token_t* scanner_get_token(Scanner* scanner);
 
 #endif //IFJ17_COMPILER_SCANNER_H
