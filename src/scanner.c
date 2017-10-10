@@ -11,15 +11,14 @@
 
 #include "scanner.h"
 
-/// Private file stream variable. Used as input stream in get_token()
-static FILE* _stream = NULL;
-
-void set_input_stream(FILE* stream) {
-	_stream = stream;
+void scanner_init(Scanner* scanner) {
+	assert(scanner != NULL);
+	scanner->stream = stdin;
 }
 
-token_t* get_token() {
-	assert(_stream != NULL);
+token_t* scanner_get_token(Scanner* scanner) {
+	assert(scanner != NULL);
+	assert(scanner->stream != NULL);
 
 	return NULL;
 }

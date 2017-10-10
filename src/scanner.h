@@ -61,19 +61,27 @@ typedef enum {
  */
 typedef struct {
     token_e id;     /// Type of token
-    void* attr; /// Token data attribute
+    void* attr;     /// Token data attribute
 } token_t;
 
 /**
- * Set the input stream  for get_token function. Only used for testing.
- * @param stream Opened file stream
+ * Scanner object structure
  */
-void set_input_stream(FILE* stream);
+typedef struct {
+    FILE* stream;  /// Input stream
+    // Current scope and maybe other stuff
+} Scanner;
+
+/**
+ * Initialize scanner object
+ * @param scanner
+ */
+void scanner_init(Scanner* scanner);
 
 /**
  * Get next token
  * @return token
  */
-token_t* get_token();
+token_t* get_token(Scanner* scanner);
 
 #endif //IFJ17_COMPILER_SCANNER_H
