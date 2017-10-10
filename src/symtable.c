@@ -126,7 +126,7 @@ htab_item_t * htab_lookup(htab_t *htab_ptr, const char *key) {
 		return NULL;
 
 	// Alllocate memory for the key
-	size_t key_length = strlen(key);
+	size_t key_length = strlen(key) + 1;
 	new_item->key = (char*) malloc(sizeof(char) * key_length);
 	if (new_item->key == NULL) {
 		free(new_item);
