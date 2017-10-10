@@ -28,7 +28,7 @@ static unsigned long hash_func(const char *str) {
 }
 
 htab_t *htab_init(size_t bucket_count) {
-	htab_t *htab_ptr = malloc(sizeof(htab_t) + bucket_count*sizeof(htab_item_t));
+	htab_t *htab_ptr = (htab_t*) malloc(sizeof(htab_t) + bucket_count*sizeof(htab_item_t));
 	if (htab_ptr == NULL)
 		return NULL;
 	htab_ptr->bucket_count = bucket_count;
@@ -121,13 +121,13 @@ htab_item_t * htab_lookup(htab_t *htab_ptr, const char *key) {
 	}
 
 	// Allocate memory for new item
-	htab_item_t * new_item = malloc(sizeof(htab_item_t));
+	htab_item_t * new_item = (htab_item_t*) malloc(sizeof(htab_item_t));
 	if (new_item == NULL)
 		return NULL;
 
 	// Alllocate memory for the key
 	size_t key_length = strlen(key);
-	new_item->key = malloc(sizeof(char) * key_length);
+	new_item->key = (char*) malloc(sizeof(char) * key_length);
 	if (new_item->key == NULL) {
 		free(new_item);
 		return NULL;
