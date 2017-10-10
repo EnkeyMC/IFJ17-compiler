@@ -27,8 +27,8 @@ static unsigned long hash_func(const char *str) {
 	return hash;
 }
 
-htab_t *htab_init(size_t bucket_count) {
-	htab_t *htab_ptr = (htab_t*) malloc(sizeof(htab_t) + bucket_count*sizeof(htab_item_t));
+HashTable *htab_init(size_t bucket_count) {
+	HashTable *htab_ptr = (HashTable*) malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item_t));
 	if (htab_ptr == NULL)
 		return NULL;
 	htab_ptr->bucket_count = bucket_count;
@@ -44,7 +44,7 @@ htab_t *htab_init(size_t bucket_count) {
  * Free all items contained in the hash table
  * @param htab_ptr Pointer to hash table
  */
-static void htab_clear(htab_t *htab_ptr) {
+static void htab_clear(HashTable *htab_ptr) {
 	for (size_t i = 0; i < htab_ptr->size; i++) {
 		htab_item_t *prev;
 		htab_item_t *next;
@@ -56,14 +56,14 @@ static void htab_clear(htab_t *htab_ptr) {
 	}
 }
 
-void htab_free(htab_t *htab_ptr) {
+void htab_free(HashTable *htab_ptr) {
 	if (htab_ptr == NULL)
 		return;
 	htab_clear(htab_ptr);
 	free(htab_ptr);
 }
 
-htab_item_t * htab_find(htab_t *htab_ptr, const char *key) {
+htab_item_t * htab_find(HashTable *htab_ptr, const char *key) {
     if (htab_ptr == NULL || key == NULL)
         return NULL;
 
@@ -79,7 +79,7 @@ htab_item_t * htab_find(htab_t *htab_ptr, const char *key) {
     return NULL;
 }
 
-bool htab_remove(htab_t *htab_ptr, const char *key) {
+bool htab_remove(HashTable *htab_ptr, const char *key) {
 	if (htab_ptr == NULL || key == NULL)
 		return false;
 
@@ -103,7 +103,7 @@ bool htab_remove(htab_t *htab_ptr, const char *key) {
 	return true;
 }
 
-htab_item_t * htab_lookup(htab_t *htab_ptr, const char *key) {
+htab_item_t * htab_lookup(HashTable *htab_ptr, const char *key) {
 	if (htab_ptr == NULL || key == NULL)
 		return NULL;
 
@@ -146,15 +146,15 @@ htab_item_t * htab_lookup(htab_t *htab_ptr, const char *key) {
 
 	return new_item;
 }
-size_t htab_size(htab_t *htab_ptr) {
+size_t htab_size(HashTable *htab_ptr) {
 	return htab_ptr != NULL ? htab_ptr->size : 0;
 }
 
-size_t htab_bucket_count(htab_t *htab_ptr) {
+size_t htab_bucket_count(HashTable *htab_ptr) {
 	return htab_ptr != NULL ? htab_ptr->bucket_count : 0;
 }
 
-void htab_foreach(htab_t *htab_ptr, void (*func)(htab_item_t *item_ptr)) {
+void htab_foreach(HashTable *htab_ptr, void (*func)(htab_item_t *item_ptr)) {
 	if (htab_ptr == NULL || func == NULL)
 		return;
 

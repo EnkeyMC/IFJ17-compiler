@@ -10,7 +10,7 @@ void foreach_count(htab_item_t *item_ptr) {
 
 class HashTableTestFixture : public ::testing::Test {
 protected:
-	htab_t* hash_table = nullptr;
+	HashTable* hash_table = nullptr;
 
 	virtual void SetUp() {
 		hash_table = htab_init(8);
@@ -24,7 +24,7 @@ protected:
 
 class HashTableWithDataTestFixture : public ::testing::Test {
 protected:
-	htab_t* hash_table = nullptr;
+	HashTable* hash_table = nullptr;
 	static const size_t n_samples = 5;
 	const char* keys[n_samples] = {"test1", "test2", "test3", "test4", "test5"};
 
