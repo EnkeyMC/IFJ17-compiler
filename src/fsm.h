@@ -19,7 +19,7 @@
  *      }
  * }
  */
-#define FSM()
+#define FSM
 #define STATE(x)            s_##x:
 #define NEXT_STATE(x)       goto s_##x
 

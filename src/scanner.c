@@ -8,8 +8,12 @@
  */
 #include <stdio.h>
 #include <assert.h>
+#include <malloc.h>
 
 #include "scanner.h"
+#include "fsm.h"
+
+#define READ_CHAR() getc(scanner->stream);
 
 void scanner_init(Scanner* scanner) {
 	assert(scanner != NULL);
@@ -20,6 +24,30 @@ token_t* scanner_get_token(Scanner* scanner) {
 	assert(scanner != NULL);
 	assert(scanner->stream != NULL);
 
+	int ch;
+	token_t* token = (token_t*) malloc(sizeof(token_t));
+	token->attr = NULL;
+
+	FSM {
+		STATE(s) {
+			ch = READ_CHAR();
+
+			if (ch == ';') {
+				NEXT_STATE(semicolon);
+			}
+
+			token->id = TOKEN_EOF;
+			return token;
+		}
+
+		STATE(semicolon) {
+			// No need to read character, this is an end state
+			token->id = TOKEN_SEMICOLON;
+			return token;
+		}
+	}
+
+	free(token);
 	return NULL;
 }
 
