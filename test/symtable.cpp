@@ -83,7 +83,7 @@ TEST_F(HashTableTestFixture, MemoryDeallocation) {
 // TODO: Test memory deallocation
 }
 
-TEST_F(HashTableTestFixture, GetOnEmptyTable) {
+TEST_F(HashTableTestFixture, FindOnEmptyTable) {
 	ASSERT_EQ(
 		htab_find(nullptr, "nokey"),
 		nullptr
@@ -95,7 +95,7 @@ TEST_F(HashTableTestFixture, GetOnEmptyTable) {
 	) << "Empty hash table should return nullptr";
 }
 
-TEST_F(HashTableWithDataTestFixture, GetInvalidItem) {
+TEST_F(HashTableWithDataTestFixture, FindInvalidItem) {
 	htab_item_t* item = htab_find(hash_table, "invalid");
 
 	ASSERT_EQ(
@@ -104,7 +104,7 @@ TEST_F(HashTableWithDataTestFixture, GetInvalidItem) {
 	) << "Found item should be nullptr";
 }
 
-TEST_F(HashTableWithDataTestFixture, GetValidItem) {
+TEST_F(HashTableWithDataTestFixture, FindValidItem) {
 
 	htab_item_t* item = htab_find(hash_table, keys[1]);
 
@@ -119,7 +119,7 @@ TEST_F(HashTableWithDataTestFixture, GetValidItem) {
 	) << "The items key should be equal to searched key";
 }
 
-TEST_F(HashTableWithDataTestFixture, DeleteInvalidItem) {
+TEST_F(HashTableWithDataTestFixture, RemoveInvalidItem) {
 	EXPECT_FALSE(htab_remove(hash_table, "invalid")) << "Invalid key should return false";
 }
 
@@ -127,17 +127,15 @@ TEST_F(HashTableWithDataTestFixture, DeleteValidItem) {
 	EXPECT_TRUE(htab_remove(hash_table, keys[2])) << "Deleting valid key should return true";
 }
 
-TEST_F(HashTableTestFixture, DeleteOnEmptyTable) {
+TEST_F(HashTableTestFixture, RemoveOnEmptyTable) {
 	ASSERT_FALSE(htab_remove(hash_table, "nokey")) << "Empty table should return false";
 }
 
 
-TEST_F(HashTableTestFixture, InvalidDelete) {
+TEST_F(HashTableTestFixture, InvalidRemove) {
 	ASSERT_FALSE(htab_remove(nullptr, "nokey")) << "Null table should return false";
 	ASSERT_FALSE(htab_remove(hash_table, nullptr)) << "Null key should return false";
 }
-
-// TODO: Fix foreach tests
 
 TEST_F(HashTableTestFixture, ForeachInvalid) {
 	htab_foreach(nullptr, foreach_count);
