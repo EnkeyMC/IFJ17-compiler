@@ -64,19 +64,19 @@ void htab_free(HashTable *htab_ptr) {
 }
 
 htab_item_t * htab_find(HashTable *htab_ptr, const char *key) {
-    if (htab_ptr == NULL || key == NULL)
-        return NULL;
+	if (htab_ptr == NULL || key == NULL)
+		return NULL;
 
-    unsigned long index = hash_func(key) % htab_ptr->bucket_count;
+	unsigned long index = hash_func(key) % htab_ptr->bucket_count;
 
-    htab_item_t * item = htab_ptr->ptr[index];
-    while (item != NULL) {
-        if (strcmp(key, item->key) == 0)
-            return item;
-        else
-            item = item->next;
-    }
-    return NULL;
+	htab_item_t * item = htab_ptr->ptr[index];
+	while (item != NULL) {
+		if (strcmp(key, item->key) == 0)
+			return item;
+		else
+			item = item->next;
+	}
+	return NULL;
 }
 
 bool htab_remove(HashTable *htab_ptr, const char *key) {
