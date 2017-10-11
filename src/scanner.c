@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <assert.h>
 #include <malloc.h>
+#include <ctype.h>
 
 #include "scanner.h"
 #include "fsm.h"
@@ -32,6 +33,14 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(s) {
 			ch = READ_CHAR();
 
+			if (ch != '\n' && isspace(ch)) {
+				NEXT_STATE(s);
+			}
+
+			if (ch == '\n') {
+				NEXT_STATE(EOL);
+			}
+
 			if (ch == ';') {
 				NEXT_STATE(semicolon);
 			}
@@ -43,6 +52,11 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(semicolon) {
 			// No need to read character, this is an end state
 			token->id = TOKEN_SEMICOLON;
+			return token;
+		}
+
+		STATE(EOL) {
+			token->id = TOKEN_EOL;
 			return token;
 		}
 	}
