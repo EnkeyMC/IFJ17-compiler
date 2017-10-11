@@ -45,7 +45,7 @@ TEST_F(ScannerTestFixture, EmptyFile) {
     ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		EOF
+		TOKEN_EOF
 	);
 }
 
