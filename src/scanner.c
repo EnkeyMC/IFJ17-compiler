@@ -1,4 +1,4 @@
-/**
+ /**
  * File is part of project IFJ2017.
  *
  * Brno University of Technology, Faculty of Information Technology
@@ -45,6 +45,38 @@ token_t* scanner_get_token(Scanner* scanner) {
 				NEXT_STATE(semicolon);
 			}
 
+            if (ch == ',') {
+                NEXT_STATE(comma);
+            }
+
+            if (ch == '=') {
+                NEXT_STATE(equal);
+            }
+
+            if (ch == '(') {
+                NEXT_STATE(left_par);
+            }
+
+            if (ch == ')') {
+                NEXT_STATE(right_par);
+            }
+
+            if (ch == '\\') {
+                NEXT_STATE(div_int);
+            }
+
+            if (ch == '*') {
+                NEXT_STATE(mul);
+            }
+
+            if (ch == '+') {
+                NEXT_STATE(add);
+            }
+
+            if (ch == '-') {
+                NEXT_STATE(sub);
+            }
+
 			token->id = TOKEN_EOF;
 			return token;
 		}
@@ -59,6 +91,46 @@ token_t* scanner_get_token(Scanner* scanner) {
 			token->id = TOKEN_EOL;
 			return token;
 		}
+
+        STATE(comma) {
+            token->id = TOKEN_COMMA;
+            return token;
+        }
+
+        STATE(equal) {
+            token->id = TOKEN_EQUAL;
+            return token;
+        }
+
+        STATE(left_par) {
+            token->id = TOKEN_LPAR;
+            return token;
+        }
+
+        STATE(right_par) {
+            token->id = TOKEN_RPAR;
+            return token;
+        }
+
+        STATE(div_int) {
+            token->id = TOKEN_DIVI;
+            return token;
+        }
+
+        STATE(mul) {
+            token->id = TOKEN_MUL;
+            return token;
+        }
+
+        STATE(add) {
+            token->id = TOKEN_ADD;
+            return token;
+        }
+
+        STATE(sub) {
+            token->id = TOKEN_SUB;
+            return token;
+        }
 	}
 
 	free(token);
