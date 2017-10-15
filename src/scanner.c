@@ -77,6 +77,30 @@ token_t* scanner_get_token(Scanner* scanner) {
                 NEXT_STATE(sub);
             }
 
+            if (ch == '<') {
+                NEXT_STATE(lt);
+            }
+
+            if (ch == '>') {
+                NEXT_STATE(gt);
+            }
+
+            if (('a' <= ch && ch <= 'z') || ('A' <= ch  && ch <= 'Z')) {
+                NEXT_STATE(identifier);
+            }
+
+            if ('0' <= ch && ch <= '9') {
+                NEXT_STATE(integer);
+            }
+
+            if (ch == '!') {
+                NEXT_STATE(string_start);
+            }
+
+            if (ch == '\'') {
+                NEXT_STATE(line_comment);
+            }
+
 			token->id = TOKEN_EOF;
 			return token;
 		}
@@ -129,6 +153,224 @@ token_t* scanner_get_token(Scanner* scanner) {
 
         STATE(sub) {
             token->id = TOKEN_SUB;
+            return token;
+        }
+
+        STATE(lt) {
+            ch = READ_CHAR();
+            if (ch == '=') {
+                NEXT_STATE(le);
+            }
+            else if (ch == '>') {
+                NEXT_STATE(ne);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = TOKEN_LT;
+                return token;
+            }
+        }
+
+        STATE(ne) {
+            token->id = TOKEN_NE;
+            return token;
+        }
+
+        STATE(le) {
+            token->id = TOKEN_LT;
+            return token;
+        }
+
+        STATE(gt) {
+            ch = READ_CHAR();
+            if (ch == '=') {
+                NEXT_STATE(ge);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = TOKEN_GT;
+                return token;
+            }
+        }
+
+        STATE(ge) {
+            token->id = TOKEN_GE;
+            return token;
+        }
+
+        STATE(identifier) {
+            ch = READ_CHAR();
+            if (('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('0' <= ch && ch <= '9')) {
+                NEXT_STATE(identifier);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = TOKEN_IDENTIFIER;
+                return token;
+            }
+        }
+
+        STATE(integer) {
+            ch = READ_CHAR();
+            if ('0' <= ch && ch <= '9') {
+                NEXT_STATE(integer);
+            }
+            else if (ch == '.') {
+                NEXT_STATE(fraction);
+            }
+            else if (ch == 'e' || ch == 'E') {
+                NEXT_STATE(exponent);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = TOKEN_INT;
+                return token;
+            }
+        }
+
+        STATE(exponent) {
+            ch = READ_CHAR();
+            if (ch == '+' || ch == '-') {
+                NEXT_STATE(sign);
+            }
+            else if ('0' <= ch && ch <= '9') {
+                NEXT_STATE(real);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = LEX_ERROR;
+                return token;
+            }
+        }
+
+        STATE(sign) {
+            ch = READ_CHAR();
+            if ('0' <= ch && ch <= '9') {
+                NEXT_STATE(real);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = LEX_ERROR;
+                return token;
+            }
+        }
+
+        STATE(fraction) {
+            ch = READ_CHAR();
+            if ('0' <= ch && ch <= '9') {
+                NEXT_STATE(real);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = LEX_ERROR;
+                return token;
+            }
+        }
+
+        STATE(real) {
+            ch = READ_CHAR();
+            if (ch == 'e' || ch == 'E') {
+                NEXT_STATE(exponent);
+            }
+            else if ('0' <= ch && ch <= '9') {
+                NEXT_STATE(real);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = TOKEN_REAL;
+                return token;
+            }
+        }
+
+        STATE(string_start) {
+            ch = READ_CHAR();
+            if (ch == '"') {
+                NEXT_STATE(string);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = LEX_ERROR;
+                return token;
+            }
+        }
+
+        STATE(string) {
+            ch = READ_CHAR();
+            if ((ch != EOF && ch != '\n') || ch != '\\') {
+                NEXT_STATE(string);
+            }
+            else if (ch == '\\') {
+                NEXT_STATE(escape_seq);
+            }
+            else if (ch == '"') {
+                NEXT_STATE(string_end);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = LEX_ERROR;
+                return token;
+            }
+        }
+
+        STATE(escape_seq) {
+            ch = READ_CHAR();
+            if ('0' <= ch && ch <= '2') {
+                NEXT_STATE(esc_num_one);
+            }
+            else if (ch != EOF && ch != '\n') {
+                NEXT_STATE(string);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = LEX_ERROR;
+                return token;
+            }
+        }
+
+        STATE(esc_num_one) {
+            ch = READ_CHAR();
+            if ('0' <= ch && ch <= '5') {
+                NEXT_STATE(esc_num_two);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = LEX_ERROR;
+                return token;
+            }
+        }
+
+        STATE(esc_num_two) {
+            ch = READ_CHAR();
+            if ('0' <= ch && ch <= '5') {
+                NEXT_STATE(string);
+            }
+            else {
+                ungetc(ch, scanner->stream);
+                token->id = LEX_ERROR;
+                return token;
+            }
+        }
+
+        STATE(string_end) {
+            token->id = TOKEN_STRING;
+            return token;
+        }
+
+        STATE(line_comment) {
+            ch = READ_CHAR();
+            if (ch == '\n') {
+                NEXT_STATE(s);
+            }
+            else if (ch == EOF) {
+                NEXT_STATE(EOF);
+            }
+            else {
+                NEXT_STATE(line_comment);
+            }
+        }
+
+        STATE(EOF) {
+            token->id = TOKEN_EOF;
             return token;
         }
 	}
