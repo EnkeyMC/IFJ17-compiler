@@ -49,10 +49,30 @@ TEST_F(ScannerTestFixture, EmptyFile) {
 	);
 }
 
+TEST_F(ScannerTestFixture, Simple01) {
+	SetInputFile("test_files/simple01.fbc");
+
+	token_e tokens[] = {
+		TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_REAL, TOKEN_EOL,
+		TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_IDENTIFIER, TOKEN_DIVR, TOKEN_INT, TOKEN_EOL,
+		TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_INT, TOKEN_EOL,
+		TOKEN_IDENTIFIER, TOKEN_LE, TOKEN_REAL, TOKEN_EOL,
+		TOKEN_EOL,
+		TOKEN_EOF
+	};
+
+	token_t* token;
+	for (int i = 0; i < sizeof(tokens) / sizeof(int); i++) {
+		token = scanner_get_token(scanner);
+		ASSERT_NE(token, nullptr);
+		ASSERT_EQ(token->id, tokens[i]);
+	}
+}
+
 TEST_F(ScannerTestFixture, FactorialRecursive) {
 	SetInputFile("test_files/factorial_recur.fbc");
 
-	int tokens[] = {
+	token_e tokens[] = {
             TOKEN_EOL,
             TOKEN_EOL,
             TOKEN_KW_DECLARE, TOKEN_KW_FUNCTION, TOKEN_IDENTIFIER, TOKEN_LPAR, TOKEN_IDENTIFIER, TOKEN_KW_AS, TOKEN_KW_INTEGER, TOKEN_RPAR, TOKEN_KW_AS, TOKEN_KW_INTEGER,
@@ -96,7 +116,7 @@ TEST_F(ScannerTestFixture, FactorialRecursive) {
 TEST_F(ScannerTestFixture, Strings) {
     SetInputFile("test_files/strings.fbc");
 
-    int tokens[] = {
+    token_e tokens[] = {
             TOKEN_EOL,
             TOKEN_EOL,
             TOKEN_KW_SCOPE, TOKEN_EOL,
