@@ -266,7 +266,7 @@ token_t* scanner_get_token(Scanner* scanner) {
         }
 
         STATE(le) {
-            token->id = TOKEN_LT;
+            token->id = TOKEN_LE;
             return token;
         }
 
