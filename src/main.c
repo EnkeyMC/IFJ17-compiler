@@ -15,8 +15,8 @@
 
 int main() {
 	Scanner* scanner = (Scanner*) malloc(sizeof(Scanner));
-    scanner_init(scanner);
+	scanner_init(scanner);
 
-    free(scanner);
-    return 0;
+	free(scanner);
+	return 0;
 }
