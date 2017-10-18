@@ -19,10 +19,11 @@ typedef struct {
 } Buffer;
 
 /**
- * Initialize buffer object, allocates default buffer size
- * @param b buffer
+ * Allocate new buffer of given size
+ * @param size
+ * @return new Buffer, NULL on allocation error
  */
-void buffer_init(Buffer* b);
+Buffer* buffer_init(size_t size);
 
 /**
  * Deallocates buffer memory
@@ -34,27 +35,31 @@ void buffer_free(Buffer* b);
  * Append one character to buffer
  * @param b buffer
  * @param c character to append
+ * @return 0 on success
  */
-void buffer_append_c(Buffer* b, char c);
+int buffer_append_c(Buffer* b, char c);
 
 /**
  * Append string to buffer
  * @param b buffer
  * @param str string to append
+ * @return 0 on success
  */
-void buffer_append_str(Buffer* b, const char* str);
+int buffer_append_str(Buffer* b, const char* str);
 
 /**
  * Reallocates buffer to default size and sets length to 0
  * @param b buffer
+ * @return 0 on success
  */
-void buffer_clear(Buffer* b);
+int buffer_clear(Buffer* b);
 
 /**
  * Copies given string to buffer
  * @param b buffer
  * @param str string to copy
+ * @return 0 on success
  */
-void buffer_set_str(Buffer* b, const char* str);
+int buffer_set_str(Buffer* b, const char* str);
 
 #endif //IFJ17_COMPILER_BUFFER_H
