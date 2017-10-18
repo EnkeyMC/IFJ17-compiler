@@ -8,11 +8,7 @@
  */
 
 
-#include <stdio.h>
+#ifndef IFJ17_COMPILER_PARSER_H
+#define IFJ17_COMPILER_PARSER_H
 
-#include "superrandom.h"
-
-int main() {
-    printf("Randomly generated number is %d\n", superrandom());
-    return 0;
-}
+#endif //IFJ17_COMPILER_PARSER_H

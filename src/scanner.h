@@ -7,12 +7,13 @@
  * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
  */
 
+#ifndef IFJ17_COMPILER_SCANNER_H
+#define IFJ17_COMPILER_SCANNER_H
 
-#include <stdio.h>
+/**
+ * Get next token
+ * @return token type
+ */
+int get_token(char*);
 
-#include "superrandom.h"
-
-int main() {
-    printf("Randomly generated number is %d\n", superrandom());
-    return 0;
-}
+#endif //IFJ17_COMPILER_SCANNER_H
