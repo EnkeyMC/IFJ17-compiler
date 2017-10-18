@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.0)
 project(ifj17_compiler)
 
+set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wextra")
 set(EXT_PROJECTS_DIR ${PROJECT_SOURCE_DIR}/ext)
@@ -44,4 +45,4 @@ add_custom_command(TARGET ${PROJECT_NAME}_test PRE_BUILD
 
 
 file(GLOB SOURCE_FILES src/*.c)
-add_executable(${PROJECT_NAME} ${SOURCE_FILES} src/debug.h)
+add_executable(${PROJECT_NAME} ${SOURCE_FILES})
