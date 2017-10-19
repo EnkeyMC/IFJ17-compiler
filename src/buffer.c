@@ -53,18 +53,22 @@ int buffer_append_c(Buffer* b, char c) {
 
 	b->arr[b->len] = c;
 	b->arr[b->len+1] = '\0';
+	b->len++;
 	return 0;
 }
 
 int buffer_append_str(Buffer* b, const char* str) {
 	assert(b != NULL);
 
-	if (b->len + strlen(str) + 1 > b->buffer_size) {
+	size_t str_len = strlen(str);
+
+	if (b->len + str_len + 1 > b->buffer_size) {
 		if (!buffer_realloc(b, b->len + strlen(str)))
 			return -1;
 	}
 
 	strcat(b->arr, str);
+	b->len = b->len + str_len;
 	return 0;
 }
 
@@ -83,10 +87,13 @@ int buffer_clear(Buffer* b) {
 int buffer_set_str(Buffer* b, const char* str) {
 	assert(b != NULL);
 
-	if (strlen(str) + 1 > b->buffer_size)
+	size_t str_len = strlen(str);
+
+	if (str_len + 1 > b->buffer_size)
 		if (!buffer_realloc(b, strlen(str) + 1))
 			return -1;
 
 	strcpy(b->arr, str);
+	b->len = str_len;
 	return 0;
 }
