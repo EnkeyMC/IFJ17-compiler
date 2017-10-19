@@ -3,12 +3,12 @@
 #include <string.h>
 #include "buffer.h"
 
-static int buffer_realloc(Buffer* b, size_t size) {
+static bool buffer_realloc(Buffer* b, size_t size) {
 	b->arr = (char*) realloc(b->arr, size);
 	if (b->arr == NULL) {
 		b->buffer_size = 0;
 		b->len = 0;
-		return -1;
+		return false;
 	}
 
 	if (size < b->buffer_size)
@@ -16,10 +16,13 @@ static int buffer_realloc(Buffer* b, size_t size) {
 
 	b->buffer_size = size;
 
-	return 0;
+	return true;
 }
 
 Buffer* buffer_init(size_t size) {
+	if (size < 1)
+		size = 1;
+
 	Buffer* b = (Buffer*) malloc(sizeof(Buffer));
 	if (b == NULL)
 		return NULL;
@@ -33,6 +36,8 @@ Buffer* buffer_init(size_t size) {
 		return NULL;
 	}
 
+	b->arr[0] = '\0';
+
 	return b;
 }
 
@@ -43,57 +48,58 @@ void buffer_free(Buffer* b) {
 	free(b);
 }
 
-int buffer_append_c(Buffer* b, char c) {
+bool buffer_append_c(Buffer* b, char c) {
 	assert(b != NULL);
 
 	if (b->len + 1 == b->buffer_size) {
 		if (!buffer_realloc(b, b->buffer_size + BUFFER_CHUNK))
-			return -1;
+			return false;
 	}
 
 	b->arr[b->len] = c;
 	b->arr[b->len+1] = '\0';
 	b->len++;
-	return 0;
+	return true;
 }
 
-int buffer_append_str(Buffer* b, const char* str) {
+bool buffer_append_str(Buffer* b, const char* str) {
 	assert(b != NULL);
 
 	size_t str_len = strlen(str);
 
 	if (b->len + str_len + 1 > b->buffer_size) {
-		if (!buffer_realloc(b, b->len + strlen(str)))
-			return -1;
+		if (!buffer_realloc(b, b->len + strlen(str) + 1)) {
+			return false;
+		}
 	}
 
 	strcat(b->arr, str);
-	b->len = b->len + str_len;
-	return 0;
+	b->len += str_len;
+	return true;
 }
 
-int buffer_clear(Buffer* b) {
+bool buffer_clear(Buffer* b) {
 	assert(b != NULL);
 
 	if (!buffer_realloc(b, BUFFER_CHUNK))
-		return -1;
+		return false;
 
 	b->len = 0;
 	b->arr = 0;
 
-	return 0;
+	return true;
 }
 
-int buffer_set_str(Buffer* b, const char* str) {
+bool buffer_set_str(Buffer* b, const char* str) {
 	assert(b != NULL);
 
 	size_t str_len = strlen(str);
 
 	if (str_len + 1 > b->buffer_size)
 		if (!buffer_realloc(b, strlen(str) + 1))
-			return -1;
+			return false;
 
 	strcpy(b->arr, str);
 	b->len = str_len;
-	return 0;
+	return true;
 }
