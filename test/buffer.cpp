@@ -28,7 +28,7 @@ TEST_F(BufferDataTestFixture, AppendChar) {
 	for ( ; i < num_of_chars; i++) {
 		EXPECT_EQ(
 			buffer_append_c(buffer, s[i]),
-			0
+			true
 		) << "Function should insert all chars\n";
 	}
 
@@ -47,7 +47,7 @@ TEST_F(BufferDataTestFixture, AppendStr) {
 	for (auto &s : str) {
 		EXPECT_EQ(
 			buffer_append_str(buffer, s),
-			0
+			true
 		) << "Function should insert all strings\n";
 	}
 
@@ -65,7 +65,7 @@ TEST_F(BufferDataTestFixture, SetStr) {
 	for (auto &s : str) {
 		EXPECT_EQ(
 			buffer_set_str(buffer, s),
-			0
+			true
 		) << "Function should insert all strings\n";
 
 		EXPECT_STREQ(
@@ -85,7 +85,7 @@ TEST_F(BufferDataTestFixture, BufferClear) {
 
 	EXPECT_EQ(
 			buffer_clear(buffer),
-			0
+			true
 	) << "Clearing the buffer should success\n";
 
 	EXPECT_EQ(
