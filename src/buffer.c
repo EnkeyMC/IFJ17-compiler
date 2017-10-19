@@ -32,6 +32,8 @@ Buffer* buffer_init(size_t size) {
 		free(b);
 		return NULL;
 	}
+
+	return b;
 }
 
 void buffer_free(Buffer* b) {
