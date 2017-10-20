@@ -57,7 +57,7 @@ static token_e get_string_token(const char* str) {
 			if (STR_IS("exit")) 		return TOKEN_KW_EXIT;
 		} else if (str[0] == 'f') {
 			if (STR_IS("function")) 	return TOKEN_KW_FUNCTION;
-			if (STR_IS("false")) 		return TOKEN_KW_FALSE
+			if (STR_IS("false")) 		return TOKEN_KW_FALSE;
 			if (STR_IS("for")) 			return TOKEN_KW_FOR;
 		} else if (str[0] == 'i') {
 			if (STR_IS("if")) 			return TOKEN_KW_IF;
