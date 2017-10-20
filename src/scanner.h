@@ -11,6 +11,7 @@
 #define IFJ17_COMPILER_SCANNER_H
 
 #include <stdio.h>
+#include "symtable.h"
 
 
 typedef enum {
@@ -108,14 +109,21 @@ typedef struct {
  */
 typedef struct {
 	FILE* stream;  /// Input stream
+    HashTable* symtable;  /// Symtable
 	// Current scope and maybe other stuff
 } Scanner;
 
 /**
  * Initialize scanner object
- * @param scanner
+ * @return scanner, NULL on allocation error
  */
-void scanner_init(Scanner* scanner);
+Scanner* scanner_init();
+
+/**
+ * Set which symtable should scanner use
+ * @param symtable
+ */
+void scanner_set_symtable(Scanner* scanner, HashTable* symtable);
 
 /**
  * Get next token

@@ -16,9 +16,19 @@
 
 #define READ_CHAR() getc(scanner->stream);
 
-void scanner_init(Scanner* scanner) {
-	assert(scanner != NULL);
+Scanner* scanner_init() {
+	Scanner* scanner = (Scanner*) malloc(sizeof(Scanner));
+	if (scanner == NULL)
+		return NULL;
+
 	scanner->stream = stdin;
+	scanner->symtable = NULL;
+	return scanner;
+}
+
+void scanner_set_symtable(Scanner* scanner, HashTable* symtable) {
+	assert(scanner != NULL);
+	scanner->symtable = symtable;
 }
 
 token_t* scanner_get_token(Scanner* scanner) {
