@@ -10,11 +10,14 @@
 #include <assert.h>
 #include <malloc.h>
 #include <ctype.h>
+#include <string.h>
 
 #include "scanner.h"
 #include "fsm.h"
 
 #define READ_CHAR() getc(scanner->stream);
+#define STR_IS(keyword) strcmp(str, keyword) == 0
+
 
 Scanner* scanner_init() {
 	Scanner* scanner = (Scanner*) malloc(sizeof(Scanner));
@@ -29,6 +32,41 @@ Scanner* scanner_init() {
 void scanner_set_symtable(Scanner* scanner, HashTable* symtable) {
 	assert(scanner != NULL);
 	scanner->symtable = symtable;
+}
+
+static token_e get_string_token(const char* str) {
+	size_t len = strlen(str);
+
+	if (len > 1) {
+		if (str[0] == 'a') {
+			if (STR_IS("as")) 			return TOKEN_KW_AS;
+			if (STR_IS("asc"))			return TOKEN_KW_ASC;
+			if (STR_IS("and"))			return TOKEN_KW_AND;
+		} else if (str[0] == 'd') {
+			if (STR_IS("do"))			return TOKEN_KW_DO;
+			if (STR_IS("dim"))			return TOKEN_KW_DIM;
+			if (STR_IS("declare"))		return TOKEN_KW_DECLARE;
+			if (STR_IS("double"))		return TOKEN_KW_DOUBLE;
+		} else if (str[0] == 'c') {
+			if (STR_IS("chr")) 			return TOKEN_KW_CHR;
+			if (STR_IS("continue")) 	return TOKEN_KW_CONTINUE;
+		} else if (str[0] == 'e') {
+			if (STR_IS("else"))			return TOKEN_KW_ELSE;
+			if (STR_IS("end"))			return TOKEN_KW_END;
+			if (STR_IS("elseif")) 		return TOKEN_KW_ELSEIF;
+			if (STR_IS("exit")) 		return TOKEN_KW_EXIT;
+		} else if (str[0] == 'f') {
+			if (STR_IS("function")) 	return TOKEN_KW_FUNCTION;
+			if (STR_IS("false")) 		return TOKEN_KW_FALSE
+			if (STR_IS("for")) 			return TOKEN_KW_FOR;
+		} else if (str[0] == 'i') {
+			if (STR_IS("if")) 			return TOKEN_KW_IF;
+			if (STR_IS("input")) 		return TOKEN_KW_INPUT;
+			if (STR_IS("integer")) 		return TOKEN_KW_INTEGER;
+		} // TODO rest of the keywords
+	}
+
+	return TOKEN_IDENTIFIER;
 }
 
 token_t* scanner_get_token(Scanner* scanner) {
