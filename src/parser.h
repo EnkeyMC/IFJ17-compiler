@@ -11,4 +11,6 @@
 #ifndef IFJ17_COMPILER_PARSER_H
 #define IFJ17_COMPILER_PARSER_H
 
+int parse();
+
 #endif //IFJ17_COMPILER_PARSER_H

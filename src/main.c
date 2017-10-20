@@ -7,16 +7,8 @@
  * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
  */
 
-
-#include <stdio.h>
-#include <malloc.h>
-
-#include "scanner.h"
+#include "parser.h"
 
 int main() {
-	Scanner* scanner = (Scanner*) malloc(sizeof(Scanner));
-	scanner_init(scanner);
-
-	free(scanner);
-	return 0;
+	return parse();
 }
