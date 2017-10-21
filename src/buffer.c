@@ -54,7 +54,7 @@ void buffer_free(Buffer* b) {
 bool buffer_append_c(Buffer* b, char c) {
 	assert(b != NULL);
 
-	if (b->len + 1 == b->buffer_size) {
+	if (b->len + 1 >= b->buffer_size) {
 		if (!buffer_realloc(b, b->buffer_size + BUFFER_CHUNK))
 			return false;
 	}
@@ -88,7 +88,7 @@ bool buffer_clear(Buffer* b) {
 		return false;
 
 	b->len = 0;
-	b->buffer_size = 0;
+	b->buffer_size = BUFFER_CHUNK;
 
 	return true;
 }

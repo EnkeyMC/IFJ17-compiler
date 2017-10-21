@@ -17,6 +17,6 @@ Scope 'Hlavni telo programu
 	Input s1
 	Do While (s1 <> !"abcdefgh")
 		Print !"\nSpatne zadana posloupnost, zkuste znovu";
-		Inpust s1
+		Input s1
 	Loop
 End Scope

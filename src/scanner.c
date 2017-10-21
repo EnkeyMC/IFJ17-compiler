@@ -487,18 +487,15 @@ token_t* scanner_get_token(Scanner* scanner) {
 
 		STATE(string) {
 			ch = READ_CHAR();
-			if ((ch != EOF && ch != '\n') || ch != '\\') {
-				APPEND_TO_BUFFER(ch);
-				NEXT_STATE(string);
-			}
-			else if (ch == '\\') {
+			if (ch == '\\') {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(escape_seq);
-			}
-			else if (ch == '"') {
+			} else if (ch == '"') {
 				NEXT_STATE(string_end);
-			}
-			else {
+			} else if (ch != EOF && ch != '\n') {
+				APPEND_TO_BUFFER(ch);
+				NEXT_STATE(string);
+			} else {
 				ungetc(ch, scanner->stream);
 				token->id = LEX_ERROR;
 				return token;
