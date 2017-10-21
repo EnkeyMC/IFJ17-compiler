@@ -556,7 +556,8 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(line_comment) {
 			ch = READ_CHAR();
 			if (ch == '\n') {
-				NEXT_STATE(s);
+				token->id = TOKEN_EOL;
+				return token;
 			}
 			else if (ch == EOF) {
 				NEXT_STATE(end_of_file);
