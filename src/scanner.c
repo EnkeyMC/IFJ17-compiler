@@ -63,7 +63,30 @@ static token_e get_string_token(const char* str) {
 			if (STR_IS("if")) 			return TOKEN_KW_IF;
 			if (STR_IS("input")) 		return TOKEN_KW_INPUT;
 			if (STR_IS("integer")) 		return TOKEN_KW_INTEGER;
-		} // TODO rest of the keywords
+		} else if (str[0] == 'l') {
+			if (STR_IS("length")) 		return TOKEN_KW_LENGTH;
+			if (STR_IS("loop")) 		return TOKEN_KW_LOOP;
+		} else if (str[0] == 'n') {
+			if (STR_IS("next")) 		return TOKEN_KW_NEXT;
+			if (STR_IS("not")) 			return TOKEN_KW_NOT;
+		} else if (str[0] == 's') {
+			if (STR_IS("scope")) 		return TOKEN_KW_SCOPE;
+			if (STR_IS("string"))		return TOKEN_KW_STRING;
+			if (STR_IS("substr")) 		return TOKEN_KW_SUBSTR;
+			if (STR_IS("shared")) 		return TOKEN_KW_SHARED;
+			if (STR_IS("static")) 		return TOKEN_KW_STATIC;
+		} else if (str[0] == 't') {
+			if (STR_IS("then")) 		return TOKEN_KW_THEN;
+			if (STR_IS("true")) 		return TOKEN_KW_TRUE;
+		} else if (STR_IS("while")) {
+			return TOKEN_KW_WHILE;
+		} else if (STR_IS("or")) {
+			return TOKEN_KW_OR;
+		} else if (STR_IS("print")) {
+			return TOKEN_KW_PRINT;
+		} else if (STR_IS("return")) {
+			return TOKEN_KW_RETURN;
+		}
 	}
 
 	return TOKEN_IDENTIFIER;
