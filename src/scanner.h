@@ -12,6 +12,7 @@
 
 #include <stdio.h>
 #include "symtable.h"
+#include "buffer.h"
 
 
 typedef enum {
@@ -110,7 +111,7 @@ typedef struct {
 typedef struct {
 	FILE* stream;  /// Input stream
     HashTable* symtable;  /// Symtable
-	// Current scope and maybe other stuff
+    Buffer* buffer;  /// Buffer for string and identifier strings
 } Scanner;
 
 /**
@@ -118,6 +119,12 @@ typedef struct {
  * @return scanner, NULL on allocation error
  */
 Scanner* scanner_init();
+
+/**
+ * Free scanner object
+ * @param scanner
+ */
+void scanner_free(Scanner* scanner);
 
 /**
  * Set which symtable should scanner use

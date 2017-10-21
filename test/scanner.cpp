@@ -18,13 +18,12 @@ protected:
 	FILE* test_file;
 
 	virtual void SetUp() {
-		scanner = (Scanner*) malloc(sizeof(Scanner));
-        scanner_init(scanner);
+		scanner = scanner_init();
 	}
 
 	virtual void TearDown() {
 		fclose(test_file);
-		free(scanner);
+		scanner_free(scanner);
 	}
 
 	void SetInputFile(const char *file) {
@@ -62,10 +61,10 @@ TEST_F(ScannerTestFixture, Simple01) {
 	};
 
 	token_t* token;
-	for (int i = 0; i < sizeof(tokens) / sizeof(int); i++) {
+	for (int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
 		token = scanner_get_token(scanner);
-		ASSERT_NE(token, nullptr);
-		ASSERT_EQ(token->id, tokens[i]);
+		ASSERT_NE(token, nullptr) << "Iter: " << i;
+		ASSERT_EQ(token->id, tokens[i]) << "Iter: " << i;
 	}
 }
 
@@ -107,10 +106,10 @@ TEST_F(ScannerTestFixture, FactorialRecursive) {
 	};
 
 	token_t* token;
-	for (int i = 0; i < sizeof(tokens) / sizeof(int); i++) {
+	for (int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
 		token = scanner_get_token(scanner);
-		ASSERT_NE(token, nullptr);
-		ASSERT_EQ(token->id, tokens[i]);
+		ASSERT_NE(token, nullptr) << "Iter: " << i;
+		ASSERT_EQ(token->id, tokens[i]) << "Iter: " << i;
 	}
 }
 
@@ -144,10 +143,10 @@ TEST_F(ScannerTestFixture, Strings) {
     };
 
     token_t* token;
-    for (int i = 0; i < sizeof(tokens) / sizeof(int); i++) {
+    for (int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
         token = scanner_get_token(scanner);
-        ASSERT_NE(token, nullptr);
-        ASSERT_EQ(token->id, tokens[i]);
+        ASSERT_NE(token, nullptr) << "Iter: " << i;
+        ASSERT_EQ(token->id, tokens[i]) << "Iter: " << i;
     }
 }
 
@@ -155,6 +154,13 @@ TEST_F(ScannerTestFixture, FactorialIterative) {
 	SetInputFile("test_files/factorial_it.fbc");
 
 	token_t* token = scanner_get_token(scanner);
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(
+		token->id,
+		TOKEN_EOL
+	) << "EOL";
+
+	token = scanner_get_token(scanner);
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(
 		token->id,

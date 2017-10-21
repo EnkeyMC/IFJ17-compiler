@@ -14,9 +14,11 @@
 
 #include "scanner.h"
 #include "fsm.h"
+#include "buffer.h"
 
 #define READ_CHAR() getc(scanner->stream);
 #define STR_IS(keyword) strcmp(str, keyword) == 0
+#define APPEND_TO_BUFFER(ch) buffer_append_c(scanner->buffer, tolower(ch));
 
 
 Scanner* scanner_init() {
@@ -24,9 +26,21 @@ Scanner* scanner_init() {
 	if (scanner == NULL)
 		return NULL;
 
+	scanner->buffer = buffer_init(BUFFER_CHUNK);
+	if (scanner->buffer == NULL) {
+		free(scanner);
+		return NULL;
+	}
+
 	scanner->stream = stdin;
 	scanner->symtable = NULL;
 	return scanner;
+}
+
+void scanner_free(Scanner* scanner) {
+	assert(scanner != NULL);
+	buffer_free(scanner->buffer);
+	free(scanner);
 }
 
 void scanner_set_symtable(Scanner* scanner, HashTable* symtable) {
@@ -35,6 +49,7 @@ void scanner_set_symtable(Scanner* scanner, HashTable* symtable) {
 }
 
 static token_e get_string_token(const char* str) {
+	assert(str != NULL);
 	size_t len = strlen(str);
 
 	if (len > 1) {
@@ -86,6 +101,8 @@ static token_e get_string_token(const char* str) {
 			return TOKEN_KW_PRINT;
 		} else if (STR_IS("return")) {
 			return TOKEN_KW_RETURN;
+		} else if (STR_IS("boolean")) {
+			return TOKEN_KW_BOOLEAN;
 		}
 	}
 
@@ -95,6 +112,8 @@ static token_e get_string_token(const char* str) {
 token_t* scanner_get_token(Scanner* scanner) {
 	assert(scanner != NULL);
 	assert(scanner->stream != NULL);
+
+	buffer_clear(scanner->buffer);
 
 	int ch;
 	token_t* token = (token_t*) malloc(sizeof(token_t));
@@ -161,10 +180,12 @@ token_t* scanner_get_token(Scanner* scanner) {
 			}
 
 			if (('a' <= ch && ch <= 'z') || ('A' <= ch	&& ch <= 'Z') || ch == '_') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(identifier);
 			}
 
 			if ('0' <= ch && ch <= '9') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(integer);
 			}
 
@@ -361,11 +382,12 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(identifier) {
 			ch = READ_CHAR();
 			if (('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('0' <= ch && ch <= '9') || ch == '_') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(identifier);
 			}
 			else {
 				ungetc(ch, scanner->stream);
-				token->id = TOKEN_IDENTIFIER;
+				token->id = get_string_token(scanner->buffer->arr);
 				return token;
 			}
 		}
@@ -373,12 +395,15 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(integer) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '9') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(integer);
 			}
 			else if (ch == '.') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(fraction);
 			}
 			else if (ch == 'e' || ch == 'E') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(exponent);
 			}
 			else {
@@ -391,9 +416,11 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(exponent) {
 			ch = READ_CHAR();
 			if (ch == '+' || ch == '-') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(sign);
 			}
 			else if ('0' <= ch && ch <= '9') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			}
 			else {
@@ -406,6 +433,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(sign) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '9') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			}
 			else {
@@ -418,6 +446,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(fraction) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '9') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			}
 			else {
@@ -430,9 +459,11 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(real) {
 			ch = READ_CHAR();
 			if (ch == 'e' || ch == 'E') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(exponent);
 			}
 			else if ('0' <= ch && ch <= '9') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			}
 			else {
@@ -457,9 +488,11 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(string) {
 			ch = READ_CHAR();
 			if ((ch != EOF && ch != '\n') || ch != '\\') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(string);
 			}
 			else if (ch == '\\') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(escape_seq);
 			}
 			else if (ch == '"') {
@@ -475,9 +508,11 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(escape_seq) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '2') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(esc_num_one);
 			}
 			else if (ch != EOF && ch != '\n') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(string);
 			}
 			else {
@@ -490,6 +525,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(esc_num_one) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '5') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(esc_num_two);
 			}
 			else {
@@ -502,6 +538,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(esc_num_two) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '5') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(string);
 			}
 			else {
@@ -555,6 +592,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(binary) {
 			ch = READ_CHAR();
 			if (ch == '0' || ch == '1') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_bin);
 			}
 			else {
@@ -567,6 +605,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(octal) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '7') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_octal);
 			}
 			else {
@@ -579,6 +618,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(hexa) {
 			ch = READ_CHAR();
 			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z')) {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
 			}
 			else {
@@ -591,6 +631,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(int_bin) {
 			ch = READ_CHAR();
 			if (ch == '0' || ch == '1') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_bin);
 			}
 			else {
@@ -603,6 +644,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(int_octal) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '7') {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_octal);
 			}
 			else {
@@ -615,6 +657,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 		STATE(int_hexa) {
 			ch = READ_CHAR();
 			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z')) {
+				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
 			}
 			else {
