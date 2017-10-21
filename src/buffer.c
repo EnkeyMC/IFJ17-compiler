@@ -4,6 +4,9 @@
 #include "buffer.h"
 
 static bool buffer_realloc(Buffer* b, size_t size) {
+	if (size == b->buffer_size)
+		return true;
+
 	b->arr = (char*) realloc(b->arr, size);
 	if (b->arr == NULL) {
 		b->buffer_size = 0;
@@ -85,7 +88,7 @@ bool buffer_clear(Buffer* b) {
 		return false;
 
 	b->len = 0;
-	b->arr = 0;
+	b->buffer_size = 0;
 
 	return true;
 }
