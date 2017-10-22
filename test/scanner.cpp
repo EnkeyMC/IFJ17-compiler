@@ -48,6 +48,18 @@ TEST_F(ScannerTestFixture, EmptyFile) {
 	);
 }
 
+TEST_F(ScannerTestFixture, ErrBase01) {
+	SetInputFile("test_files/lex_err_base_01.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
 TEST_F(ScannerTestFixture, Simple01) {
 	SetInputFile("test_files/simple01.fbc");
 
