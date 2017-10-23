@@ -405,6 +405,9 @@ token_t* scanner_get_token(Scanner* scanner) {
 			else if (ch == 'e' || ch == 'E') {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(exponent);
+			} if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+				return token;
 			}
 			else {
 				ungetc(ch, scanner->stream);
