@@ -465,6 +465,9 @@ token_t* scanner_get_token(Scanner* scanner) {
 			else if ('0' <= ch && ch <= '9') {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(real);
+			} if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+				return token;
 			}
 			else {
 				ungetc(ch, scanner->stream);
@@ -508,7 +511,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(esc_num_one);
 			}
-			else if (ch != EOF && ch != '\n') {
+			else if (ch == '"' || ch == 'n' || ch == 't' || ch == '\\') {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(string);
 			}
@@ -536,6 +539,13 @@ token_t* scanner_get_token(Scanner* scanner) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '5') {
 				APPEND_TO_BUFFER(ch);
+
+				// \000 is forbidden
+				if (strcmp((scanner->buffer->arr + scanner->buffer->len - 3), "000") == 0) {
+					token->id = LEX_ERROR;
+					return token;
+				}
+
 				NEXT_STATE(string);
 			}
 			else {
@@ -631,8 +641,10 @@ token_t* scanner_get_token(Scanner* scanner) {
 			if (ch == '0' || ch == '1') {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_bin);
-			}
-			else {
+			} if ((ch >= '2' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+				return token;
+			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
 				return token;
@@ -644,8 +656,10 @@ token_t* scanner_get_token(Scanner* scanner) {
 			if ('0' <= ch && ch <= '7') {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_octal);
-			}
-			else {
+			} if ((ch >= '8' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+				return token;
+			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
 				return token;
@@ -657,8 +671,10 @@ token_t* scanner_get_token(Scanner* scanner) {
 			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')) {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
-			}
-			else {
+			} if ((ch >= 'g' && ch <= 'z') || (ch >= 'G' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+				return token;
+			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
 				return token;

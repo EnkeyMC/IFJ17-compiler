@@ -228,6 +228,18 @@ TEST_F(ScannerTestFixture, ErrString05) {
 	);
 }
 
+TEST_F(ScannerTestFixture, ErrString06) {
+	SetInputFile("test_files/lex_err_string_06.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
 TEST_F(ScannerTestFixture, ErrUnknownChar) {
 	SetInputFile("test_files/lex_err_unknown_char.fbc");
 
