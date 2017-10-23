@@ -615,7 +615,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 
 		STATE(hexa) {
 			ch = READ_CHAR();
-			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z')) {
+			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')) {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
 			}
@@ -654,7 +654,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 
 		STATE(int_hexa) {
 			ch = READ_CHAR();
-			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z')) {
+			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')) {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
 			}

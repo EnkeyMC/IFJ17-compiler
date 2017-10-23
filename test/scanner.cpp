@@ -60,6 +60,186 @@ TEST_F(ScannerTestFixture, ErrBase01) {
 	);
 }
 
+TEST_F(ScannerTestFixture, ErrBase02) {
+	SetInputFile("test_files/lex_err_base_02.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrBase03) {
+	SetInputFile("test_files/lex_err_base_03.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrBase04) {
+	SetInputFile("test_files/lex_err_base_04.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrBlockComm01) {
+	SetInputFile("test_files/lex_err_block_comment_01.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrBlockComm02) {
+	SetInputFile("test_files/lex_err_block_comment_02.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrReal01) {
+	SetInputFile("test_files/lex_err_real_01.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrReal02) {
+	SetInputFile("test_files/lex_err_real_02.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrReal03) {
+	SetInputFile("test_files/lex_err_real_03.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrReal04) {
+	SetInputFile("test_files/lex_err_real_04.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrString01) {
+	SetInputFile("test_files/lex_err_string_01.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrString02) {
+	SetInputFile("test_files/lex_err_string_02.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrString03) {
+	SetInputFile("test_files/lex_err_string_03.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrString04) {
+	SetInputFile("test_files/lex_err_string_04.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrString05) {
+	SetInputFile("test_files/lex_err_string_05.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
+TEST_F(ScannerTestFixture, ErrUnknownChar) {
+	SetInputFile("test_files/lex_err_unknown_char.fbc");
+
+	token_t *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+}
+
 TEST_F(ScannerTestFixture, Simple01) {
 	SetInputFile("test_files/simple01.fbc");
 
