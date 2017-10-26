@@ -33,7 +33,7 @@ TEST_F(BufferDataTestFixture, AppendChar) {
 	}
 
 	EXPECT_STREQ(
-			buffer->arr,
+			buffer->str,
 			"very_long_identifier"
 	) << "Buffer should contain inserted text\n";
 
@@ -52,7 +52,7 @@ TEST_F(BufferDataTestFixture, AppendStr) {
 	}
 
 	EXPECT_STREQ(
-			buffer->arr,
+			buffer->str,
 			"str_to_append_1, str_to_append_2, str_to_append_3, str_to_append_4\n"
 	) << "Buffer should contain inserted text\n";
 }
@@ -69,7 +69,7 @@ TEST_F(BufferDataTestFixture, SetStr) {
 		) << "Function should insert all strings\n";
 
 		EXPECT_STREQ(
-				buffer->arr,
+				buffer->str,
 				s
 		) << "Buffer should contain string\n";
 	}

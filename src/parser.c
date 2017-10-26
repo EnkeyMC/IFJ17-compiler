@@ -24,17 +24,23 @@ int parse() {
 		htab_free(symtab_global);
 		return EXIT_INTERN_ERROR;
 	}
-	scanner_set_symtable(scanner, symtab_global);
 
-	token_t* token = NULL;
+	Token* token = NULL;
 
 	do {
-		if (token != NULL)
-			free(token);
+		token_free(token);
+
 		token = scanner_get_token(scanner);
-		if (token->id == LEX_ERROR)
+		if (token == NULL) {
+			ret_code = EXIT_INTERN_ERROR;
+			break;
+		} else if (token->id == LEX_ERROR) {
 			ret_code = EXIT_LEX_ERROR;
-	} while (token->id != TOKEN_EOF && token->id != LEX_ERROR);
+			break;
+		}
+	} while (token->id != TOKEN_EOF);
+
+	token_free(token);
 
 	scanner_free(scanner);
 	htab_free(symtab_global);

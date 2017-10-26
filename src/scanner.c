@@ -11,6 +11,7 @@
 #include <malloc.h>
 #include <ctype.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include "scanner.h"
 #include "fsm.h"
@@ -33,7 +34,6 @@ Scanner* scanner_init() {
 	}
 
 	scanner->stream = stdin;
-	scanner->symtable = NULL;
 	return scanner;
 }
 
@@ -41,11 +41,6 @@ void scanner_free(Scanner* scanner) {
 	assert(scanner != NULL);
 	buffer_free(scanner->buffer);
 	free(scanner);
-}
-
-void scanner_set_symtable(Scanner* scanner, HashTable* symtable) {
-	assert(scanner != NULL);
-	scanner->symtable = symtable;
 }
 
 static token_e get_string_token(const char* str) {
@@ -109,15 +104,18 @@ static token_e get_string_token(const char* str) {
 	return TOKEN_IDENTIFIER;
 }
 
-token_t* scanner_get_token(Scanner* scanner) {
+Token* scanner_get_token(Scanner* scanner) {
 	assert(scanner != NULL);
 	assert(scanner->stream != NULL);
 
-	buffer_clear(scanner->buffer);
+	if (!buffer_clear(scanner->buffer)) {
+		return NULL;
+	}
 
 	int ch;
-	token_t* token = (token_t*) malloc(sizeof(token_t));
-	token->attr = NULL;
+	Token* token = (Token*) malloc(sizeof(Token));
+	if (token == NULL)
+		return NULL;
 
 	FSM {
 		STATE(s) {
@@ -387,7 +385,19 @@ token_t* scanner_get_token(Scanner* scanner) {
 			}
 			else {
 				ungetc(ch, scanner->stream);
-				token->id = get_string_token(scanner->buffer->arr);
+				token->id = get_string_token(scanner->buffer->str);
+
+				if (token->id == TOKEN_IDENTIFIER) {
+					// Allocate memory for identifier
+					token->str = (char*) malloc(sizeof(char) * scanner->buffer->len + 1);
+					if (token->str == NULL) {
+						free(token);
+						return NULL;
+					}
+					// Copy identifier to token
+					strcpy(token->str, scanner->buffer->str);
+				}
+
 				return token;
 			}
 		}
@@ -412,6 +422,9 @@ token_t* scanner_get_token(Scanner* scanner) {
 			else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
+
+
+				token->i = (unsigned int) strtoul(scanner->buffer->str, NULL, 10);
 				return token;
 			}
 		}
@@ -475,6 +488,8 @@ token_t* scanner_get_token(Scanner* scanner) {
 			else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_REAL;
+
+				token->d = strtod(scanner->buffer->str, NULL);
 				return token;
 			}
 		}
@@ -544,7 +559,7 @@ token_t* scanner_get_token(Scanner* scanner) {
 				APPEND_TO_BUFFER(ch);
 
 				// \000 is forbidden
-				if (strcmp((scanner->buffer->arr + scanner->buffer->len - 3), "000") == 0) {
+				if (strcmp((scanner->buffer->str + scanner->buffer->len - 3), "000") == 0) {
 					token->id = LEX_ERROR;
 					return token;
 				}
@@ -650,6 +665,8 @@ token_t* scanner_get_token(Scanner* scanner) {
 			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
+
+				token->i = (unsigned int) strtoul(scanner->buffer->str, NULL, 2);;
 				return token;
 			}
 		}
@@ -665,6 +682,8 @@ token_t* scanner_get_token(Scanner* scanner) {
 			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
+
+				token->i = (unsigned int) strtoul(scanner->buffer->str, NULL, 8);
 				return token;
 			}
 		}
@@ -680,12 +699,14 @@ token_t* scanner_get_token(Scanner* scanner) {
 			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
+
+				token->i = (unsigned int) strtoul(scanner->buffer->str, NULL, 16);;
 				return token;
 			}
 		}
 	}
 
-	free(token);
+	token_free(token);
 	return NULL;
 }
 
