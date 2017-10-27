@@ -1,4 +1,3 @@
-#include <assert.h>
 #include <malloc.h>
 #include "token.h"
 
