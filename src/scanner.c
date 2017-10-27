@@ -575,6 +575,14 @@ Token* scanner_get_token(Scanner* scanner) {
 
 		STATE(string_end) {
 			token->id = TOKEN_STRING;
+			// Allocate memory for string
+			token->str = (char*) malloc(sizeof(char) * scanner->buffer->len + 1);
+			if (token->str == NULL) {
+				free(token);
+				return NULL;
+			}
+			// Copy string to token
+			strcpy(token->str, scanner->buffer->str);
 			return token;
 		}
 
