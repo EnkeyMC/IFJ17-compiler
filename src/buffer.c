@@ -58,7 +58,7 @@ bool buffer_append_c(Buffer* b, char c) {
 		if (!buffer_realloc(b, b->buffer_size + BUFFER_CHUNK))
 			return false;
 	}
-
+  
 	b->str[b->len] = c;
 	b->str[b->len+1] = '\0';
 	b->len++;
