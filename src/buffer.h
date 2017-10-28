@@ -17,7 +17,7 @@
  * care of appending '\0' at the end of the string.
  */
 typedef struct {
-    char* arr;              /// Character array with dimension of buffer_size
+    char* str;              /// Character array with dimension of buffer_size
     size_t len;             /// Valid string length in arr
     size_t buffer_size;     /// Allocated arr size
 } Buffer;

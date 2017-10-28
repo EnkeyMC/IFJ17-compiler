@@ -4,8 +4,11 @@
 #include "buffer.h"
 
 static bool buffer_realloc(Buffer* b, size_t size) {
-	b->arr = (char*) realloc(b->arr, size);
-	if (b->arr == NULL) {
+	if (size == b->buffer_size)
+		return true;
+
+	b->str = (char*) realloc(b->str, size);
+	if (b->str == NULL) {
 		b->buffer_size = 0;
 		b->len = 0;
 		return false;
@@ -29,35 +32,35 @@ Buffer* buffer_init(size_t size) {
 
 	b->buffer_size = size;
 	b->len = 0;
-	b->arr = (char*) malloc(sizeof(char) * b->buffer_size);
+	b->str = (char*) malloc(sizeof(char) * b->buffer_size);
 
-	if (b->arr == NULL) {
+	if (b->str == NULL) {
 		free(b);
 		return NULL;
 	}
 
-	b->arr[0] = '\0';
+	b->str[0] = '\0';
 
 	return b;
 }
 
 void buffer_free(Buffer* b) {
 	assert(b != NULL);
-	if (b->arr != NULL)
-		free(b->arr);
+	if (b->str != NULL)
+		free(b->str);
 	free(b);
 }
 
 bool buffer_append_c(Buffer* b, char c) {
 	assert(b != NULL);
 
-	if (b->len + 1 == b->buffer_size) {
+	if (b->len + 1 >= b->buffer_size) {
 		if (!buffer_realloc(b, b->buffer_size + BUFFER_CHUNK))
 			return false;
 	}
-
-	b->arr[b->len] = c;
-	b->arr[b->len+1] = '\0';
+  
+	b->str[b->len] = c;
+	b->str[b->len+1] = '\0';
 	b->len++;
 	return true;
 }
@@ -73,7 +76,7 @@ bool buffer_append_str(Buffer* b, const char* str) {
 		}
 	}
 
-	strcat(b->arr, str);
+	strcat(b->str, str);
 	b->len += str_len;
 	return true;
 }
@@ -85,7 +88,7 @@ bool buffer_clear(Buffer* b) {
 		return false;
 
 	b->len = 0;
-	b->arr = 0;
+	b->buffer_size = BUFFER_CHUNK;
 
 	return true;
 }
@@ -99,7 +102,7 @@ bool buffer_set_str(Buffer* b, const char* str) {
 		if (!buffer_realloc(b, strlen(str) + 1))
 			return false;
 
-	strcpy(b->arr, str);
+	strcpy(b->str, str);
 	b->len = str_len;
 	return true;
 }
