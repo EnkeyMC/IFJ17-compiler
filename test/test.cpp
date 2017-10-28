@@ -7,10 +7,9 @@
  * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
  */
 
+#include "gtest/gtest.h"
 
-#ifndef IFJ17_COMPILER_PARSER_H
-#define IFJ17_COMPILER_PARSER_H
-
-int parse();
-
-#endif //IFJ17_COMPILER_PARSER_H
+int main(int argc, char** argv) {
+	::testing::InitGoogleTest(&argc, argv);
+	return RUN_ALL_TESTS();
+}

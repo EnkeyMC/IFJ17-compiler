@@ -1,0 +1,7 @@
+' This are simple scanner tests
+var1 = 0.5
+var_2=var1/2
+var1 = &hA52f
+Var_2 <= 2.7e5
+/' Block
+comment '/

@@ -13,7 +13,7 @@ enable_testing()
 
 include_directories(${GTEST_INCLUDE_DIRS} src/)
 
-file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp)
+file(GLOB TEST_SRC_FILES ${PROJECT_SOURCE_DIR}/test/*.cpp ${PROJECT_SOURCE_DIR}/test/*.h)
 
 set(PROJECT_TEST_NAME ${PROJECT_NAME}_test)
 add_executable(${PROJECT_TEST_NAME} ${TEST_SRC_FILES})
@@ -38,6 +38,10 @@ endif()
 target_link_libraries(${PROJECT_TEST_NAME} ${CMAKE_THREAD_LIBS_INIT})
 
 add_test(Tests ${PROJECT_TEST_NAME})
+
+add_custom_command(TARGET ${PROJECT_NAME}_test PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/test/test_files ${PROJECT_BINARY_DIR}/test_files)
 
 
 file(GLOB SOURCE_FILES src/*.c)

@@ -7,12 +7,8 @@
  * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
  */
 
-
-#include <stdio.h>
-
-#include "superrandom.h"
+#include "parser.h"
 
 int main() {
-    printf("Randomly generated number is %d\n", superrandom());
-    return 0;
+	return parse();
 }
