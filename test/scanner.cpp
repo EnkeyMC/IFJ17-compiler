@@ -192,6 +192,20 @@ TEST_F(ScannerTestFixture, ErrReal04) {
 	token_free(token);
 }
 
+TEST_F(ScannerTestFixture, ErrReal05) {
+	SetInputFile("test_files/lex_err_real_05.fbc");
+
+	Token *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	EXPECT_EQ(
+		token->id,
+		LEX_ERROR
+	);
+
+	token_free(token);
+}
+
 TEST_F(ScannerTestFixture, ErrString01) {
 	SetInputFile("test_files/lex_err_string_01.fbc");
 
@@ -327,6 +341,124 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
 	EXPECT_EQ(token->i, 19549);
+	token_free(token);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// EOF
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOF);
+}
+
+TEST_F(ScannerTestFixture, ParseReal) {
+	SetInputFile("test_files/parse_real.fbc");
+
+	// 5e-5
+	Token *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_REAL);
+	EXPECT_DOUBLE_EQ(token->d, 5e-5);
+	token_free(token);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// 3E+6
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_REAL);
+	EXPECT_EQ(token->d, 3E+6);
+	token_free(token);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// 0.8125
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_REAL);
+	EXPECT_EQ(token->d, 0.8125);
+	token_free(token);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// 0.5e-2
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_REAL);
+	EXPECT_EQ(token->d, 0.5e-2);
+	token_free(token);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// 0.3e+20
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_REAL);
+	EXPECT_EQ(token->d, 0.3e20);
+	token_free(token);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// EOF
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOF);
+}
+
+TEST_F(ScannerTestFixture, ParseString) {
+	SetInputFile("test_files/parse_string.fbc");
+
+	// "Test string \001\n"
+	Token *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_STRING);
+	EXPECT_STREQ(token->str, "Test string \\001\\n");
+	token_free(token);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// "\\\n Test\ttwo"
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_STRING);
+	EXPECT_STREQ(token->str, "\\\\\\n Test\\ttwo");
 	token_free(token);
 
 	// EOL

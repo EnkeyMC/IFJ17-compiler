@@ -19,7 +19,8 @@
 
 #define READ_CHAR() getc(scanner->stream);
 #define STR_IS(keyword) strcmp(str, keyword) == 0
-#define APPEND_TO_BUFFER(ch) buffer_append_c(scanner->buffer, tolower(ch));
+#define APPEND_LOWER_TO_BUFFER(ch) buffer_append_c(scanner->buffer, tolower(ch));
+#define APPEND_TO_BUFFER(ch) buffer_append_c(scanner->buffer, ch);
 
 
 Scanner* scanner_init() {
@@ -178,12 +179,12 @@ Token* scanner_get_token(Scanner* scanner) {
 			}
 
 			if (('a' <= ch && ch <= 'z') || ('A' <= ch	&& ch <= 'Z') || ch == '_') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(identifier);
 			}
 
 			if ('0' <= ch && ch <= '9') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(integer);
 			}
 
@@ -380,7 +381,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(identifier) {
 			ch = READ_CHAR();
 			if (('a' <= ch && ch <= 'z') || ('A' <= ch && ch <= 'Z') || ('0' <= ch && ch <= '9') || ch == '_') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(identifier);
 			}
 			else {
@@ -405,15 +406,15 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(integer) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '9') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(integer);
 			}
 			else if (ch == '.') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(fraction);
 			}
 			else if (ch == 'e' || ch == 'E') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(exponent);
 			} if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
 				token->id = LEX_ERROR;
@@ -432,11 +433,11 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(exponent) {
 			ch = READ_CHAR();
 			if (ch == '+' || ch == '-') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(sign);
 			}
 			else if ('0' <= ch && ch <= '9') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			}
 			else {
@@ -449,7 +450,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(sign) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '9') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			}
 			else {
@@ -462,7 +463,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(fraction) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '9') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			}
 			else {
@@ -475,11 +476,11 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(real) {
 			ch = READ_CHAR();
 			if (ch == 'e' || ch == 'E') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(exponent);
 			}
 			else if ('0' <= ch && ch <= '9') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			} if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
 				token->id = LEX_ERROR;
@@ -626,7 +627,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(binary) {
 			ch = READ_CHAR();
 			if (ch == '0' || ch == '1') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_bin);
 			}
 			else {
@@ -639,7 +640,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(octal) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '7') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_octal);
 			}
 			else {
@@ -652,7 +653,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(hexa) {
 			ch = READ_CHAR();
 			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')) {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
 			}
 			else {
@@ -665,7 +666,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(int_bin) {
 			ch = READ_CHAR();
 			if (ch == '0' || ch == '1') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_bin);
 			} if ((ch >= '2' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
 				token->id = LEX_ERROR;
@@ -682,7 +683,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(int_octal) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '7') {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_octal);
 			} if ((ch >= '8' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
 				token->id = LEX_ERROR;
@@ -699,7 +700,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(int_hexa) {
 			ch = READ_CHAR();
 			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')) {
-				APPEND_TO_BUFFER(ch);
+				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
 			} if ((ch >= 'g' && ch <= 'z') || (ch >= 'G' && ch <= 'Z')) {
 				token->id = LEX_ERROR;
