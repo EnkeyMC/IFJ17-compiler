@@ -10,7 +10,7 @@ typedef void (*stack_free_callback) (void* item);
 
 typedef struct {
     int top;  /// Stack top
-    size_t size;  /// Stack allocated size
+    int size;  /// Stack allocated size
     void** stack;  /// Dynamically allocated pointer array
 } Stack;
 
@@ -20,7 +20,7 @@ typedef struct {
  * @param default_size default stack allocation size
  * @return pointer to new stack, NULL on allocation error
  */
-Stack* stack_init(size_t default_size);
+Stack* stack_init(int default_size);
 
 /**
  * Return whether stack is empty or not
@@ -32,14 +32,14 @@ bool stack_empty(Stack* s);
 /**
  * Return item on the top of the stack, does not remove it from the stack
  * @param s valid Stack object
- * @return item from top of the stack
+ * @return item from top of the stack, NULL if stack is empty
  */
 void* stack_top(Stack* s);
 
 /**
  * Return item on the top of the stack and remove it from the stack
  * @param s valid Stack object
- * @return item from top of the stack
+ * @return item from top of the stack, NULL if stack is empty
  */
 void* stack_pop(Stack* s);
 
