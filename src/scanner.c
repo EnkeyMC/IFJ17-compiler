@@ -15,7 +15,6 @@
 
 #include "scanner.h"
 #include "fsm.h"
-#include "buffer.h"
 
 #define READ_CHAR() getc(scanner->stream);
 #define STR_IS(keyword) strcmp(str, keyword) == 0
