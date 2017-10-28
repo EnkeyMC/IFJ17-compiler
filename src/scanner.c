@@ -438,7 +438,7 @@ Token* scanner_get_token(Scanner* scanner) {
 			}
 			else if ('0' <= ch && ch <= '9') {
 				APPEND_LOWER_TO_BUFFER(ch);
-				NEXT_STATE(real);
+				NEXT_STATE(real_exp);
 			}
 			else {
 				ungetc(ch, scanner->stream);
@@ -451,7 +451,7 @@ Token* scanner_get_token(Scanner* scanner) {
 			ch = READ_CHAR();
 			if ('0' <= ch && ch <= '9') {
 				APPEND_LOWER_TO_BUFFER(ch);
-				NEXT_STATE(real);
+				NEXT_STATE(real_exp);
 			}
 			else {
 				ungetc(ch, scanner->stream);
@@ -482,6 +482,24 @@ Token* scanner_get_token(Scanner* scanner) {
 			else if ('0' <= ch && ch <= '9') {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(real);
+			} if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+				return token;
+			}
+			else {
+				ungetc(ch, scanner->stream);
+				token->id = TOKEN_REAL;
+
+				token->d = strtod(scanner->buffer->str, NULL);
+				return token;
+			}
+		}
+
+		STATE(real_exp) {
+			ch = READ_CHAR();
+			if ('0' <= ch && ch <= '9') {
+				APPEND_LOWER_TO_BUFFER(ch);
+				NEXT_STATE(real_exp);
 			} if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
 				token->id = LEX_ERROR;
 				return token;
