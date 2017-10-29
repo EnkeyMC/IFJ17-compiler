@@ -1,9 +1,11 @@
 #ifndef IFJ17_COMPILER_TOKEN_H
 #define IFJ17_COMPILER_TOKEN_H
 
+#include "grammar.h"
+
 typedef enum {
 // ARITMETIC OPERATORS
-    TOKEN_EQUAL,
+    TOKEN_EQUAL = TERMINALS_START,
     TOKEN_DIVR,
     TOKEN_DIVI,
     TOKEN_MUL,
