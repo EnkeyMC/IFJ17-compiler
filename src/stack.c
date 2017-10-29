@@ -9,7 +9,7 @@ static bool stack_realloc(Stack* s, int size) {
 		return true;
 
 	// Reallocate stack to new size
-	s->stack = realloc(s->stack, size);
+	s->stack = (void**) realloc(s->stack, sizeof(void*) * size);
 	if (s->stack == NULL) { // Check reallocation success
 		s->size = 0;
 		s->top = -1;
@@ -28,7 +28,7 @@ Stack* stack_init(int size) {
 		return NULL;
 
 	// Allocate stack
-	s->stack = malloc(sizeof(void*) * size);
+	s->stack = (void**) malloc(sizeof(void*) * size);
 	if (s->stack == NULL) {
 		free(s);
 		return NULL;
