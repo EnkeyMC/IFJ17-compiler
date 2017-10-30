@@ -55,6 +55,7 @@ typedef enum {
     TOKEN_KW_SUBSTR,
     TOKEN_KW_THEN,
     TOKEN_KW_WHILE,
+    TOKEN_KW_UNTIL,
 
 // EXPANSIONS
 
@@ -72,6 +73,8 @@ typedef enum {
     TOKEN_KW_SHARED,
     TOKEN_KW_STATIC,
     TOKEN_KW_TRUE,
+    TOKEN_KW_TO,
+    TOKEN_KW_STEP,
 
     TOKEN_SUB_ASIGN,
     TOKEN_DIVR_ASIGN,

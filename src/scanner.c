@@ -82,11 +82,13 @@ static token_e get_string_token(const char* str) {
 		} else if (str[0] == 's') {
 			if (STR_IS("scope")) 		return TOKEN_KW_SCOPE;
 			if (STR_IS("string"))		return TOKEN_KW_STRING;
+			if (STR_IS("step"))			return TOKEN_KW_STEP;
 			if (STR_IS("substr")) 		return TOKEN_KW_SUBSTR;
 			if (STR_IS("shared")) 		return TOKEN_KW_SHARED;
 			if (STR_IS("static")) 		return TOKEN_KW_STATIC;
 		} else if (str[0] == 't') {
 			if (STR_IS("then")) 		return TOKEN_KW_THEN;
+			if (STR_IS("to"))			return TOKEN_KW_TO;
 			if (STR_IS("true")) 		return TOKEN_KW_TRUE;
 		} else if (STR_IS("while")) {
 			return TOKEN_KW_WHILE;
@@ -98,6 +100,8 @@ static token_e get_string_token(const char* str) {
 			return TOKEN_KW_RETURN;
 		} else if (STR_IS("boolean")) {
 			return TOKEN_KW_BOOLEAN;
+		} else if (STR_IS("until")) {
+			return TOKEN_KW_UNTIL;
 		}
 	}
 
