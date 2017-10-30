@@ -3,6 +3,14 @@
 
 #include <stdbool.h>
 
+/**
+ * Enum of non terminals, also used as index to grammar array.
+ *
+ * Special enum constants:
+ * NT_ENUM_SIZE - number of non terminals, size of grammar array
+ * END_OF_RULE - used to determine the end of rule production array
+ * TERMINALS_START - starting point of terminals (tokens) see {@link token.h}, used to determine terminals from non-terminals
+ */
 typedef enum {
     NT_PROGRAM,
     NT_LINES_N,
@@ -42,6 +50,9 @@ typedef enum {
     TERMINALS_START
 } non_terminal_e;
 
+/**
+ * Grammar rule structure
+ */
 typedef struct rule_t {
     int* production;  /// Array of non_terminal_e and token_e
     struct rule_t* next;  /// Next rule

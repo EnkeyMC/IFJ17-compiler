@@ -25,6 +25,12 @@ int parse() {
 		return EXIT_INTERN_ERROR;
 	}
 
+	if (!grammar_init()) {
+		htab_free(symtab_global);
+		scanner_free(scanner);
+		return EXIT_INTERN_ERROR;
+	}
+
 	Token* token = NULL;
 
 	do {
@@ -44,6 +50,7 @@ int parse() {
 
 	scanner_free(scanner);
 	htab_free(symtab_global);
+	grammar_free();
 
 	return ret_code;
 }

@@ -4,8 +4,42 @@
 #include "grammar.h"
 #include "token.h"
 
-#define ADD_EPSILON_RULE(nt)  if (!grammar_add_rule(nt)) { grammar_free(); return false; }
-#define ADD_RULE(nt, ...) if (!grammar_add_rule(nt, __VA_ARGS__)) { grammar_free(); return false; }
+/// Get number of variable arguments
+#define NUM_ARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
+
+/// Add epsilon rule to grammar, cleanup on failure
+#define ADD_EPSILON_RULE(nt)  if (!grammar_add_epsilon_rule(nt)) { grammar_free(); return false; }
+/// Add rule to grammar, cleanup on failure
+#define ADD_RULE(nt, ...) if (!grammar_add_rule(nt, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
+
+static bool grammar_add_epsilon_rule(non_terminal_e nt) {
+	Rule* rule = (Rule*) malloc(sizeof(Rule));
+	if (rule == NULL) {
+		return false;
+	}
+
+	rule->production = (int*) malloc(sizeof(int));
+	if (rule->production == NULL) {
+		free(rule);
+		return false;
+	}
+
+	rule->production[0] = END_OF_RULE;
+
+	if (grammar[nt] != NULL) {
+		struct rule_t* last_rule = grammar[nt];
+
+		while (last_rule->next != NULL) {
+			last_rule = last_rule->next;
+		}
+
+		last_rule->next = rule;
+	} else {
+		grammar[nt] = rule;
+	}
+
+	return true;
+}
 
 static bool grammar_add_rule(non_terminal_e nt, int va_num, ...) {
 	Rule* rule = (Rule*) malloc(sizeof(Rule));
@@ -70,7 +104,7 @@ bool grammar_init() {
 	ADD_RULE(NT_STMT_SEQ, NT_STATEMENT, TOKEN_EOL, NT_STMT_SEQ);
 	ADD_EPSILON_RULE(NT_STMT_SEQ);
 	ADD_RULE(NT_VAR_DECL, TOKEN_KW_DIM, NT_VAR_DECL_NEXT);
-	ADD_RULE(TOKEN_KW_STATIC, NT_VAR_DEF);
+	ADD_RULE(NT_VAR_DECL, TOKEN_KW_STATIC, NT_VAR_DEF);
 	ADD_RULE(NT_VAR_DECL_NEXT, NT_VAR_DEF);
 	ADD_RULE(NT_VAR_DECL_NEXT, TOKEN_KW_SHARED, NT_VAR_DEF);
 	ADD_RULE(NT_VAR_DEF, TOKEN_IDENTIFIER, TOKEN_KW_AS, NT_TYPE, NT_INIT_OPT);
@@ -136,7 +170,7 @@ void grammar_free() {
 	struct rule_t* tmp_rule, *to_free_rule;
 	for (int i = 0; i < NT_ENUM_SIZE; i++) {
 		tmp_rule = grammar[i];
-		if (tmp_rule != NULL) {
+		while (tmp_rule != NULL) {
 			to_free_rule = tmp_rule;
 			tmp_rule = tmp_rule->next;
 			rule_free(to_free_rule);
