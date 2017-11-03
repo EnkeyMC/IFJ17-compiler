@@ -312,7 +312,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, 0);
+	EXPECT_EQ(token->i, (unsigned) 0);
 	token_free(token);
 
 	// EOL
@@ -326,7 +326,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, 5);
+	EXPECT_EQ(token->i, (unsigned) 5);
 	token_free(token);
 
 	// EOL
@@ -340,7 +340,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, 19549);
+	EXPECT_EQ(token->i, (unsigned) 19549);
 	token_free(token);
 
 	// EOL
@@ -488,7 +488,7 @@ TEST_F(ScannerTestFixture, Simple01) {
 	};
 
 	Token* token;
-	for (int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
+	for (unsigned int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
 		token = scanner_get_token(scanner);
 		ASSERT_NE(token, nullptr) << "Iter: " << i;
 		ASSERT_EQ(token->id, tokens[i]) << "Iter: " << i;
@@ -534,7 +534,7 @@ TEST_F(ScannerTestFixture, FactorialRecursive) {
 	};
 
 	Token* token;
-	for (int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
+	for (unsigned int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
 		token = scanner_get_token(scanner);
 		ASSERT_NE(token, nullptr) << "Iter: " << i;
 		ASSERT_EQ(token->id, tokens[i]) << "Iter: " << i;
@@ -572,7 +572,7 @@ TEST_F(ScannerTestFixture, Strings) {
     };
 
     Token* token;
-    for (int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
+    for (unsigned int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
         token = scanner_get_token(scanner);
         ASSERT_NE(token, nullptr) << "Iter: " << i;
         ASSERT_EQ(token->id, tokens[i]) << "Iter: " << i;

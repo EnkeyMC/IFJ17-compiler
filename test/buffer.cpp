@@ -24,7 +24,7 @@ TEST_F(BufferDataTestFixture, AppendChar) {
 	static const size_t num_of_chars = 20;
 	const char *s = "very_long_identifier";
 
-	int i = 0;
+	unsigned int i = 0;
 	for ( ; i < num_of_chars; i++) {
 		EXPECT_EQ(
 			buffer_append_c(buffer, s[i]),
@@ -90,6 +90,6 @@ TEST_F(BufferDataTestFixture, BufferClear) {
 
 	EXPECT_EQ(
 			buffer->len,
-			0
+			(unsigned) 0
 	) << "Length should be zero\n";
 }
