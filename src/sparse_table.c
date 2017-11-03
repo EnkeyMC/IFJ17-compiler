@@ -17,7 +17,7 @@ SparseTable* sparse_table_init(unsigned int nrows, unsigned int ncols, int domin
 		return NULL;
 	}
 
-	for (int i = 0; i < nrows; i++) {
+	for (unsigned int i = 0; i < nrows; i++) {
 		stab->table[i] = NULL;
 	}
 
@@ -29,7 +29,7 @@ void sparse_table_free(SparseTable* stab) {
 
 	if (stab->table != NULL) {
 		SparseTableListItem* tmp;
-		for (int i = 0; i < stab->nrows; i++) {
+		for (unsigned int i = 0; i < stab->nrows; i++) {
 			while (stab->table[i] != NULL) {
 				tmp = stab->table[i];
 				stab->table[i] = tmp->next;

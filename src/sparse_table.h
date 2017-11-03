@@ -7,7 +7,7 @@
  * Sparse table list item
  */
 typedef struct sparse_table_item_t {
-    int column;  /// Column index
+    unsigned int column;  /// Column index
     int value;  /// Item value
     struct sparse_table_item_t* next;  /// Next item in list
 } SparseTableListItem;

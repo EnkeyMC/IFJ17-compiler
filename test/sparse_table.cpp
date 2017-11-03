@@ -40,16 +40,16 @@ protected:
 };
 
 TEST_F(SparseTableTestFixture, InitTest) {
-	for (int row = 0; row < nrows; row++) {
-		for (int col = 0; col < ncols; col++) {
+	for (unsigned int row = 0; row < nrows; row++) {
+		for (unsigned int col = 0; col < ncols; col++) {
 			EXPECT_EQ(sparse_table_get(sparse_table, row, col), dominant) << "Empty sparse table should return dominant value on every index";
 		}
 	}
 }
 
 TEST_F(SparseTableTestFixture, SetTest) {
-	for (int row = 0; row < nrows; row++) {
-		for (int col = 0; col < ncols; col++) {
+	for (unsigned int row = 0; row < nrows; row++) {
+		for (unsigned int col = 0; col < ncols; col++) {
 			EXPECT_TRUE(sparse_table_set(sparse_table, row, col, row + col)) << "Setting value to valid index should not fail";
 		}
 	}
