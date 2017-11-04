@@ -13,6 +13,9 @@
 /// Add rule to grammar, cleanup on failure
 #define ADD_RULE(nt, ...) if (!grammar_add_rule(curr_idx++, nt, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
 
+/// Set table value, cleanup on failure
+#define TABLE_SET(row, column, value) if (!sparse_table_set(grammar.LL_table, row, column - TERMINALS_START, value)) { grammar_free(); return false; }
+
 static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 	assert(idx < NUM_OF_RULES);
 
@@ -73,6 +76,11 @@ static void rule_free(Rule* rule) {
 }
 
 bool grammar_init() {
+	// LL table init
+	grammar.LL_table = sparse_table_init(NT_ENUM_SIZE, END_OF_TERMINALS - TERMINALS_START, 0);
+	if (grammar.LL_table == NULL)
+		return false;
+
 	int curr_idx = 0;
 	grammar.rules[curr_idx++] = NULL;  // First index needs to be empty
 
@@ -152,6 +160,9 @@ bool grammar_init() {
 	ADD_RULE(NT_EXPRESSION, TOKEN_KW_TRUE);
 	ADD_RULE(NT_EXPRESSION, TOKEN_KW_FALSE);
 
+	// LL table initialization
+	TABLE_SET(NT_LINE, TOKEN_KW_DECLARE, 1);
+	// TODO rest of the table
 
 	return true;
 }

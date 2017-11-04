@@ -85,7 +85,7 @@ typedef enum {
 // ENDING TOKENS
     TOKEN_EOF,
 
-    END_OF_TOKENS,  // Not actual token
+    END_OF_TERMINALS,  // Not actual token
     LEX_ERROR
 } token_e;
 
