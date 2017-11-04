@@ -1,5 +1,6 @@
 #include <stdarg.h>
 #include <malloc.h>
+#include <assert.h>
 
 #include "grammar.h"
 #include "token.h"
@@ -8,11 +9,13 @@
 #define NUM_ARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
 
 /// Add epsilon rule to grammar, cleanup on failure
-#define ADD_EPSILON_RULE(nt)  if (!grammar_add_epsilon_rule(nt)) { grammar_free(); return false; }
+#define ADD_EPSILON_RULE(nt)  if (!grammar_add_epsilon_rule(curr_idx++, nt)) { grammar_free(); return false; }
 /// Add rule to grammar, cleanup on failure
-#define ADD_RULE(nt, ...) if (!grammar_add_rule(nt, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
+#define ADD_RULE(nt, ...) if (!grammar_add_rule(curr_idx++, nt, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
 
-static bool grammar_add_epsilon_rule(non_terminal_e nt) {
+static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
+	assert(idx < NUM_OF_RULES);
+
 	Rule* rule = (Rule*) malloc(sizeof(Rule));
 	if (rule == NULL) {
 		return false;
@@ -25,23 +28,16 @@ static bool grammar_add_epsilon_rule(non_terminal_e nt) {
 	}
 
 	rule->production[0] = END_OF_RULE;
+	rule->for_nt = nt;
 
-	if (grammar[nt] != NULL) {
-		struct rule_t* last_rule = grammar[nt];
-
-		while (last_rule->next != NULL) {
-			last_rule = last_rule->next;
-		}
-
-		last_rule->next = rule;
-	} else {
-		grammar[nt] = rule;
-	}
+	grammar.rules[idx] = rule;
 
 	return true;
 }
 
-static bool grammar_add_rule(non_terminal_e nt, int va_num, ...) {
+static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
+	assert(idx < NUM_OF_RULES);
+
 	Rule* rule = (Rule*) malloc(sizeof(Rule));
 	if (rule == NULL) {
 		return false;
@@ -61,20 +57,11 @@ static bool grammar_add_rule(non_terminal_e nt, int va_num, ...) {
 	}
 
 	rule->production[i] = END_OF_RULE;
+	rule->for_nt = nt;
 
 	va_end(va_args);
 
-	if (grammar[nt] != NULL) {
-		struct rule_t* last_rule = grammar[nt];
-
-		while (last_rule->next != NULL) {
-			last_rule = last_rule->next;
-		}
-
-		last_rule->next = rule;
-	} else {
-		grammar[nt] = rule;
-	}
+	grammar.rules[idx] = rule;
 
 	return true;
 }
@@ -86,6 +73,9 @@ static void rule_free(Rule* rule) {
 }
 
 bool grammar_init() {
+	int curr_idx = 0;
+	grammar.rules[curr_idx++] = NULL;  // First index needs to be empty
+
 	ADD_RULE(NT_PROGRAM, NT_LINES_N, TOKEN_EOF);
 	ADD_RULE(NT_LINES_N, NT_LINE, NT_LINES_N);
 	ADD_EPSILON_RULE(NT_LINES_N);
@@ -167,13 +157,9 @@ bool grammar_init() {
 }
 
 void grammar_free() {
-	struct rule_t* tmp_rule, *to_free_rule;
-	for (int i = 0; i < NT_ENUM_SIZE; i++) {
-		tmp_rule = grammar[i];
-		while (tmp_rule != NULL) {
-			to_free_rule = tmp_rule;
-			tmp_rule = tmp_rule->next;
-			rule_free(to_free_rule);
-		}
+	for (int i = 0; i < NUM_OF_RULES; i++) {
+		rule_free(grammar.rules[i]);
 	}
+
+	sparse_table_free(grammar.LL_table);
 }
