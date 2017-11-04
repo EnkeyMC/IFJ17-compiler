@@ -16,10 +16,9 @@
  * TERMINALS_START - starting point of terminals (tokens) see {@link token.h}, used to determine terminals from non-terminals
  */
 typedef enum {
-    NT_PROGRAM,
-    NT_LINES_N,
     NT_LINE,
     NT_STATEMENT,
+    NT_INNER_STMT,
     NT_STMT_SEQ,
     NT_VAR_DECL,
     NT_VAR_DECL_NEXT,
@@ -40,6 +39,7 @@ typedef enum {
     NT_IF_STMT_CONT,
     NT_IF_STMT_END,
     NT_DO_STMT,
+    NT_DO_STMT_END,
     NT_TEST_TYPE,
     NT_DO_BODY,
     NT_FOR_STMT,
