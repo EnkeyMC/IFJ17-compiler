@@ -29,6 +29,7 @@ typedef enum {
     NT_FUNC_DEF,
     NT_FUNC_BODY,
     NT_PARAMS,
+    NT_PARAM_DECL,
     NT_PARAMS_NEXT,
     NT_ASSIGNMENT,
     NT_INPUT_STMT,
