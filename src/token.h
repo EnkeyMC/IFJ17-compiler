@@ -102,6 +102,17 @@ typedef struct {
     };  /// Token data
 } Token;
 
+/**
+ * Free token
+ * @param token
+ */
 void token_free(Token* token);
+
+/**
+ * Get column index to LL table from token
+ * @param token
+ * @return column index to LL table
+ */
+unsigned int get_token_column_value(token_e token);
 
 #endif //IFJ17_COMPILER_TOKEN_H

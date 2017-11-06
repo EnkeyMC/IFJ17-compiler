@@ -14,7 +14,7 @@
 #define ADD_RULE(nt, ...) if (!grammar_add_rule(curr_idx++, nt, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
 
 /// Set table value, cleanup on failure
-#define TABLE_SET(row, column, value) if (!sparse_table_set(grammar.LL_table, row, column - TERMINALS_START, value)) { grammar_free(); return false; }
+#define TABLE_SET(row, column, value) if (!sparse_table_set(grammar.LL_table, row, get_token_column_value(column), value)) { grammar_free(); return false; }
 
 static void array_reverse(int* array, int length) {
 	int tmp;
@@ -80,9 +80,11 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 }
 
 static void rule_free(Rule* rule) {
-	if (rule->production != NULL)
-		free(rule->production);
-	free(rule);
+	if (rule != NULL) {
+		if (rule->production != NULL)
+			free(rule->production);
+		free(rule);
+	}
 }
 
 bool grammar_init() {

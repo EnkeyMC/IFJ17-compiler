@@ -9,3 +9,7 @@ void token_free(Token* token) {
 		free(token->str);
 	free(token);
 }
+
+unsigned int get_token_column_value(token_e token) {
+	return token - TERMINALS_START;
+}
