@@ -16,6 +16,15 @@
 /// Set table value, cleanup on failure
 #define TABLE_SET(row, column, value) if (!sparse_table_set(grammar.LL_table, row, column - TERMINALS_START, value)) { grammar_free(); return false; }
 
+static void array_reverse(int* array, int length) {
+	int tmp;
+	for (int i = 0; i < length / 2; i++) {
+		tmp = array[i];
+		array[i] = array[length - i - 1];
+		array[length - i - 1] = tmp;
+	}
+}
+
 static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 	assert(idx < NUM_OF_RULES);
 
@@ -59,6 +68,7 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 		rule->production[i] = va_arg(va_args, int);
 	}
 
+	array_reverse(rule->production, va_num);  // We are going to push it on stack in reverse order
 	rule->production[i] = END_OF_RULE;
 	rule->for_nt = nt;
 
@@ -212,7 +222,7 @@ bool grammar_init() {
 	TABLE_SET(NT_STMT_SEQ, TOKEN_KW_INPUT, 15);
 	TABLE_SET(NT_STMT_SEQ, TOKEN_KW_LOOP, 16);
 	TABLE_SET(NT_STMT_SEQ, TOKEN_KW_PRINT, 15);
-	TABLE_SET(NT_STMT_SEQ, TOKEN_KW_SCOPE, 15;
+	TABLE_SET(NT_STMT_SEQ, TOKEN_KW_SCOPE, 15);
 	TABLE_SET(NT_STMT_SEQ, TOKEN_KW_ELSEIF, 16);
 	TABLE_SET(NT_STMT_SEQ, TOKEN_KW_FOR, 15);
 	TABLE_SET(NT_STMT_SEQ, TOKEN_KW_NEXT, 16);
