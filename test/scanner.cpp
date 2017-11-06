@@ -8,7 +8,6 @@
  */
 
 #include <cstdio>
-#include <scanner.h>
 #include "gtest/gtest.h"
 #include "scanner.c"
 #include "token.c"

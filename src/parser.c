@@ -13,26 +13,26 @@
 #include "error_code.h"
 #include "stack.h"
 
-int parse() {
+
+int parse(Scanner* scanner) {
 	int ret_code = EXIT_SUCCESS;
 
 	HashTable* symtab_global = htab_init(0);
 	if (symtab_global == NULL)
 		return EXIT_INTERN_ERROR;
 
-	Scanner* scanner = scanner_init();
-	if (scanner == NULL) {
-		htab_free(symtab_global);
-		return EXIT_INTERN_ERROR;
-	}
 
 	if (!grammar_init()) {
 		htab_free(symtab_global);
-		scanner_free(scanner);
 		return EXIT_INTERN_ERROR;
 	}
 
 	Stack* dtree_stack = stack_init(30);  // Stack for simulating syntax derivation tree
+	if (dtree_stack == NULL) {
+		htab_free(symtab_global);
+		grammar_free();
+		return EXIT_INTERN_ERROR;
+	}
 	non_terminal_e start_non_terminal = NT_LINE;
 	stack_push(dtree_stack, &start_non_terminal);
 
@@ -52,10 +52,10 @@ int parse() {
 			break;
 		}
 
-		unsigned int s_top = *(unsigned int*) stack_top(dtree_stack);
+		unsigned int* s_top = (unsigned int*) stack_top(dtree_stack);
 
-		while (s_top < TERMINALS_START) {
-			rule_idx = sparse_table_get(grammar.LL_table, s_top, get_token_column_value(token->id));
+		while (*s_top < TERMINALS_START) {
+			rule_idx = sparse_table_get(grammar.LL_table, *s_top, get_token_column_value(token->id));
 
 			rule = grammar.rules[rule_idx];
 
@@ -70,12 +70,18 @@ int parse() {
 				stack_push(dtree_stack, &rule->production[i]);
 			}
 
-			s_top = *(unsigned int*) stack_top(dtree_stack);
+			s_top = (unsigned int*) stack_top(dtree_stack);
+
+			// Empty file
+			if (s_top == NULL) {
+				ret_code = EXIT_SUCCESS;
+				break;
+			}
 		}
 
-		if (s_top == token->id && ret_code == EXIT_SUCCESS) {
+		if (s_top != NULL && *s_top == token->id && ret_code == EXIT_SUCCESS) {
 			stack_pop(dtree_stack);
-		} else {
+		} else if (s_top != NULL) {
 			ret_code = EXIT_SYNTAX_ERROR;
 			break;
 		}
@@ -83,7 +89,6 @@ int parse() {
 
 	token_free(token);
 
-	scanner_free(scanner);
 	htab_free(symtab_global);
 	grammar_free();
 	stack_free(dtree_stack, NULL);

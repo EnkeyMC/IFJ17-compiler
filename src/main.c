@@ -8,7 +8,15 @@
  */
 
 #include "parser.h"
+#include "error_code.h"
 
 int main() {
-	return parse();
+	Scanner* scanner = scanner_init();
+	if (scanner == NULL)
+		return EXIT_INTERN_ERROR;
+
+	int ret_code = parse(scanner);
+
+	scanner_free(scanner);
+	return ret_code;
 }

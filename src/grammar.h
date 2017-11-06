@@ -68,7 +68,7 @@ typedef struct rule_t {
 /**
  * Global grammar. Needs to be initialized.
  */
-struct grammar_t {
+extern struct grammar_t {
     Rule* rules[NUM_OF_RULES];  /// Array of rules.
     SparseTable* LL_table;  /// The LL table of the grammar
 } grammar;
