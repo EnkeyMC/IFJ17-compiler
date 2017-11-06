@@ -5,6 +5,7 @@
 int foreach_cnt = 0;
 
 void foreach_count(htab_item_t *item_ptr) {
+	(void) item_ptr;
 	foreach_cnt++;
 }
 
@@ -50,7 +51,7 @@ TEST_F(HashTableTestFixture, Initialization) {
 TEST_F(HashTableTestFixture, SizeEmpty) {
 	EXPECT_EQ(
 		htab_size(hash_table),
-		0
+		(unsigned) 0
 	) << "Size is not 0";
 }
 

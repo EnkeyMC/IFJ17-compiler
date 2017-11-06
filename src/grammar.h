@@ -2,9 +2,13 @@
 #define IFJ17_COMPILER_GRAMMAR_H
 
 #include <stdbool.h>
+#include "sparse_table.h"
+
+// Number of rules in grammar. Needs to be incremented by 1 because first rule is empty
+#define NUM_OF_RULES 79
 
 /**
- * Enum of non terminals, also used as index to grammar array.
+ * Enum of non terminals.
  *
  * Special enum constants:
  * NT_ENUM_SIZE - number of non terminals, size of grammar array
@@ -12,10 +16,9 @@
  * TERMINALS_START - starting point of terminals (tokens) see {@link token.h}, used to determine terminals from non-terminals
  */
 typedef enum {
-    NT_PROGRAM,
-    NT_LINES_N,
     NT_LINE,
     NT_STATEMENT,
+    NT_INNER_STMT,
     NT_STMT_SEQ,
     NT_VAR_DECL,
     NT_VAR_DECL_NEXT,
@@ -26,6 +29,7 @@ typedef enum {
     NT_FUNC_DEF,
     NT_FUNC_BODY,
     NT_PARAMS,
+    NT_PARAM_DECL,
     NT_PARAMS_NEXT,
     NT_ASSIGNMENT,
     NT_INPUT_STMT,
@@ -36,6 +40,7 @@ typedef enum {
     NT_IF_STMT_CONT,
     NT_IF_STMT_END,
     NT_DO_STMT,
+    NT_DO_STMT_END,
     NT_TEST_TYPE,
     NT_DO_BODY,
     NT_FOR_STMT,
@@ -45,6 +50,8 @@ typedef enum {
     NT_ID_OPT,
     NT_ASSIGN_OPERATOR,
     NT_EXPRESSION,
+
+    // Special enum items
     NT_ENUM_SIZE,
     END_OF_RULE,
     TERMINALS_START
@@ -54,11 +61,17 @@ typedef enum {
  * Grammar rule structure
  */
 typedef struct rule_t {
-    int* production;  /// Array of non_terminal_e and token_e
-    struct rule_t* next;  /// Next rule
+    non_terminal_e for_nt;  /// To which non terminal this rule applies
+    int* production;  /// Array of non_terminal_e and token_e ending with END_OF_RULE
 } Rule;
 
-Rule* grammar[NT_ENUM_SIZE];  /// Array of rules, values of non_terminal_e are indexes to this array. Needs to be initialized.
+/**
+ * Global grammar. Needs to be initialized.
+ */
+struct grammar_t {
+    Rule* rules[NUM_OF_RULES];  /// Array of rules.
+    SparseTable* LL_table;  /// The LL table of the grammar
+} grammar;
 
 /**
  * Initialize grammar
@@ -67,7 +80,7 @@ Rule* grammar[NT_ENUM_SIZE];  /// Array of rules, values of non_terminal_e are i
 bool grammar_init();
 
 /**
- * Free gramamar
+ * Free grammar
  */
 void grammar_free();
 
