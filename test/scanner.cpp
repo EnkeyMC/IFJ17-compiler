@@ -473,6 +473,27 @@ TEST_F(ScannerTestFixture, ParseString) {
 	ASSERT_EQ(token->id, TOKEN_EOF);
 }
 
+TEST_F(ScannerTestFixture, Basic02) {
+	SetInputFile("test_files/basic/02.code");
+
+	token_e tokens[] = {
+		TOKEN_EOL,
+		TOKEN_KW_SCOPE, TOKEN_EOL,
+		TOKEN_KW_DIM, TOKEN_IDENTIFIER, TOKEN_KW_AS, TOKEN_KW_STRING, TOKEN_EOL,
+		TOKEN_KW_DIM, TOKEN_IDENTIFIER, TOKEN_KW_AS, TOKEN_KW_INTEGER, TOKEN_EOL,
+		TOKEN_KW_DIM, TOKEN_IDENTIFIER, TOKEN_KW_AS, TOKEN_KW_DOUBLE, TOKEN_EOL,
+		TOKEN_KW_END, TOKEN_KW_SCOPE, TOKEN_EOF
+	};
+
+	Token* token;
+	for (unsigned int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
+		token = scanner_get_token(scanner);
+		ASSERT_NE(token, nullptr) << "Iter: " << i;
+		ASSERT_EQ(token->id, tokens[i]) << "Iter: " << i;
+		token_free(token);
+	}
+}
+
 TEST_F(ScannerTestFixture, Simple01) {
 	SetInputFile("test_files/simple01.fbc");
 
