@@ -61,3 +61,27 @@ TEST_F(ParserTestFixture, SuccStrings) {
 
 	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
 }
+
+TEST_F(ParserTestFixture, SuccBasic02) {
+	SetInputFile("test_files/basic/02.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccBasic05) {
+	SetInputFile("test_files/basic/05.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccBasic08) {
+	SetInputFile("test_files/basic/08.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccBasic018) {
+	SetInputFile("test_files/basic/18.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
