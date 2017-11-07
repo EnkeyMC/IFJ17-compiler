@@ -12,7 +12,6 @@
 #include "scanner.h"
 #include "error_code.h"
 #include "stack.h"
-#include "debug.h"
 
 
 int parse(Scanner* scanner) {
@@ -34,12 +33,16 @@ int parse(Scanner* scanner) {
 		grammar_free();
 		return EXIT_INTERN_ERROR;
 	}
+
+	token_e eof_terminal = TOKEN_EOF;
 	non_terminal_e start_non_terminal = NT_LINE;
+	stack_push(dtree_stack, &eof_terminal);
 	stack_push(dtree_stack, &start_non_terminal);
 
 	Token* token = NULL;
 	int rule_idx;
 	Rule* rule;
+	unsigned int* s_top;
 
 	do {
 		token_free(token);
@@ -53,7 +56,7 @@ int parse(Scanner* scanner) {
 			break;
 		}
 
-		unsigned int* s_top = (unsigned int*) stack_top(dtree_stack);
+		s_top = (unsigned int*) stack_top(dtree_stack);
 
 		while (*s_top < TERMINALS_START) {
 			rule_idx = sparse_table_get(grammar.LL_table, *s_top, get_token_column_value(token->id));
@@ -72,17 +75,11 @@ int parse(Scanner* scanner) {
 			}
 
 			s_top = (unsigned int*) stack_top(dtree_stack);
-
-			// Empty file
-			if (s_top == NULL) {
-				ret_code = EXIT_SUCCESS;
-				break;
-			}
 		}
 
-		if (s_top != NULL && *s_top == token->id && ret_code == EXIT_SUCCESS) {
+		if (*s_top == token->id && ret_code == EXIT_SUCCESS) {
 			stack_pop(dtree_stack);
-		} else if (s_top != NULL) {
+		} else {
 			ret_code = EXIT_SYNTAX_ERROR;
 			break;
 		}
