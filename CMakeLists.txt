@@ -47,3 +47,7 @@ add_custom_command(TARGET ${PROJECT_NAME}_test PRE_BUILD
 
 file(GLOB SOURCE_FILES src/*.c)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
+add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/test/test_files ${PROJECT_BINARY_DIR}/test_files)

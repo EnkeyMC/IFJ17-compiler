@@ -10,13 +10,32 @@
 #include "parser.h"
 #include "error_code.h"
 
-int main() {
+int main(int argc, char* argv[]) {
 	Scanner* scanner = scanner_init();
 	if (scanner == NULL)
 		return EXIT_INTERN_ERROR;
 
+	FILE* in_file = NULL;
+
+	if (argc == 2) {
+		in_file = fopen(argv[1], "r");
+
+		if (in_file == NULL) {
+			perror("Error");
+			scanner_free(scanner);
+			return EXIT_INTERN_ERROR;
+		}
+
+		scanner->stream = in_file;
+	}
+
 	int ret_code = parse(scanner);
 
 	scanner_free(scanner);
+
+	if (in_file !=  NULL) {
+		fclose(in_file);
+	}
+
 	return ret_code;
 }

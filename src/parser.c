@@ -12,6 +12,7 @@
 #include "scanner.h"
 #include "error_code.h"
 #include "stack.h"
+#include "debug.h"
 
 
 int parse(Scanner* scanner) {
