@@ -18,9 +18,11 @@ List* list_init(free_data_f free_data) {
 void list_free(List* l) {
 	assert(l != NULL);
 
-	list_activate(l);
-	while (list_active(l)) {
-		l->free_data(list_delete_active(l));
+	if (l->free_data != NULL) {
+		list_activate(l);
+		while (list_active(l)) {
+			l->free_data(list_delete_active(l));
+		}
 	}
 
 	free(l);
