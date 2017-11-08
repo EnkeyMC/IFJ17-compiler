@@ -5,7 +5,7 @@
 #include "sparse_table.h"
 
 // Number of rules in grammar. Needs to be incremented by 1 because first rule is empty
-#define NUM_OF_RULES 79
+#define NUM_OF_RULES 80
 
 /**
  * Enum of non terminals.
@@ -17,6 +17,7 @@
  */
 typedef enum {
     NT_LINE,
+    NT_LINE_END,
     NT_STATEMENT,
     NT_INNER_STMT,
     NT_STMT_SEQ,
