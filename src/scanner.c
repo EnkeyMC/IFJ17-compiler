@@ -564,7 +564,7 @@ Token* scanner_get_token(Scanner* scanner) {
 
 		STATE(esc_num_one) {
 			ch = READ_CHAR();
-			if ('0' <= ch && ch <= '5') {
+			if ('0' <= ch && ch <= '9') {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(esc_num_two);
 			}
@@ -577,11 +577,11 @@ Token* scanner_get_token(Scanner* scanner) {
 
 		STATE(esc_num_two) {
 			ch = READ_CHAR();
-			if ('0' <= ch && ch <= '5') {
+			if ('0' <= ch && ch <= '9') {
 				APPEND_TO_BUFFER(ch);
 
-				// \000 is forbidden
-				if (strcmp((scanner->buffer->str + scanner->buffer->len - 3), "000") == 0) {
+				unsigned long check = strtoul((scanner->buffer->str + scanner->buffer->len - 3), NULL, 10);
+				if (check == 0 || check > 255) {
 					token->id = LEX_ERROR;
 					return token;
 				}
