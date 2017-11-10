@@ -90,8 +90,41 @@ bool dllist_post_insert(DLList *l, void *data) {
 
 	new_item->data = data;
 	new_item->next = l->active->next;
+	new_item->prev = l->active;
+
+	if (l->active->next != NULL) {
+		l->active->next->prev = new_item;
+	} else {
+		l->last = new_item;
+	}
 
 	l->active->next = new_item;
+
+	return true;
+}
+
+bool dllist_pre_insert(DLList *l, void *data) {
+	assert(l != NULL);
+
+	if (l->active == NULL)
+		return false;
+
+	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
+	if (new_item == NULL) {
+		return false;
+	}
+
+	new_item->data = data;
+	new_item->next = l->active;
+	new_item->prev = l->active->prev;
+
+	if (l->active->prev != NULL) {
+		l->active->prev->next = new_item;
+	} else {
+		l->first = new_item;
+	}
+
+	l->active->prev = new_item;
 
 	return true;
 }
@@ -227,6 +260,17 @@ void* dllist_delete_and_prev(DLList *l) {
 	return data;
 }
 
+void* dllist_update(DLList *l, void* data) {
+	assert(l != NULL);
+
+	if (l->active == NULL)
+		return NULL;
+
+	void* old = l->active->data;
+	l->active->data = data;
+	return old;
+}
+
 void dllist_activate_first(DLList *l) {
 	assert(l != NULL);
 
@@ -243,6 +287,12 @@ void dllist_succ(DLList *l) {
 	assert(l != NULL);
 
 	l->active = l->active->next;
+}
+
+void dllist_pred(DLList *l) {
+	assert(l != NULL);
+
+	l->active = l->active->prev;
 }
 
 int dllist_length(DLList *l) {
