@@ -52,7 +52,7 @@ TEST_F(ScannerTestFixture, EmptyFile) {
 }
 
 TEST_F(ScannerTestFixture, ErrBase01) {
-	SetInputFile("test_files/lex_err_base_01.fbc");
+	SetInputFile("test_files/scanner/lex_err_base_01.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -66,7 +66,7 @@ TEST_F(ScannerTestFixture, ErrBase01) {
 }
 
 TEST_F(ScannerTestFixture, ErrBase02) {
-	SetInputFile("test_files/lex_err_base_02.fbc");
+	SetInputFile("test_files/scanner/lex_err_base_02.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -80,7 +80,7 @@ TEST_F(ScannerTestFixture, ErrBase02) {
 }
 
 TEST_F(ScannerTestFixture, ErrBase03) {
-	SetInputFile("test_files/lex_err_base_03.fbc");
+	SetInputFile("test_files/scanner/lex_err_base_03.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -94,7 +94,7 @@ TEST_F(ScannerTestFixture, ErrBase03) {
 }
 
 TEST_F(ScannerTestFixture, ErrBase04) {
-	SetInputFile("test_files/lex_err_base_04.fbc");
+	SetInputFile("test_files/scanner/lex_err_base_04.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -108,7 +108,7 @@ TEST_F(ScannerTestFixture, ErrBase04) {
 }
 
 TEST_F(ScannerTestFixture, ErrBlockComm01) {
-	SetInputFile("test_files/lex_err_block_comment_01.fbc");
+	SetInputFile("test_files/scanner/lex_err_block_comment_01.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -122,7 +122,7 @@ TEST_F(ScannerTestFixture, ErrBlockComm01) {
 }
 
 TEST_F(ScannerTestFixture, ErrBlockComm02) {
-	SetInputFile("test_files/lex_err_block_comment_02.fbc");
+	SetInputFile("test_files/scanner/lex_err_block_comment_02.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -136,7 +136,7 @@ TEST_F(ScannerTestFixture, ErrBlockComm02) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal01) {
-	SetInputFile("test_files/lex_err_real_01.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_01.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -150,7 +150,7 @@ TEST_F(ScannerTestFixture, ErrReal01) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal02) {
-	SetInputFile("test_files/lex_err_real_02.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_02.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -164,7 +164,7 @@ TEST_F(ScannerTestFixture, ErrReal02) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal03) {
-	SetInputFile("test_files/lex_err_real_03.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_03.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -178,7 +178,7 @@ TEST_F(ScannerTestFixture, ErrReal03) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal04) {
-	SetInputFile("test_files/lex_err_real_04.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_04.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -192,7 +192,7 @@ TEST_F(ScannerTestFixture, ErrReal04) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal05) {
-	SetInputFile("test_files/lex_err_real_05.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_05.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -206,7 +206,7 @@ TEST_F(ScannerTestFixture, ErrReal05) {
 }
 
 TEST_F(ScannerTestFixture, ErrString01) {
-	SetInputFile("test_files/lex_err_string_01.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_01.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -220,7 +220,7 @@ TEST_F(ScannerTestFixture, ErrString01) {
 }
 
 TEST_F(ScannerTestFixture, ErrString02) {
-	SetInputFile("test_files/lex_err_string_02.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_02.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -234,7 +234,7 @@ TEST_F(ScannerTestFixture, ErrString02) {
 }
 
 TEST_F(ScannerTestFixture, ErrString03) {
-	SetInputFile("test_files/lex_err_string_03.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_03.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -248,7 +248,7 @@ TEST_F(ScannerTestFixture, ErrString03) {
 }
 
 TEST_F(ScannerTestFixture, ErrString04) {
-	SetInputFile("test_files/lex_err_string_04.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_04.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -262,7 +262,7 @@ TEST_F(ScannerTestFixture, ErrString04) {
 }
 
 TEST_F(ScannerTestFixture, ErrString05) {
-	SetInputFile("test_files/lex_err_string_05.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_05.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -276,7 +276,7 @@ TEST_F(ScannerTestFixture, ErrString05) {
 }
 
 TEST_F(ScannerTestFixture, ErrString06) {
-	SetInputFile("test_files/lex_err_string_06.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_06.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -290,7 +290,7 @@ TEST_F(ScannerTestFixture, ErrString06) {
 }
 
 TEST_F(ScannerTestFixture, ErrUnknownChar) {
-	SetInputFile("test_files/lex_err_unknown_char.fbc");
+	SetInputFile("test_files/scanner/lex_err_unknown_char.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -304,7 +304,7 @@ TEST_F(ScannerTestFixture, ErrUnknownChar) {
 }
 
 TEST_F(ScannerTestFixture, ParseInteger) {
-	SetInputFile("test_files/parse_int.fbc");
+	SetInputFile("test_files/scanner/parse_int.fbc");
 
 	// 0
 	Token *token = scanner_get_token(scanner);
@@ -356,7 +356,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 }
 
 TEST_F(ScannerTestFixture, ParseReal) {
-	SetInputFile("test_files/parse_real.fbc");
+	SetInputFile("test_files/scanner/parse_real.fbc");
 
 	// 5e-5
 	Token *token = scanner_get_token(scanner);
@@ -436,7 +436,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 }
 
 TEST_F(ScannerTestFixture, ParseString) {
-	SetInputFile("test_files/parse_string.fbc");
+	SetInputFile("test_files/scanner/parse_string.fbc");
 
 	// "Test string \001\n"
 	Token *token = scanner_get_token(scanner);
@@ -495,7 +495,7 @@ TEST_F(ScannerTestFixture, Basic02) {
 }
 
 TEST_F(ScannerTestFixture, Simple01) {
-	SetInputFile("test_files/simple01.fbc");
+	SetInputFile("test_files/scanner/simple01.fbc");
 
 	token_e tokens[] = {
 		TOKEN_EOL,
