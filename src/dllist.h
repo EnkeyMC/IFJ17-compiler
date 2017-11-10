@@ -3,6 +3,11 @@
 #ifndef IFJ17_COMPILER_LIST_H
 #define IFJ17_COMPILER_LIST_H
 
+#ifndef DEREF_DATA
+// Macro for easier and cleaner data dereferencing
+#define DEREF_DATA(expr, type) *((type *) expr)
+#endif // DEREF_DATA
+
 /**
  * DLList item
  */
@@ -113,6 +118,13 @@ void* dllist_get_last(DLList *l);
 void* dllist_delete_frist(DLList *l);
 
 /**
+ * Delete last item from list and return it
+ * @param l List
+ * @return item data
+ */
+void* dllist_delete_last(DLList *l);
+
+/**
  * Delete active item from list and return it, activity will shift to next item
  * @param l List
  * @return item data
@@ -124,7 +136,7 @@ void* dllist_delete_and_succ(DLList *l);
  * @param l List
  * @return item data
  */
-void* dllist_delete_and_prev(DLList *l);
+void* dllist_delete_and_pred(DLList *l);
 
 /**
  * Update value of active item, returns old value to free. No action if list is not active

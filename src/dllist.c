@@ -183,9 +183,33 @@ void* dllist_delete_frist(DLList *l) {
 
 	if (l->first != NULL)
 		l->first->prev = NULL;
+	else
+		l->last = NULL;
 
 	free(to_delete);
 	return data;
+}
+
+void* dllist_delete_last(DLList *l) {
+	assert(l != NULL);
+
+	if (l->last == NULL)
+		return NULL;
+
+	if (l->last == l->active)
+		l->active = NULL;
+
+	void* data = l->last->data;
+	DLListItem* to_delete = l->last;
+	l->last = l->last->prev;
+
+	if (l->last != NULL)
+		l->last->next = NULL;
+	else
+		l->first = NULL;
+
+	free(to_delete);
+	return data;	
 }
 
 void* dllist_delete_and_succ(DLList *l) {
@@ -214,9 +238,9 @@ void* dllist_delete_and_succ(DLList *l) {
 	}
 
 	if (l->active->prev != NULL)
-		l->active->prev = l->active->next;
+		l->active->prev->next = l->active->next;
 	if (l->active->next != NULL)
-		l->active->next = l->active->prev;
+		l->active->next->prev = l->active->prev;
 
 	l->active = l->active->next;
 
@@ -224,7 +248,7 @@ void* dllist_delete_and_succ(DLList *l) {
 	return data;
 }
 
-void* dllist_delete_and_prev(DLList *l) {
+void* dllist_delete_and_pred(DLList *l) {
 	assert(l != NULL);
 
 	if (l->active == NULL)
@@ -250,9 +274,9 @@ void* dllist_delete_and_prev(DLList *l) {
 	}
 
 	if (l->active->prev != NULL)
-		l->active->prev = l->active->next;
+		l->active->prev->next = l->active->next;
 	if (l->active->next != NULL)
-		l->active->next = l->active->prev;
+		l->active->next->prev = l->active->prev;
 
 	l->active = l->active->prev;
 
@@ -280,7 +304,7 @@ void dllist_activate_first(DLList *l) {
 void dllist_activate_last(DLList *l) {
 	assert(l != NULL);
 
-	l->active = l->first;
+	l->active = l->last;
 }
 
 void dllist_succ(DLList *l) {
