@@ -1,0 +1,4 @@
+' Empty for statement
+
+For i = 1 to 100 
+next

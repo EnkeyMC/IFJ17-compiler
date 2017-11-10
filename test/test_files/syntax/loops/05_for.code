@@ -1,0 +1,6 @@
+' Extended for statement
+
+For _ as integer = 0 TO 200 step 5
+    print _;
+next _
+

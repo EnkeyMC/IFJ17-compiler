@@ -1,0 +1,11 @@
+' two ifs
+scope
+	if x then
+		print 123;
+	end if
+	if x then
+		print 74;
+	else
+
+	end if
+end scope

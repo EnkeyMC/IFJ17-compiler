@@ -1,0 +1,7 @@
+' Basic do-while loop test
+
+do while 42
+	dim a as integer = 1
+	dim b as string = !""
+	print i; b;
+loop

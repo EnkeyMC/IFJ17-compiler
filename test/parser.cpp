@@ -146,12 +146,6 @@ TEST_F(ParserTestFixture, SuccFunctions05) {
 	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
 }
 
-TEST_F(ParserTestFixture, SuccFunctions17) {
-	SetInputFile("test_files/syntax/functions/17.code");
-
-	EXPECT_EQ(parse(scanner), EXIT_SYNTAX_ERROR);
-}
-
 TEST_F(ParserTestFixture, SuccStatements06) {
 	SetInputFile("test_files/syntax/statements/06_modified.code");
 
@@ -184,6 +178,72 @@ TEST_F(ParserTestFixture, SuccBase03) {
 
 TEST_F(ParserTestFixture, SuccBase04) {
 	SetInputFile("test_files/syntax/base/04.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccLoops01_dowhile) {
+	SetInputFile("test_files/syntax/loops/01_dowhile.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccLoops02_dowhile) {
+	SetInputFile("test_files/syntax/loops/02_dowhile.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccLoops03_dowhile) {
+	SetInputFile("test_files/syntax/loops/03_dowhile.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccLoops04_for) {
+	SetInputFile("test_files/syntax/loops/04_for.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccLoops05_for) {
+	SetInputFile("test_files/syntax/loops/05_for.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccConditions01) {
+	SetInputFile("test_files/syntax/conditions/01_modified.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccConditions02) {
+	SetInputFile("test_files/syntax/conditions/02_modified.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccConditions04) {
+	SetInputFile("test_files/syntax/conditions/04_modified.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccConditions05) {
+	SetInputFile("test_files/syntax/conditions/05_modified.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccConditions06) {
+	SetInputFile("test_files/syntax/conditions/06_modified.code");
+
+	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccConditions07) {
+	SetInputFile("test_files/syntax/conditions/07_modified.code");
 
 	EXPECT_EQ(parse(scanner), EXIT_SUCCESS);
 }

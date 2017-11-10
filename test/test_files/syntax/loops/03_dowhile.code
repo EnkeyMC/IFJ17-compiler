@@ -1,0 +1,12 @@
+' Extended do-while loop EXIT and CONTINUE statements
+
+do while false
+    dim a as integer = 33
+    if a then
+        exit do
+    else
+        continue do
+    end if
+loop
+
+
