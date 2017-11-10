@@ -115,7 +115,7 @@ void* dllist_get_last(DLList *l);
  * @param l List
  * @return item data
  */
-void* dllist_delete_frist(DLList *l);
+void* dllist_delete_first(DLList *l);
 
 /**
  * Delete last item from list and return it

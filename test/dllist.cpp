@@ -248,7 +248,7 @@ TEST_F(ListTestFixture, DeleteFirst) {
 	EXPECT_TRUE(dllist_active(l));
 
 	EXPECT_EQ(
-		DEREF_DATA(dllist_delete_frist(l), int),
+		DEREF_DATA(dllist_delete_first(l), int),
 		numbers[0]
 	);
 
@@ -452,7 +452,7 @@ TEST_F(ListTestFixture, CopyFirstAndLast) {
 	);
 
 	for (int i = 0; i < 3; i++)
-		dllist_delete_frist(l);
+		dllist_delete_first(l);
 
 	EXPECT_EQ(
 		dllist_get_first(l),
