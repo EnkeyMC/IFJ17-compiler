@@ -168,7 +168,7 @@ void* dllist_get_last(DLList *l) {
 	return l->last->data;
 }
 
-void* dllist_delete_frist(DLList *l) {
+void* dllist_delete_first(DLList *l) {
 	assert(l != NULL);
 
 	if (l->first == NULL)
