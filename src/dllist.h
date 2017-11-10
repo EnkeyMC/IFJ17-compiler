@@ -5,7 +5,7 @@
 
 #ifndef DEREF_DATA
 // Macro for easier and cleaner data dereferencing
-#define DEREF_DATA(expr, type) *((type *) expr)
+#define DEREF_DATA(expr, type) *((type *) (expr))
 #endif // DEREF_DATA
 
 /**
