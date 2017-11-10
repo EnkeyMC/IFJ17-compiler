@@ -6,6 +6,11 @@
 
 #define STACK_CHUNK 10
 
+#ifndef DEREF_DATA
+// Macro for easier and cleaner data dereferencing
+#define DEREF_DATA(expr, type) *((type *) expr)
+#endif // DEREF_DATA
+
 typedef void (*stack_free_callback) (void* item);
 
 typedef struct {
