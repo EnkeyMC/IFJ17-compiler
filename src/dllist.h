@@ -63,6 +63,14 @@ bool dllist_insert_last(DLList *l, void *data);
 bool dllist_post_insert(DLList *l, void *data);
 
 /**
+ * Insert item before active item, no effect if list is not active
+ * @param l List
+ * @param data generic data to insert
+ * @return true on success, false otherwise
+ */
+bool dllist_pre_insert(DLList *l, void *data);
+
+/**
  * Is list empty
  * @param l List
  * @return true if empty, false otherwise
@@ -119,6 +127,14 @@ void* dllist_delete_and_succ(DLList *l);
 void* dllist_delete_and_prev(DLList *l);
 
 /**
+ * Update value of active item, returns old value to free. No action if list is not active
+ * @param l List
+ * @param data new data to store in item
+ * @return old value that may need deallocation, NULL if list is not active
+ */
+void* dllist_update(DLList *l, void* data);
+
+/**
  * Set first item as active
  * @param l List
  */
@@ -135,6 +151,12 @@ void dllist_activate_last(DLList *l);
  * @param l List
  */
 void dllist_succ(DLList *l);
+
+/**
+ * Set previous item as active
+ * @param l List
+ */
+void dllist_pred(DLList *l);
 
 /**
  * List length
