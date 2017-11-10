@@ -12,23 +12,19 @@
 \begin{document}
 %###############################################################################
 %###############################################################################
-\section{CHANGE LOG v1.4}
-\begin{enumerate}
-\item{Odstranění $\varepsilon$ pravidla u neterminálu $Line$}
-\item{Nový neterminál--pravidlo $LineEnd$ na řádku 2 a 3}
-\item{Odstraněn EOL na konci pravidla $ForStmt$ na řádku 58 (za neterminálem $IdOpt$).}
-\end{enumerate}
-\section{LL Grammar IFJ17 (v1.4)}
+\section{CHANGE LOG v1.5}
+$InnerStmt$ lze nově rozgenerovat na: $ReturnStmt$, $ExitStmt$ a $ContinueStmt$. To způsobí, že půjde příkazy RETURN, EXIT a CONTINUE použít uvnitř složeného příkazu(if, scope, \dots), ale navíc přibude povinnost kontrolovat, zda není RETURN použit mimo funkci (nebo EXIT a CONTINUE mimo cyklus).
+\section{LL Grammar IFJ17 (v1.5)}
 \begin{eqnarray}
-\underline{Line}        &   \rightarrow     & Statement\quad \underline{LineEnd}    \\
-\underline{LineEnd}     & \rightarrow       & \underline{\textbf{EOL}\quad Line}   \\
-            &       |           & \underline{\varepsilon}         \\
+Line        &   \rightarrow     & Statement\quad LineEnd    \\
+LineEnd     & \rightarrow       & \textbf{EOL}\quad Line   \\
+            &       |           & \varepsilon         \\
 %###############################################################################
 Statement   &   \rightarrow     & InnerStmt  \\
             &       |           & FuncDecl    \\
             &       |           & FuncDef    \\
 %###############################################################################
-InnerStmt   &   \rightarrow     & VarDecl  \\
+\underline{InnerStmt}   &   \rightarrow     & VarDecl  \\
             &       |           & Assignment    \\
             &       |           & IfStmt    \\
             &       |           & ScopeStmt   \\
@@ -36,6 +32,9 @@ InnerStmt   &   \rightarrow     & VarDecl  \\
             &       |           & \textcolor{green1}{ForStmt}\quad  \\
             &       |           & PrintStmt \\
             &       |           & InputStmt  \\
+            &       |           & \underline{ReturnStmt}  \\
+            &       |           & \underline{\textcolor{green1}{ExitStmt}}  \\
+            &       |           & \underline{\textcolor{green1}{ContinueStmt}}  \\
             &       |           & \varepsilon \\
 %###############################################################################
 StmtSeq     &    \rightarrow    & InnerStmt\quad \textbf{EOL}\quad StmtSeq   \\
@@ -51,22 +50,22 @@ VarDef      & \rightarrow       & \textbf{ID}\quad \textbf{AS}\quad Type \quad I
 InitOpt     &      \rightarrow  & `=`\quad Expression \\
             &       |           & \varepsilon \\
 %###############################################################################
-FuncDecl&  \rightarrow      & \textbf{DECLARE}\quad \textbf{FUNCTION}\quad \textbf{ID}\quad `(` \quad Params \quad`)`\quad \textbf{AS}\quad Type   \\
+FuncDecl    &  \rightarrow      & \textbf{DECLARE}\quad \textbf{FUNCTION}\quad \textbf{ID}\quad `(` \quad Params \quad`)`\quad \textbf{AS}\quad Type   \\
 %###############################################################################
-Type &    \rightarrow &    \textbf{INTEGER}    \\
+Type        &    \rightarrow    &    \textbf{INTEGER}    \\
             &       |           & \textbf{DOUBLE}   \\
             &       |           & \textbf{STRING}   \\
             &       |           & \textcolor{green1}{\textbf{BOOLEAN}}  \\
 %###############################################################################
-FuncDef    &    \rightarrow    & \textbf{FUNCTION}\quad \textbf{ID}\quad `(`\quad Params\quad `)`\quad \textbf{AS}\quad Type\quad \textbf{EOL}\quad FuncBody\quad \textbf{END}\quad \textbf{FUNCTION}\quad \\
-FuncBody    &    \rightarrow    &    StmtSeq  \\
-&   |       & \textbf{RETURN}\quad Expression \quad\textbf{EOL}\quad FuncBody    \\
+    \underline{FuncDef}    &    \rightarrow    & \textbf{FUNCTION}\quad \textbf{ID}\quad `(`\quad Params\quad `)`\quad \textbf{AS}\quad Type\quad \textbf{EOL}\quad \underline{StmtSeq}\quad \textbf{END}\quad \textbf{FUNCTION}\quad \\
 %###############################################################################
-{ParamDecl}   &   \rightarrow   & {\textbf{ID}\quad \textbf{AS}\quad Type}    \\
+ParamDecl   &   \rightarrow   & {\textbf{ID}\quad \textbf{AS}\quad Type}    \\
 Params      &    \rightarrow    & {ParamDecl}\quad ParamsNext  \\
             &    |              & \varepsilon             \\
 ParamsNext  &    \rightarrow    & `,`\quad {ParamDecl}\quad  ParamsNext   \\
             &    |              & \varepsilon             \\
+%###############################################################################
+\underline{ReturnStmt}  &   \rightarrow     & \underline{\textbf{RETURN}\quad Expression}     \\
 %###############################################################################
 Assignment  & \rightarrow       & \textbf{ID}\quad AssignOperator \quad Expression \\
 %###############################################################################
@@ -86,23 +85,24 @@ IfStmtEnd  &   \rightarrow  &\textcolor{green1}{\textbf{END}\quad \textbf{IF}}  
 &   |      &    \textcolor{green1}{\textbf{ELSE}\quad  \textbf{EOL}\quad StmtSeq\quad \textbf{END}\quad \textbf{IF}}   \\
 %###############################################################################
 DoStmt&    \rightarrow    & \textbf{DO} \quad DoStmtEnd   \\
-DoStmtEnd  &   \rightarrow     &  TestType \quad  Expression \quad \textbf{EOL} \quad DoBody \quad \textbf{LOOP}    \\
-&    | &\textbf{EOL} \quad DoBody \quad \textbf{LOOP}\quad TestType \quad  Expression \quad   \\
+\underline{DoStmtEnd}&   \rightarrow  &  TestType \quad  Expression \quad \textbf{EOL} \quad \underline{StmtSeq} \quad \textbf{LOOP}    \\
+&    | &\textbf{EOL} \quad \underline{StmtSeq} \quad \textbf{LOOP}\quad TestType \quad  Expression \quad   \\
 TestType & \rightarrow  &   \textbf{WHILE}\quad \\
         &       |       & \textcolor{green1}{\textbf{UNTIL}} \\
-DoBody    &    \rightarrow    &    StmtSeq  \\
-&   |       &       \textcolor{green1}{\textbf{EXIT}\quad \textbf{DO}\quad \textbf{EOL}\quad DoBody}   \\
-&   |       &       \textcolor{green1}{\textbf{CONTINUE}\quad \textbf{DO}\quad \textbf{EOL}\quad DoBody}    \\
 %###############################################################################
-ForStmt &    \rightarrow    &  \textcolor{green1}{\textbf{FOR}\quad \textbf{ID}\quad TypeOpt\quad `=`\quad Expression\quad \textbf{TO}\quad Expression\quad StepOpt\quad \textbf{EOL}\quad ForBody\quad \textbf{NEXT}\quad IdOpt\quad} \\
-ForBody    &    \rightarrow    &    \textcolor{green1}{StmtSeq}  \\
-&   |       &       \textcolor{green1}{\textbf{EXIT}\quad \textbf{FOR}\quad \textbf{EOL}\quad ForBody}   \\
-&   |       &       \textcolor{green1}{\textbf{CONTINUE}\quad \textbf{FOR}\quad \textbf{EOL}\quad ForBody}    \\
-TypeOpt & \rightarrow  & \textcolor{green1}{\textbf{AS}\quad Type} \\
-        & | &   \textcolor{green1}{\varepsilon} \\
-StepOpt & \rightarrow  & \textcolor{green1}{\textbf{STEP}\quad Expression} \\
-        & | &   \textcolor{green1}{\varepsilon} \\
-IdOpt   & \rightarrow & \textcolor{green1}{\textbf{ID}} \\
+\underline{\textcolor{green1}{ExitStmt}} & \rightarrow & \underline{\textcolor{green1}{\textbf{EXIT}\quad LoopType}}    \\
+%###############################################################################
+\underline{\textcolor{green1}{ContinueStmt}} & \rightarrow & \underline{\textcolor{green1}{\textbf{CONTINUE}\quad LoopType}}    \\
+%###############################################################################
+\underline{\textcolor{green1}{Looptype}} & \rightarrow & \underline{\textcolor{green1}{\textbf{DO}}}\\
+&   |       &   \underline{\textcolor{green1}{\textbf{FOR}}}   \\
+%###############################################################################
+\underline{\textcolor{green1}{ForStmt}} &    \rightarrow    &  \textcolor{green1}{\textbf{FOR}\quad \textbf{ID}\quad TypeOpt\quad `=`\quad Expression\quad \textbf{TO}\quad Expression\quad StepOpt\quad \textbf{EOL}\quad \underline{StmtSeq}\quad \textbf{NEXT}\quad IdOpt\quad} \\
+\textcolor{green1}{TypeOpt} & \rightarrow  & \textcolor{green1}{\textbf{AS}\quad Type} \\
+& | &   \textcolor{green1}{\varepsilon} \\
+\textcolor{green1}{StepOpt} & \rightarrow  & \textcolor{green1}{\textbf{STEP}\quad Expression} \\
+& | &   \textcolor{green1}{\varepsilon} \\
+\textcolor{green1}{IdOpt}   & \rightarrow & \textcolor{green1}{\textbf{ID}} \\
         & | &  \textcolor{green1}{\varepsilon} \\
 %###############################################################################
 AssignOperator  &    \rightarrow    &    `=` \quad      \\
@@ -112,19 +112,13 @@ AssignOperator  &    \rightarrow    &    `=` \quad      \\
         &   |       &   \textcolor{green1}{`\backslash =`}\quad \textrm{\texttt{TOKEN\_DIVI\_ASIGN}}    \\
         &   |       &   \textcolor{green1}{`/=`}\quad \textrm{\texttt{TOKEN\_DIVR\_ASIGN}}\\
 %###############################################################################
-% BoolOp      &     \rightarrow   & \textcolor{green1}{`=` \quad | \quad `<>` \quad | \quad \textbf{AND}\quad | \quad \textbf{OR}\quad |\quad \textbf{NOT}}    \\
-% %###############################################################################
-% RelationOperator &  \rightarrow &   `=`\quad|\quad `>` \quad|\quad `>=` \quad|\quad `<` \quad| \quad `<=` \quad | \quad `<>`  \\
-% %###############################################################################
-% Operator    &     \rightarrow   &    = \quad|\quad - \quad|\quad + \quad|\quad * \quad|\quad \backslash \quad|\quad / \\
-%###############################################################################
-Expression &    \rightarrow    & \textbf{ID}\quad \textrm{\texttt{TOKEN\_IDENTIFIER}}  \\
+Expression &    \rightarrow    & \textbf{ID}    \\
         &   |       &   \textbf{INT}    \\
         &   |       &   \textbf{REAL}   \\
         &   |       &   \textbf{STR}\quad \textrm{\texttt{TOKEN\_STRING}} \\
         &   |       &   \textcolor{green1}{\textbf{TRUE}}    \\
         &   |       &   \textcolor{green1}{\textbf{FALSE}}    \\
-        &   |       &   \textcolor{red1}{todo}
+ = \textrm{\texttt{number of rules}} & & 
 %###############################################################################
 \end{eqnarray}
 
@@ -132,7 +126,6 @@ Expression &    \rightarrow    & \textbf{ID}\quad \textrm{\texttt{TOKEN\_IDENTIF
 \begin{itemize}
 \item{\emph{Neterminály}: Psány kurzívou ($Statement$, $Expression$, \dots).}
 \item{\textbf{TERMINÁLY(TOKENY)}: Terminály (\textbf{IF}, \textbf{LOOP}, \dots) psány VELKÝMI PÍSMENY a vyznačeny \textbf{tučně}. Nepísmenné terminály (`=`, `(`, `)`, \dots) vyznačeny `uvozovkami`.}
-\item {Počáteční neterminál: $Line$} -- Implicitně se předpokládá, že za počátečním neterminálem následuje znak konce souboru (v přednáškách značen jako '\$') v našem případě EOF. Je to první symbol, který se umístí na zásobník na úplném začátku syntaktické analýzy.
 \end{itemize}
 % %###############################################################################
 \enddocument
