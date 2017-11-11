@@ -20,7 +20,7 @@ static bool expr_grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 		return false;
 	}
 
-	rule->production = (int*) malloc(sizeof(int) * va_num + 1);
+	rule->production = (int*) malloc(sizeof(int) * (va_num + 1));
 	if (rule->production == NULL) {
 		free(rule);
 		return false;
