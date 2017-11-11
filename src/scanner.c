@@ -34,6 +34,7 @@ Scanner* scanner_init() {
 	}
 
 	scanner->stream = stdin;
+	scanner->backlog_token = NULL;
 	return scanner;
 }
 
@@ -108,9 +109,22 @@ static token_e get_string_token(const char* str) {
 	return TOKEN_IDENTIFIER;
 }
 
+void scanner_unget_token(Scanner* scanner, Token* token) {
+	assert(scanner != NULL);
+	assert(scanner->backlog_token == NULL);
+
+	scanner->backlog_token = token;
+}
+
 Token* scanner_get_token(Scanner* scanner) {
 	assert(scanner != NULL);
 	assert(scanner->stream != NULL);
+
+	if (scanner->backlog_token != NULL) {
+		Token* backlog = scanner->backlog_token;
+		scanner->backlog_token = NULL;
+		return backlog;
+	}
 
 	if (!buffer_clear(scanner->buffer)) {
 		return NULL;

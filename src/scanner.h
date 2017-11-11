@@ -22,6 +22,7 @@
 typedef struct {
 	FILE* stream;  /// Input stream
     Buffer* buffer;  /// Buffer for string and identifier strings
+	Token* backlog_token; /// Backlog token
 } Scanner;
 
 /**
@@ -41,5 +42,12 @@ void scanner_free(Scanner* scanner);
  * @return token, NULL on allocation error
  */
 Token* scanner_get_token(Scanner* scanner);
+
+/**
+ * Return backlog token, only one token can be in backlog
+ * @param scanner Scanner
+ * @param token Token to backlog
+ */
+void scanner_unget_token(Scanner* scanner, Token* token);
 
 #endif //IFJ17_COMPILER_SCANNER_H
