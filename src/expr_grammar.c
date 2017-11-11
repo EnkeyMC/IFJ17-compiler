@@ -107,11 +107,11 @@ bool expr_grammar_init() {
 	for (unsigned i = 0; i < PT_INDEX_ENUM_SIZE; i++)
 		for (unsigned k = 0; k < PT_INDEX_ENUM_SIZE; k++) {
 			if (rows[i][k] == '<')
-				expr_grammar.precedence_table[i][k] = EXPR_HANDLE_START;
+				expr_grammar.precedence_table[i][k] = EXPR_HANDLE_MARKER;
 			else if (rows[i][k] == '>')
-				expr_grammar.precedence_table[i][k] = EXPR_HANDLE_END;
+				expr_grammar.precedence_table[i][k] = EXPR_REDUCE_MARKER;
 			else if (rows[i][k] == '=')
-				expr_grammar.precedence_table[i][k] = EXPR_PUSH;
+				expr_grammar.precedence_table[i][k] = EXPR_PUSH_MARKER;
 			else if (rows[i][k] == ' ')
 				expr_grammar.precedence_table[i][k] = EXPR_ERROR;
 			else
