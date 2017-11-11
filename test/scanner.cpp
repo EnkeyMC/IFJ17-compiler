@@ -474,7 +474,7 @@ TEST_F(ScannerTestFixture, ParseString) {
 }
 
 TEST_F(ScannerTestFixture, Basic02) {
-	SetInputFile("test_files/basic/02.code");
+	SetInputFile("test_files/syntax/basic/02.code");
 
 	token_e tokens[] = {
 		TOKEN_EOL,
