@@ -15,6 +15,12 @@ int main(int argc, char* argv[]) {
 	if (scanner == NULL)
 		return EXIT_INTERN_ERROR;
 
+	Parser* parser = parser_init(scanner);
+	if (parser == NULL) {
+		scanner_free(scanner);
+		return EXIT_INTERN_ERROR;
+	}
+
 	FILE* in_file = NULL;
 
 	if (argc == 2) {
@@ -23,15 +29,17 @@ int main(int argc, char* argv[]) {
 		if (in_file == NULL) {
 			perror("Error");
 			scanner_free(scanner);
+			parser_free(parser);
 			return EXIT_INTERN_ERROR;
 		}
 
 		scanner->stream = in_file;
 	}
 
-	int ret_code = parse(scanner);
+	int ret_code = parse(parser);
 
 	scanner_free(scanner);
+	parser_free(parser);
 
 	if (in_file !=  NULL) {
 		fclose(in_file);

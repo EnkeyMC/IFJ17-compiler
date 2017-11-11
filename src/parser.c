@@ -9,87 +9,112 @@
 
 #include <malloc.h>
 #include <stdlib.h>
-#include "scanner.h"
+#include <assert.h>
+#include "parser.h"
 #include "error_code.h"
-#include "stack.h"
 
 
-int parse(Scanner* scanner) {
-	int ret_code = EXIT_SUCCESS;
+Parser* parser_init(Scanner* scanner) {
+	Parser* parser = (Parser*) malloc(sizeof(Parser));
+	if (parser == NULL)
+		return NULL;
 
-	HashTable* symtab_global = htab_init(0);
-	if (symtab_global == NULL)
-		return EXIT_INTERN_ERROR;
-
+	parser->scanner = scanner;
 
 	if (!grammar_init()) {
-		htab_free(symtab_global);
-		return EXIT_INTERN_ERROR;
+		free(parser);
+		return NULL;
 	}
 
-	Stack* dtree_stack = stack_init(30);  // Stack for simulating syntax derivation tree
-	if (dtree_stack == NULL) {
-		htab_free(symtab_global);
+	parser->dtree_stack = stack_init(30);
+	if (parser->dtree_stack == NULL) {
+		free(parser);
 		grammar_free();
-		return EXIT_INTERN_ERROR;
+		return NULL;
 	}
 
+	return parser;
+}
+
+void parser_free(Parser* parser) {
+	assert(parser != NULL);
+
+	grammar_free();
+	stack_free(parser->dtree_stack, NULL);
+	free(parser);
+}
+
+int parse(Parser* parser) {
+	assert(parser != NULL);
+
+	int ret_code = EXIT_SUCCESS;
+
+	// Push ending token and starting non terminal onto stack
 	token_e eof_terminal = TOKEN_EOF;
 	non_terminal_e start_non_terminal = NT_LINE;
-	stack_push(dtree_stack, &eof_terminal);
-	stack_push(dtree_stack, &start_non_terminal);
+	stack_push(parser->dtree_stack, &eof_terminal);
+	stack_push(parser->dtree_stack, &start_non_terminal);
 
-	Token* token = NULL;
-	int rule_idx;
-	Rule* rule;
-	unsigned int* s_top;
+	Token* token = NULL;  // Temp var for current token
+	int rule_idx;  // Temp var for rule index returned from LL table
+	Rule* rule;  // Temp var for current rule
+	unsigned int* s_top;  // Temp var for current stack top
 
-	do {
-		token_free(token);
+	// Start processing tokens
+	do {  // Token loop
+		token_free(token);  // Free last token, does nothing first iteration
 
-		token = scanner_get_token(scanner);
-		if (token == NULL) {
+		// Get next token from scanner
+		token = scanner_get_token(parser->scanner);
+		if (token == NULL) {  // Internal allocation error
 			ret_code = EXIT_INTERN_ERROR;
 			break;
-		} else if (token->id == LEX_ERROR) {
+		} else if (token->id == LEX_ERROR) {  // Lexical error
 			ret_code = EXIT_LEX_ERROR;
 			break;
 		}
 
-		s_top = (unsigned int*) stack_top(dtree_stack);
+		// Look at what is on top of the stack
+		s_top = (unsigned int*) stack_top(parser->dtree_stack);
 
-		while (*s_top < TERMINALS_START) {
+		// If it is non terminal, rewrite it by rules, until there is terminal (token) in s_top
+		while (*s_top < TERMINALS_START) {  // Non terminal loop
+			// Look at LL table to get index to rule with right production
 			rule_idx = sparse_table_get(grammar.LL_table, *s_top, get_token_column_value(token->id));
 
+			// Get the rule from grammar
 			rule = grammar.rules[rule_idx];
 
+			// If no rule can be applied, return syntax error
 			if (rule == NULL) {
 				ret_code = EXIT_SYNTAX_ERROR;
 				break;
 			}
 
-			stack_pop(dtree_stack);
+			// Pop the current non terminal on top of stack
+			stack_pop(parser->dtree_stack);
 
+			// Rewrite it to the rule production (rule production is already reversed)
 			for (int i = 0; rule->production[i] != END_OF_RULE; i++) {
-				stack_push(dtree_stack, &rule->production[i]);
+				stack_push(parser->dtree_stack, &rule->production[i]);
 			}
 
-			s_top = (unsigned int*) stack_top(dtree_stack);
-		}
+			// See what is now on top of the stack
+			s_top = (unsigned int*) stack_top(parser->dtree_stack);
+		}  // End non terminal loop
 
+		// If the terminal (token) is the same as terminal on top of the stack and no error occured, pop it from stack
 		if (*s_top == token->id && ret_code == EXIT_SUCCESS) {
-			stack_pop(dtree_stack);
+			stack_pop(parser->dtree_stack);
 		} else {
+			// Else there is syntax error
 			ret_code = EXIT_SYNTAX_ERROR;
 			break;
 		}
-	} while (token->id != TOKEN_EOF);
+	} while (token->id != TOKEN_EOF);  // End token loop
 
+	// Free the last token
 	token_free(token);
-
-	htab_free(symtab_global);
-	grammar_free();
-	stack_free(dtree_stack, NULL);
 
 	return ret_code;
 }
