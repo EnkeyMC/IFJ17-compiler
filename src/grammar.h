@@ -52,6 +52,7 @@ typedef enum {
     NT_ID_OPT,
     NT_ASSIGN_OPERATOR,
     NT_EXPRESSION,
+    NT_LIST,    // Nonterminal for operator-precedence grammar
 
     // Special enum items
     NT_ENUM_SIZE,

@@ -86,7 +86,9 @@ typedef enum {
     TOKEN_EOF,
 
     END_OF_TERMINALS,  // Not actual token
-    LEX_ERROR
+    LEX_ERROR,
+
+    TOKEN_ENUM_END  // Mark starting point for precedence table items
 } token_e;
 
 
