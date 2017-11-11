@@ -7,6 +7,9 @@
 // Number of rules in grammar. Needs to be incremented by 1 because first rule is empty
 #define NUM_OF_RULES 80
 
+/// Get number of variable arguments
+#define NUM_ARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
+
 /**
  * Enum of non terminals.
  *
@@ -81,6 +84,12 @@ extern struct grammar_t {
  * @return true on success, false otherwise
  */
 bool grammar_init();
+
+/**
+ * Free rule
+ * @param rule pointer to rule structure
+ */
+void rule_free(Rule* rule);
 
 /**
  * Free grammar

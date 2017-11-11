@@ -5,9 +5,6 @@
 #include "grammar.h"
 #include "token.h"
 
-/// Get number of variable arguments
-#define NUM_ARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
-
 /// Add epsilon rule to grammar, cleanup on failure
 #define ADD_EPSILON_RULE(nt)  if (!grammar_add_epsilon_rule(curr_idx++, nt)) { grammar_free(); return false; }
 /// Add rule to grammar, cleanup on failure
@@ -83,7 +80,7 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 	return true;
 }
 
-static void rule_free(Rule* rule) {
+void rule_free(Rule* rule) {
 	if (rule != NULL) {
 		if (rule->production != NULL)
 			free(rule->production);
