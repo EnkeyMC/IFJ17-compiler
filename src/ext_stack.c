@@ -70,10 +70,8 @@ bool ext_stack_shift(ExtStack* s, token_e token) {
 static unsigned find_rule(ExtStack* s) {
 	dllist_activate_first(s);
 
-	int i;
-	bool found = false;
 	stack_item* item;
-	for (i = 0; i < NUM_OF_EXPR_RULES; i++) {
+	for (int i = 0; i < NUM_OF_EXPR_RULES; i++) {
 		int k;
 		for (k = 0; expr_grammar.rules[i]->production[k] != END_OF_RULE; k++) {
 			item = (stack_item*) dllist_get_active(s);
@@ -84,18 +82,13 @@ static unsigned find_rule(ExtStack* s) {
 		}
 
 		item = (stack_item*) dllist_get_active(s);
-		if (item->type_id == EXPR_HANDLE_MARKER && expr_grammar.rules[i]->production[k] == END_OF_RULE) {
-			found = true;
-			break;
-		}
+		if (item->type_id == EXPR_HANDLE_MARKER && expr_grammar.rules[i]->production[k] == END_OF_RULE)
+			return expr_grammar.rules[i]->for_nt;	// rule FOUND
 
 		dllist_activate_first(s);
 	}
 
-	if (found)
-		return expr_grammar.rules[i]->for_nt;
-	else
-		return EXPR_ERROR;
+	return EXPR_ERROR;
 }
 
 bool ext_stack_reduce(ExtStack* s) {
