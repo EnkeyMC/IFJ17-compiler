@@ -135,6 +135,8 @@ void expr_grammar_free() {
 	for (int i = 0; i < NUM_OF_EXPR_RULES; i++)
 		rule_free(expr_grammar.rules[i]);
 
+	for (int i = 0; i < PT_INDEX_ENUM_SIZE; i++)
+		free(expr_grammar.precedence_table[i]);
 	free(expr_grammar.precedence_table);
 }
 
