@@ -20,7 +20,9 @@ static bool expr_grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 		return false;
 	}
 
+
 	rule->production = (unsigned*) malloc(sizeof(unsigned) * (va_num + 1));
+
 	if (rule->production == NULL) {
 		free(rule);
 		return false;
@@ -108,9 +110,9 @@ bool expr_grammar_init() {
 		"<<<<<<<<<<<<<<<>><>>>",	// TOKEN_KW_NOT
 		"<<<<<<<<<<<<<<<>><>>>",	// TOKEN_KW_AND
 		"<<<<<<<<<<<<<<<<><>>>",	// TOKEN_KW_OR
-		"<<<<<<<<<<<<<<<<<<== ",	// TOKEN_LPAR
+		"<<<<<<<<<<<<<<<<<<=< ",	// TOKEN_LPAR
 		">>>>>>>>>>>>  >>> >>>",	// TOKEN_RPAR
-		"<<<<<<<<<<<<<<<<<<== ",	// TOKEN_COMMA
+		"<<<<<<<<<<<<<<<<<<>> ",	// TOKEN_COMMA
 		"<<<<<<<<<<<<<<<<<<  $"		// END_MARKER
 	};
 
