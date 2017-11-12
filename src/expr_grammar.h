@@ -43,9 +43,12 @@ typedef enum {
 } pt_index_e;
 
 typedef enum {
-	EXPR_HANDLE_START = TOKEN_ENUM_END,	// '<'
-	EXPR_PUSH,	// '='
-	EXPR_HANDLE_END,	// '>'
+    // Only these two can be placed on stack during expression parsing
+    EXPR_END_MARKER = TOKEN_ENUM_END, // '$'
+	EXPR_HANDLE_MARKER,	// '<'
+
+	EXPR_PUSH_MARKER,	// '='
+	EXPR_REDUCE_MARKER,	// '>'
 	EXPR_ERROR,	// correponds to blank space in precedence table
 	EXPR_SUCCESS
 } pt_item_e;

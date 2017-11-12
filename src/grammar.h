@@ -8,7 +8,7 @@
 #define NUM_OF_RULES 80
 
 /// Get number of variable arguments
-#define NUM_ARGS(...)  (sizeof((int[]){__VA_ARGS__})/sizeof(int))
+#define NUM_ARGS(...)  (sizeof((unsigned[]){__VA_ARGS__})/sizeof(unsigned))
 
 /**
  * Enum of non terminals.
@@ -68,7 +68,7 @@ typedef enum {
  */
 typedef struct rule_t {
     non_terminal_e for_nt;  /// To which non terminal this rule applies
-    int* production;  /// Array of non_terminal_e and token_e ending with END_OF_RULE
+    unsigned* production;  /// Array of non_terminal_e and token_e ending with END_OF_RULE
 } Rule;
 
 /**

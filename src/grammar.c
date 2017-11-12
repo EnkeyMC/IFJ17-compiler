@@ -17,8 +17,8 @@
 struct grammar_t grammar;
 
 
-static void array_reverse(int* array, int length) {
-	int tmp;
+static void array_reverse(unsigned* array, int length) {
+	unsigned tmp;
 	for (int i = 0; i < length / 2; i++) {
 		tmp = array[i];
 		array[i] = array[length - i - 1];
@@ -34,7 +34,7 @@ static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 		return false;
 	}
 
-	rule->production = (int*) malloc(sizeof(int));
+	rule->production = (unsigned*) malloc(sizeof(unsigned));
 	if (rule->production == NULL) {
 		free(rule);
 		return false;
@@ -56,7 +56,9 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 		return false;
 	}
 
-	rule->production = (int*) malloc(sizeof(int) * (va_num + 1));
+
+	rule->production = (unsigned*) malloc(sizeof(unsigned) * (va_num + 1));
+
 	if (rule->production == NULL) {
 		free(rule);
 		return false;
@@ -66,7 +68,7 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 	va_start(va_args, va_num);
 	int i;
 	for (i = 0; i < va_num; i++) {
-		rule->production[i] = va_arg(va_args, int);
+		rule->production[i] = va_arg(va_args, unsigned);
 	}
 
 	array_reverse(rule->production, va_num);  // We are going to push it on stack in reverse order
