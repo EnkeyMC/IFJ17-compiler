@@ -20,7 +20,7 @@ static bool expr_grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 		return false;
 	}
 
-	rule->production = (unsigned*) malloc(sizeof(unsigned) * va_num + 1);
+	rule->production = (unsigned*) malloc(sizeof(unsigned) * (va_num + 1));
 	if (rule->production == NULL) {
 		free(rule);
 		return false;
@@ -45,8 +45,18 @@ static bool expr_grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 
 bool expr_grammar_init() {
 	// Precedence table allocation
-	expr_grammar.precedence_table = malloc(sizeof(unsigned) * PT_INDEX_ENUM_SIZE * PT_INDEX_ENUM_SIZE);
-	if (expr_grammar.precedence_table == NULL)
+	expr_grammar.precedence_table = (unsigned**) malloc(sizeof(unsigned*) * PT_INDEX_ENUM_SIZE);
+	if (expr_grammar.precedence_table != NULL) {
+		for (int j = 0; j < PT_INDEX_ENUM_SIZE; j++) {
+			expr_grammar.precedence_table[j] = (unsigned *) malloc(sizeof(unsigned) * PT_INDEX_ENUM_SIZE);
+			if (expr_grammar.precedence_table[j] == NULL) {
+				for (j = j - 1;j >= 0; j--)
+					free(expr_grammar.precedence_table[j]);
+				return false;
+			}
+		}
+	}
+	else
 		return false;
 
 	// Grammar rules init -- Rules already REVERSED !!!

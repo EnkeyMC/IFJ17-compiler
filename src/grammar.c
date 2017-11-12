@@ -56,7 +56,7 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 		return false;
 	}
 
-	rule->production = (unsigned*) malloc(sizeof(unsigned) * va_num + 1);
+	rule->production = (unsigned*) malloc(sizeof(unsigned) * (va_num + 1));
 	if (rule->production == NULL) {
 		free(rule);
 		return false;
