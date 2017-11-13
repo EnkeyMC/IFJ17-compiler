@@ -59,3 +59,15 @@ TEST_F(ExprParserTestFixture, ExprTest05) {
 
 	EXPECT_EQ(parse_expression(parser), EXIT_SUCCESS);
 }
+
+TEST_F(ExprParserTestFixture, ExprTest06) {
+	SetInputFile("test_files/expressions/06.test");
+
+	EXPECT_EQ(parse_expression(parser), EXIT_SUCCESS);
+}
+
+TEST_F(ExprParserTestFixture, ExprTest07) {
+	SetInputFile("test_files/expressions/07.test");
+
+	EXPECT_EQ(parse_expression(parser), EXIT_SYNTAX_ERROR);
+}
