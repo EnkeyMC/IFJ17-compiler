@@ -10,8 +10,10 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <assert.h>
+
 #include "parser.h"
 #include "error_code.h"
+#include "expr_grammar.h"
 
 
 Parser* parser_init(Scanner* scanner) {
@@ -26,10 +28,17 @@ Parser* parser_init(Scanner* scanner) {
 		return NULL;
 	}
 
+	if (!expr_grammar_init()) {
+		free(parser);
+		grammar_free();
+		return NULL;
+	}
+
 	parser->dtree_stack = stack_init(30);
 	if (parser->dtree_stack == NULL) {
 		free(parser);
 		grammar_free();
+		expr_grammar_free();
 		return NULL;
 	}
 
@@ -40,6 +49,7 @@ void parser_free(Parser* parser) {
 	assert(parser != NULL);
 
 	grammar_free();
+	expr_grammar_free();
 	stack_free(parser->dtree_stack, NULL);
 	free(parser);
 }
