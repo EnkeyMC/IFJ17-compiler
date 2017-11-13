@@ -76,6 +76,6 @@ void expr_grammar_free();
  * @param token token to map index to
  * @return index of column/row
  */
-unsigned pt_map_token(token_e token);
+unsigned pt_map_token(unsigned token);
 
 #endif //IFJ17_COMPILER_PREC_GRAMMAR_H
