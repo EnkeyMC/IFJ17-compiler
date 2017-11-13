@@ -1,0 +1,41 @@
+.IFJcode17
+
+createframe
+pushframe
+
+defvar LF@a
+defvar LF@vysl
+
+write string@Zadejte\032cislo\032pro\032vypocet\032faktorialu
+read LF@a int
+
+defvar LF@if1cond
+lt LF@if1cond LF@a int@0
+jumpifeq if1else  LF@if1cond bool@false
+
+write string@\010Faktorial\032nelze\032spocitat\010
+jump if1end
+
+label if1else
+
+move LF@vysl int@1
+
+defvar LF@while1cond
+label while1cond
+gt LF@while1cond LF@a int@0
+jumpifeq while1end LF@while1cond bool@false
+
+mul LF@vysl LF@vysl LF@a
+sub LF@a LF@a int@1
+
+jump while1cond
+
+label while1end
+
+
+write string@\010Vysledek\032je:
+write LF@vysl
+write string@\010
+
+label if1end
+popframe
