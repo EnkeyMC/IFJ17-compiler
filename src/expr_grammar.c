@@ -141,7 +141,7 @@ void expr_grammar_free() {
 	free(expr_grammar.precedence_table);
 }
 
-unsigned pt_map_token(token_e token) {
+unsigned pt_map_token(unsigned token) {
 	switch (token) {
 		// Arithmetic operators
 		case TOKEN_DIVR: return PT_INDEX_DIVR;
