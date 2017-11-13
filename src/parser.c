@@ -33,12 +33,42 @@ Parser* parser_init(Scanner* scanner) {
 		return NULL;
 	}
 
+	parser->sym_tab_stack = stack_init(1);
+	if (parser->sym_tab_stack == NULL) {
+		stack_free(parser->dtree_stack, NULL);
+		free(parser);
+		grammar_free();
+		return NULL;
+	}
+
+	parser->sym_tab_global = htab_init(10);
+	if (parser->sym_tab_global == NULL) {
+		stack_free(parser->sym_tab_stack, NULL);
+		stack_free(parser->dtree_stack, NULL);
+		free(parser);
+		grammar_free();
+		return NULL;
+	}
+
+	parser->sym_tab_functions = htab_init(10);
+	if (parser->sym_tab_functions == NULL) {
+		htab_free(parser->sym_tab_global);
+		stack_free(parser->sym_tab_stack, NULL);
+		stack_free(parser->dtree_stack, NULL);
+		free(parser);
+		grammar_free();
+		return NULL;
+	}
+
 	return parser;
 }
 
 void parser_free(Parser* parser) {
 	assert(parser != NULL);
 
+	htab_free(parser->sym_tab_global);
+	stack_free(parser->sym_tab_stack, NULL);
+	htab_free(parser->sym_tab_functions);
 	grammar_free();
 	stack_free(parser->dtree_stack, NULL);
 	free(parser);

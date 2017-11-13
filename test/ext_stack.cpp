@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "expr_grammar.c"
 #include "ext_stack.c"
+#include "grammar.c"
 
 
 class ExtendedStackTestFixture : public ::testing::Test {

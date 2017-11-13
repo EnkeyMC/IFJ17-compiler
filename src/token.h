@@ -95,7 +95,7 @@ typedef enum {
 /**
  * Token structure type
  */
-typedef struct {
+typedef struct token_t {
     token_e id;		/// Type of token
     union {
         unsigned int i;

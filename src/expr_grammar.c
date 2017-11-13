@@ -3,7 +3,6 @@
 #include <assert.h>
 
 #include "expr_grammar.h"
-#include "grammar.h"
 
 /// Add rule to grammar, cleanup on failure
 #define ADD_EXPR_RULE(nt, ...) if (!expr_grammar_add_rule(curr_idx++, nt, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { expr_grammar_free(); return false; }

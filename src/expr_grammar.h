@@ -2,6 +2,7 @@
 #define IFJ17_COMPILER_PREC_GRAMMAR_H
 
 #include <stdbool.h>
+#include "sem_analyzer.h"
 #include "token.h"
 
 #define NUM_OF_EXPR_RULES 27

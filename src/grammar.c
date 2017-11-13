@@ -8,7 +8,9 @@
 /// Add epsilon rule to grammar, cleanup on failure
 #define ADD_EPSILON_RULE(nt)  if (!grammar_add_epsilon_rule(curr_idx++, nt)) { grammar_free(); return false; }
 /// Add rule to grammar, cleanup on failure
-#define ADD_RULE(nt, ...) if (!grammar_add_rule(curr_idx++, nt, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
+#define ADD_RULE(nt, ...) if (!grammar_add_rule(curr_idx++, nt, NULL, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
+/// Add rule with semantic action, cleanup on failure
+#define ADD_SEMANTIC_RULE(nt, sem_action, ...) if (!grammar_add_rule(curr_idx++, nt, sem_action, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
 
 /// Set table value, cleanup on failure
 #define TABLE_SET(row, column, value) if (!sparse_table_set(grammar.LL_table, row, get_token_column_value(column), value)) { grammar_free(); return false; }
@@ -48,7 +50,7 @@ static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 	return true;
 }
 
-static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
+static bool grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_action, int va_num, ...) {
 	assert(idx < NUM_OF_RULES);
 
 	Rule* rule = (Rule*) malloc(sizeof(Rule));
@@ -74,6 +76,7 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, int va_num, ...) {
 	array_reverse(rule->production, va_num);  // We are going to push it on stack in reverse order
 	rule->production[i] = END_OF_RULE;
 	rule->for_nt = nt;
+	rule->sem_action = sem_action;
 
 	va_end(va_args);
 

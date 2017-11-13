@@ -3,6 +3,7 @@
 
 #include <stdbool.h>
 #include "sparse_table.h"
+#include "sem_analyzer.h"
 
 // Number of rules in grammar. Needs to be incremented by 1 because first rule is empty
 #define NUM_OF_RULES 80
@@ -69,6 +70,7 @@ typedef enum {
 typedef struct rule_t {
     non_terminal_e for_nt;  /// To which non terminal this rule applies
     unsigned* production;  /// Array of non_terminal_e and token_e ending with END_OF_RULE
+    semantic_action_f sem_action;  /// Semantic action, NULL if no action
 } Rule;
 
 /**

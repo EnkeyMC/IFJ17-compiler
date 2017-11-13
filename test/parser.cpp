@@ -9,7 +9,6 @@
 
 #include <cstdio>
 #include "gtest/gtest.h"
-#include "grammar.c"
 #include "parser.c"
 
 class ParserTestFixture : public ::testing::Test {

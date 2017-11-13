@@ -13,6 +13,7 @@
 
 #include "scanner.h"
 #include "stack.h"
+#include "symtable.h"
 
 /**
  * Parser object structure
@@ -20,6 +21,9 @@
 typedef struct parser_t {
     Scanner* scanner;  /// Input scanner
     Stack* dtree_stack;  /// Stack for simulating syntax derivation tree
+    Stack* sym_tab_stack;  /// Stack of local symbol tables
+    HashTable* sym_tab_global;  /// Global symbol table
+    HashTable* sym_tab_functions;  /// Functions symbol table
 } Parser;
 
 /**
