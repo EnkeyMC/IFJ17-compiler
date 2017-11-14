@@ -14,14 +14,13 @@ typedef enum {
 struct sem_analyzer_t;
 struct parser_t;
 struct token_t;
-typedef struct token_t Token;
 
 /**
  * Function that represents semantic action
  *
  * @return return code (see error_code.h)
  */
-typedef int (*semantic_action_f) (struct sem_analyzer_t*, struct parser_t* parser, Token* token);
+typedef int (*semantic_action_f) (struct sem_analyzer_t*, struct parser_t* parser, struct token_t* token);
 
 /**
  * Semantic analyzer object, holds current state of semantic analysis
@@ -47,6 +46,6 @@ void sem_an_free(SemAnalyzer* sem_an);
 
 // SEMANTIC FUNCTIONS
 
-int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, Token* token);
+int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, struct token_t* token);
 
 #endif //IFJ17_COMPILER_SEM_ANALYZER_H
