@@ -71,88 +71,81 @@ int parse(Parser* parser) {
 	int rule_idx;  // Temp var for rule index returned from LL table
 	Rule* rule;  // Temp var for current rule
 	unsigned int* s_top;  // Temp var for current stack top
-	bool expr = false;
 
 	// Start processing tokens
 	do {  // Token loop
 		if (token != NULL) {
 			token_free(token);  // Free last token, does nothing first iteration
-			parser->scanner->backlog_token = NULL;
 		}
 
 		// Get next token from scanner
-		if (!expr) {
-			token = scanner_get_token(parser->scanner);
-			if (token == NULL) {  // Internal allocation error
-				ret_code = EXIT_INTERN_ERROR;
-				break;
-			} else if (token->id == LEX_ERROR) {  // Lexical error
-				ret_code = EXIT_LEX_ERROR;
-				break;
-			}
 
-			parser->scanner->backlog_token = token;
-		}
-		else {
-			token = parser->scanner->backlog_token;
-			expr = false;
+		token = scanner_get_token(parser->scanner);
+		if (token == NULL) {  // Internal allocation error
+			ret_code = EXIT_INTERN_ERROR;
+		} else if (token->id == LEX_ERROR) {  // Lexical error
+			ret_code = EXIT_LEX_ERROR;
 		}
 
 		// Look at what is on top of the stack
 		s_top = (unsigned int*) stack_top(parser->dtree_stack);
 
 		// If it is non terminal, rewrite it by rules, until there is terminal (token) in s_top
-		while (*s_top < TERMINALS_START) {  // Non terminal loop
+		while (*s_top < TERMINALS_START && ret_code == EXIT_SUCCESS) {  // Non terminal loop
 			// Look at LL table to get index to rule with right production
 			if (*s_top == NT_EXPRESSION) {
+				// Return token tu buffer for expression parser
+				scanner_unget_token(parser->scanner, token);
+				// Call expression parser
 				ret_code = parse_expression(parser);
-				if (ret_code != EXIT_SUCCESS)
-					break;
-				else {
+				// Get new token
+				token = scanner_get_token(parser->scanner);
+				if (token == NULL) {  // Internal allocation error
+					ret_code = EXIT_INTERN_ERROR;
+				} else if (token->id == LEX_ERROR) {  // Lexical error
+					ret_code = EXIT_LEX_ERROR;
+				}
+
+				stack_pop(parser->dtree_stack);
+			} else {
+				rule_idx = sparse_table_get(grammar.LL_table, *s_top, get_token_column_value(token->id));
+
+				// Get the rule from grammar
+				rule = grammar.rules[rule_idx];
+
+				// If no rule can be applied, return syntax error
+				if (rule == NULL) {
+					ret_code = EXIT_SYNTAX_ERROR;
+				} else {
+					// Pop the current non terminal on top of stack
 					stack_pop(parser->dtree_stack);
-					expr = true;
-					break;
+
+					// Rewrite it to the rule production (rule production is already reversed)
+					for (int i = 0; rule->production[i] != END_OF_RULE; i++) {
+						stack_push(parser->dtree_stack, &rule->production[i]);
+					}
+
 				}
 			}
-
-			rule_idx = sparse_table_get(grammar.LL_table, *s_top, get_token_column_value(token->id));
-
-			// Get the rule from grammar
-			rule = grammar.rules[rule_idx];
-
-			// If no rule can be applied, return syntax error
-			if (rule == NULL) {
-				ret_code = EXIT_SYNTAX_ERROR;
-				break;
-			}
-
-			// Pop the current non terminal on top of stack
-			stack_pop(parser->dtree_stack);
-
-			// Rewrite it to the rule production (rule production is already reversed)
-			for (int i = 0; rule->production[i] != END_OF_RULE; i++) {
-				stack_push(parser->dtree_stack, &rule->production[i]);
-			}
-
 			// See what is now on top of the stack
 			s_top = (unsigned int*) stack_top(parser->dtree_stack);
 		}  // End non terminal loop
-		if (expr) {
-			token = NULL;
-			continue;
-		}
-		else if (ret_code != EXIT_SUCCESS)
-			break;
 
-		// If the terminal (token) is the same as terminal on top of the stack and no error occured, pop it from stack
-		if (*s_top == token->id && ret_code == EXIT_SUCCESS) {
-			stack_pop(parser->dtree_stack);
+		if (ret_code == EXIT_SUCCESS) {
+			// If the terminal (token) is the same as terminal on top of the stack and no error occured, pop it from stack
+			if (*s_top == token->id) {
+				stack_pop(parser->dtree_stack);
+			} else {
+				// Else there is syntax error
+				ret_code = EXIT_SYNTAX_ERROR;
+				break;
+			}
 		} else {
-			// Else there is syntax error
-			ret_code = EXIT_SYNTAX_ERROR;
 			break;
 		}
-	} while (expr || token->id != TOKEN_EOF);  // End token loop
+	} while (token->id != TOKEN_EOF);  // End token loop
+
+	token_free(token);
 
 
 	return ret_code;
