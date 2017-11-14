@@ -15,6 +15,7 @@
 
 #include "scanner.h"
 #include "fsm.h"
+#include "buffer.h"
 
 #define READ_CHAR() getc(scanner->stream);
 #define STR_IS(keyword) strcmp(str, keyword) == 0
@@ -43,6 +44,20 @@ void scanner_free(Scanner* scanner) {
 	buffer_free(scanner->buffer);
 	free(scanner->backlog_token);
 	free(scanner);
+}
+
+static bool str_duplicate(char ** str_dst, const char* str_src) {
+	assert(str_dst != NULL);
+	assert(str_src != NULL);
+
+	// Allocate memory for string
+	*str_dst = (char*) malloc(sizeof(char) * (strlen(str_src) + 1));
+	if (*str_dst == NULL) {
+		return false;
+	}
+	// Copy string to token
+	strcpy(*str_dst, str_src);
+	return true;
 }
 
 static token_e get_string_token(const char* str) {
@@ -135,6 +150,7 @@ Token* scanner_get_token(Scanner* scanner) {
 	Token* token = (Token*) malloc(sizeof(Token));
 	if (token == NULL)
 		return NULL;
+	token->id = LEX_ERROR;
 
 	FSM {
 		STATE(s) {
@@ -407,14 +423,10 @@ Token* scanner_get_token(Scanner* scanner) {
 				token->id = get_string_token(scanner->buffer->str);
 
 				if (token->id == TOKEN_IDENTIFIER) {
-					// Allocate memory for identifier
-					token->str = (char*) malloc(sizeof(char) * (scanner->buffer->len + 1));
-					if (token->str == NULL) {
+					if (!str_duplicate(&token->str, scanner->buffer->str)) {
 						free(token);
 						return NULL;
 					}
-					// Copy identifier to token
-					strcpy(token->str, scanner->buffer->str);
 				}
 
 				return token;
@@ -434,7 +446,8 @@ Token* scanner_get_token(Scanner* scanner) {
 			else if (ch == 'e' || ch == 'E') {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(exponent);
-			} if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+			}
+			else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
 				token->id = LEX_ERROR;
 				return token;
 			}
@@ -612,14 +625,10 @@ Token* scanner_get_token(Scanner* scanner) {
 
 		STATE(string_end) {
 			token->id = TOKEN_STRING;
-			// Allocate memory for string
-			token->str = (char*) malloc(sizeof(char) * (scanner->buffer->len + 1));
-			if (token->str == NULL) {
+			if (!str_duplicate(&token->str, scanner->buffer->str)) {
 				free(token);
 				return NULL;
 			}
-			// Copy string to token
-			strcpy(token->str, scanner->buffer->str);
 			return token;
 		}
 
