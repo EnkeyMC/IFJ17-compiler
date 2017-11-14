@@ -408,7 +408,7 @@ Token* scanner_get_token(Scanner* scanner) {
 
 				if (token->id == TOKEN_IDENTIFIER) {
 					// Allocate memory for identifier
-					token->str = (char*) malloc(sizeof(char) * scanner->buffer->len + 1);
+					token->str = (char*) malloc(sizeof(char) * (scanner->buffer->len + 1));
 					if (token->str == NULL) {
 						free(token);
 						return NULL;
@@ -613,7 +613,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(string_end) {
 			token->id = TOKEN_STRING;
 			// Allocate memory for string
-			token->str = (char*) malloc(sizeof(char) * scanner->buffer->len + 1);
+			token->str = (char*) malloc(sizeof(char) * (scanner->buffer->len + 1));
 			if (token->str == NULL) {
 				free(token);
 				return NULL;
