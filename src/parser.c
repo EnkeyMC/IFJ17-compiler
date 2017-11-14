@@ -136,7 +136,7 @@ int parse(Parser* parser) {
 			// Look at LL table to get index to rule with right production
 			if (*s_top == NT_EXPRESSION) {
 				ret_code = parse_expression(parser);
-				if (ret_code == EXIT_SYNTAX_ERROR)
+				if (ret_code != EXIT_SUCCESS)
 					break;
 				else {
 					stack_pop(parser->dtree_stack);
@@ -171,6 +171,8 @@ int parse(Parser* parser) {
 			token = NULL;
 			continue;
 		}
+		else if (ret_code != EXIT_SUCCESS)
+			break;
 
 		// If the terminal (token) is the same as terminal on top of the stack and no error occured, pop it from stack
 		if (*s_top == token->id && ret_code == EXIT_SUCCESS) {
