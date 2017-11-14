@@ -5,7 +5,7 @@
 #include "expr_grammar.h"
 
 ExtStack* ext_stack_init() {
-	ExtStack* s = dllist_init(NULL);
+	ExtStack* s = dllist_init(free);
 	if (s == NULL)
 		return NULL;
 
