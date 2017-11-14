@@ -1,0 +1,153 @@
+.IFJcode17
+
+jump main
+
+# Začátek funkce substr
+label substr
+
+pushframe
+
+defvar LF@substr
+defvar LF@anotherchar
+defvar LF@counter
+defvar LF@total
+defvar LF@retval
+
+strlen LF@total LF@str
+move LF@substr string@
+move LF@counter int@0
+
+defvar LF@if1cond
+lt LF@if1cond LF@i int@1
+sub LF@i LF@i int@1
+jumpifeq finalstring LF@if1cond bool@true
+
+defvar LF@if2cond
+lt LF@if2cond LF@n int@0
+jumpifeq itoend LF@if2cond bool@true
+
+defvar LF@if3cond
+sub LF@total LF@total LF@i
+gt LF@if3cond LF@n LF@total
+jumpifeq itoend LF@if3cond bool@true
+
+label charloop
+jumpifeq finalstring LF@counter LF@n
+getchar LF@anotherchar LF@str LF@i
+concat LF@substr LF@substr LF@anotherchar
+add LF@i LF@i int@1
+add LF@counter LF@counter int@1
+jump charloop
+
+label itoend
+strlen LF@total LF@str
+defvar LF@itoendwhilecond
+
+label itoendwhile
+lt LF@itoendwhilecond LF@i LF@total
+jumpifeq finalstring LF@itoendwhilecond bool@false
+getchar LF@anotherchar LF@str LF@i
+concat LF@substr LF@substr LF@anotherchar
+add LF@i LF@i int@1
+jump itoendwhile
+
+label finalstring
+
+move LF@retval LF@substr
+
+popframe
+
+return
+# Konec funkce substr
+
+
+label main
+
+createframe
+pushframe
+
+defvar LF@str
+
+# Začátek volání funkce substr
+createframe
+defvar TF@str
+defvar TF@i
+defvar TF@n
+move TF@str string@TestAhojString
+move TF@i int@5
+move TF@n int@4
+
+call substr
+
+move LF@str TF@retval
+# Konec volání funkce
+
+write LF@str
+write string@\010
+
+
+createframe
+defvar TF@str
+defvar TF@i
+defvar TF@n
+move TF@str string@Test2
+move TF@i int@5
+move TF@n int@4
+
+call substr
+
+move LF@str TF@retval
+
+write LF@str
+write string@\010
+
+
+createframe
+defvar TF@str
+defvar TF@i
+defvar TF@n
+move TF@str string@Test3
+move TF@i int@7
+move TF@n int@3
+
+call substr
+
+move LF@str TF@retval
+
+write LF@str
+write string@\010
+
+
+createframe
+defvar TF@str
+defvar TF@i
+defvar TF@n
+move TF@str string@Test4
+move TF@i int@0
+move TF@n int@3
+
+call substr
+
+move LF@str TF@retval
+
+write LF@str
+write string@\010
+
+
+createframe
+defvar TF@str
+defvar TF@i
+defvar TF@n
+move TF@str string@Test5
+move TF@i int@-8
+move TF@n int@3
+
+call substr
+
+move LF@str TF@retval
+
+write LF@str
+write string@\010
+
+popframe
+
