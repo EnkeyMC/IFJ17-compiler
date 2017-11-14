@@ -142,7 +142,7 @@ void expr_grammar_free() {
 	free(expr_grammar.precedence_table);
 }
 
-unsigned pt_map_token(token_e token) {
+unsigned pt_map_token(unsigned token) {
 	switch (token) {
 		// Arithmetic operators
 		case TOKEN_DIVR: return PT_INDEX_DIVR;
@@ -166,7 +166,11 @@ unsigned pt_map_token(token_e token) {
 		case TOKEN_REAL: return PT_INDEX_CONST;
 		case TOKEN_KW_FALSE: return PT_INDEX_CONST;
 		case TOKEN_KW_TRUE: return PT_INDEX_CONST;
-		case TOKEN_IDENTIFIER: return PT_INDEX_ID;
+		case TOKEN_IDENTIFIER: 
+		case TOKEN_KW_LENGTH:
+		case TOKEN_KW_SUBSTR:
+		case TOKEN_KW_ASC:
+		case TOKEN_KW_CHR: return PT_INDEX_ID;
 
 		// Bitwise operators
 		case TOKEN_KW_NOT: return PT_INDEX_NOT;

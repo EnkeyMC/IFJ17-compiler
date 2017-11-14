@@ -41,6 +41,7 @@ Scanner* scanner_init() {
 void scanner_free(Scanner* scanner) {
 	assert(scanner != NULL);
 	buffer_free(scanner->buffer);
+	free(scanner->backlog_token);
 	free(scanner);
 }
 
