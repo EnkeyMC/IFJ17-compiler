@@ -10,10 +10,12 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <assert.h>
+#include <stdbool.h>
 
 #include "parser.h"
 #include "error_code.h"
 #include "expr_grammar.h"
+#include "expr_parser.h"
 
 
 Parser* parser_init(Scanner* scanner) {
@@ -69,19 +71,31 @@ int parse(Parser* parser) {
 	int rule_idx;  // Temp var for rule index returned from LL table
 	Rule* rule;  // Temp var for current rule
 	unsigned int* s_top;  // Temp var for current stack top
+	bool expr = false;
 
 	// Start processing tokens
 	do {  // Token loop
-		token_free(token);  // Free last token, does nothing first iteration
+		if (token != NULL) {
+			token_free(token);  // Free last token, does nothing first iteration
+			parser->scanner->backlog_token = NULL;
+		}
 
 		// Get next token from scanner
-		token = scanner_get_token(parser->scanner);
-		if (token == NULL) {  // Internal allocation error
-			ret_code = EXIT_INTERN_ERROR;
-			break;
-		} else if (token->id == LEX_ERROR) {  // Lexical error
-			ret_code = EXIT_LEX_ERROR;
-			break;
+		if (!expr) {
+			token = scanner_get_token(parser->scanner);
+			if (token == NULL) {  // Internal allocation error
+				ret_code = EXIT_INTERN_ERROR;
+				break;
+			} else if (token->id == LEX_ERROR) {  // Lexical error
+				ret_code = EXIT_LEX_ERROR;
+				break;
+			}
+
+			parser->scanner->backlog_token = token;
+		}
+		else {
+			token = parser->scanner->backlog_token;
+			expr = false;
 		}
 
 		// Look at what is on top of the stack
@@ -90,6 +104,17 @@ int parse(Parser* parser) {
 		// If it is non terminal, rewrite it by rules, until there is terminal (token) in s_top
 		while (*s_top < TERMINALS_START) {  // Non terminal loop
 			// Look at LL table to get index to rule with right production
+			if (*s_top == NT_EXPRESSION) {
+				ret_code = parse_expression(parser);
+				if (ret_code == EXIT_SYNTAX_ERROR)
+					break;
+				else {
+					stack_pop(parser->dtree_stack);
+					expr = true;
+					break;
+				}
+			}
+
 			rule_idx = sparse_table_get(grammar.LL_table, *s_top, get_token_column_value(token->id));
 
 			// Get the rule from grammar
@@ -112,6 +137,10 @@ int parse(Parser* parser) {
 			// See what is now on top of the stack
 			s_top = (unsigned int*) stack_top(parser->dtree_stack);
 		}  // End non terminal loop
+		if (expr) {
+			token = NULL;
+			continue;
+		}
 
 		// If the terminal (token) is the same as terminal on top of the stack and no error occured, pop it from stack
 		if (*s_top == token->id && ret_code == EXIT_SUCCESS) {
@@ -121,10 +150,8 @@ int parse(Parser* parser) {
 			ret_code = EXIT_SYNTAX_ERROR;
 			break;
 		}
-	} while (token->id != TOKEN_EOF);  // End token loop
+	} while (expr || token->id != TOKEN_EOF);  // End token loop
 
-	// Free the last token
-	token_free(token);
 
 	return ret_code;
 }
