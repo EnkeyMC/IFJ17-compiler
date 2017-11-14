@@ -19,9 +19,7 @@ int parse_expression(Parser *parser) {
 	Token* token = NULL;
 
 	do {
-		if (token != NULL) {
-			token_free(token);
-		}
+		token_free(token);
 
 		token = scanner_get_token(parser->scanner);
 		if (token == NULL) {

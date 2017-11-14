@@ -5,8 +5,9 @@ void token_free(Token* token) {
 	if (token == NULL)
 		return;
 
-	if ((token->id == TOKEN_IDENTIFIER || token->id == TOKEN_STRING) && token->str != NULL)
-		free(token->str);
+	if (token->id == TOKEN_IDENTIFIER || token->id == TOKEN_STRING)
+		if (token->str != NULL)
+			free(token->str);
 	free(token);
 }
 

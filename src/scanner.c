@@ -151,6 +151,7 @@ Token* scanner_get_token(Scanner* scanner) {
 	if (token == NULL)
 		return NULL;
 	token->id = LEX_ERROR;
+	token->str = NULL;
 
 	FSM {
 		STATE(s) {

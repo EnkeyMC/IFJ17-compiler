@@ -104,9 +104,7 @@ int parse(Parser* parser) {
 
 	// Start processing tokens
 	do {  // Token loop
-		if (token != NULL) {
-			token_free(token);  // Free last token, does nothing first iteration
-		}
+		token_free(token);  // Free last token, does nothing first iteration
 
 		// Get next token from scanner
 
