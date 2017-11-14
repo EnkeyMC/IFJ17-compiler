@@ -59,6 +59,8 @@ int parse_expression(Parser *parser) {
 			}
 		}
 		else if (action == EXPR_HANDLE_MARKER) {
+			if (token->id == TOKEN_KW_ASC || token->id == TOKEN_KW_SUBSTR || token->id == TOKEN_KW_CHR || token->id == TOKEN_KW_LENGTH )
+				token->id = TOKEN_IDENTIFIER;
 			if (! ext_stack_shift(s, token->id)) {
 				ret_code = EXIT_INTERN_ERROR;
 				break;
