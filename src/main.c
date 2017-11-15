@@ -9,6 +9,7 @@
 
 #include "parser.h"
 #include "error_code.h"
+#include "3ac.h"
 
 int main(int argc, char* argv[]) {
 	Scanner* scanner = scanner_init();
@@ -18,6 +19,12 @@ int main(int argc, char* argv[]) {
 	Parser* parser = parser_init(scanner);
 	if (parser == NULL) {
 		scanner_free(scanner);
+		return EXIT_INTERN_ERROR;
+	}
+
+	if (!il_init()) {
+		scanner_free(scanner);
+		parser_free(parser);
 		return EXIT_INTERN_ERROR;
 	}
 
@@ -40,6 +47,7 @@ int main(int argc, char* argv[]) {
 
 	scanner_free(scanner);
 	parser_free(parser);
+	il_free();
 
 	if (in_file !=  NULL) {
 		fclose(in_file);
