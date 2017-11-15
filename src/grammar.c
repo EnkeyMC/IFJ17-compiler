@@ -44,6 +44,7 @@ static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 
 	rule->production[0] = END_OF_RULE;
 	rule->for_nt = nt;
+	rule->sem_action = NULL;
 
 	grammar.rules[idx] = rule;
 

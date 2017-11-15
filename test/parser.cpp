@@ -10,6 +10,7 @@
 #include <cstdio>
 #include "gtest/gtest.h"
 #include "parser.c"
+#include "sem_analyzer.c"
 
 class ParserTestFixture : public ::testing::Test {
 protected:

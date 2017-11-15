@@ -8,7 +8,8 @@
  */
 typedef enum {
     SEM_STATE_START,
-    SEM_STATE_VAR_TYPE
+    SEM_STATE_VAR_TYPE,
+    SEM_STATE_EOL
 } sem_state_e;
 
 // Forward declarations

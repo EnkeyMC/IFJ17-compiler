@@ -22,6 +22,10 @@ SemAnalyzer* sem_an_init(semantic_action_f sem_action) {
 }
 
 void sem_an_free(void* sem_an) {
+	if (((SemAnalyzer*) sem_an)->symbol != NULL) {
+		token_free(((SemAnalyzer*) sem_an)->symbol);
+	}
+
 	free(sem_an);
 }
 
@@ -47,7 +51,9 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, Token* token) {
 	switch (sem_an->state) {
 		case SEM_STATE_START:
 			if (token->id == TOKEN_IDENTIFIER) {
-				sem_an->symbol = token;
+				sem_an->symbol = token_copy(token);
+				if (sem_an->symbol == NULL)
+					return EXIT_INTERN_ERROR;
 
 				symtab = get_current_sym_tab(parser);
 
@@ -62,8 +68,6 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, Token* token) {
 				}
 
 				sem_an->state = SEM_STATE_VAR_TYPE;  // Set next state
-			} else {
-				token_free(token);  // Free token
 			}
 			break;
 
@@ -77,15 +81,24 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, Token* token) {
 						symtab = get_current_sym_tab(parser);
 						htab_item_t* item = htab_lookup(symtab, sem_an->symbol->str);
 						item->type = token->id;
-						sem_an->finished = true;
+
+						sem_an->state = SEM_STATE_EOL;
 					}
 				default:
-					token_free(token);
+					break;
+			}
+			break;
+
+		case SEM_STATE_EOL:
+			switch (token->id) {
+				case TOKEN_EOL:
+					sem_an->finished = true;
+					break;
+				default:
 					break;
 			}
 			break;
 		default:
-			token_free(token);
 			return EXIT_INTERN_ERROR;
 	}
 

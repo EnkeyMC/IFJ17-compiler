@@ -117,4 +117,11 @@ void token_free(Token* token);
  */
 unsigned int get_token_column_value(token_e token);
 
+/**
+ * Deep copy a token
+ * @param token Token to copy
+ * @return copied token, NULL on error
+ */
+Token* token_copy(Token* token);
+
 #endif //IFJ17_COMPILER_TOKEN_H
