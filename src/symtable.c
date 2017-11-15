@@ -113,7 +113,6 @@ htab_item_t * htab_lookup(HashTable *htab_ptr, const char *key) {
 	htab_item_t ** item = &(htab_ptr->ptr[index]);
 	while (*item != NULL) {
 		if (strcmp(key, (*item)->key) == 0) {
-			(*item)->value++;
 			return *item;
 		}
 		else
@@ -135,8 +134,8 @@ htab_item_t * htab_lookup(HashTable *htab_ptr, const char *key) {
 
 	// Copy the key into the new item
 	strncpy(new_item->key, key, key_length);
-	new_item->value = 1;
 	new_item->next = NULL;
+	new_item->type = END_OF_TERMINALS;
 
 	// Put the new item at the end of the list of items
 	*item = new_item;
@@ -161,10 +160,8 @@ void htab_foreach(HashTable *htab_ptr, void (*func)(htab_item_t *item_ptr)) {
 	for (size_t i = 0; i < htab_ptr->bucket_count; i++)
 		for (htab_item_t *item = htab_ptr->ptr[i]; item != NULL; item = item->next)
 			func(item);
-	return;
 }
 
 void print_item(htab_item_t * item_ptr) {
-	printf("Key: '%s'\tValue: %d\n", item_ptr->key, item_ptr->value);
-	return;
+	printf("Key: '%s'\tType: %d\n", item_ptr->key, item_ptr->type);
 }

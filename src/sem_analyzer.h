@@ -7,7 +7,8 @@
  * Enumeration of semantic states
  */
 typedef enum {
-    SEM_STATE_START
+    SEM_STATE_START,
+    SEM_STATE_VAR_TYPE
 } sem_state_e;
 
 // Forward declarations
@@ -18,6 +19,8 @@ struct token_t;
 /**
  * Function that represents semantic action
  *
+ * Takes care of freeing token if it does not use it
+ *
  * @return return code (see error_code.h)
  */
 typedef int (*semantic_action_f) (struct sem_analyzer_t*, struct parser_t* parser, struct token_t* token);
@@ -27,7 +30,9 @@ typedef int (*semantic_action_f) (struct sem_analyzer_t*, struct parser_t* parse
  */
 typedef struct sem_analyzer_t {
     semantic_action_f sem_action;  /// Semantic action
+    bool finished;  /// Indicates whether semantic action is finished or not
     sem_state_e state;  /// State of semantic action
+    struct token_t* symbol;  /// Constant or temporary variable from nested SemAnalyzer or aggregated value for parent SymAnalyzer
 } SemAnalyzer;
 
 /**
@@ -41,7 +46,7 @@ SemAnalyzer* sem_an_init(semantic_action_f sem_action);
  * Free semantic action
  * @param sem_an SemAnalyzer
  */
-void sem_an_free(SemAnalyzer* sem_an);
+void sem_an_free(void* sem_an);
 
 
 // SEMANTIC FUNCTIONS

@@ -12,13 +12,14 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "token.h"
 
 /**
  * Hash table item type
  */
 typedef struct htab_item {
 	char *key;
-	int value;
+	token_e type;  /// Variable type or function return type
 	struct htab_item * next;	/// Pointer to next item in the list
 
 	// TODO

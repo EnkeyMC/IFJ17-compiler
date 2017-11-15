@@ -71,6 +71,17 @@ Parser* parser_init(Scanner* scanner) {
 		return NULL;
 	}
 
+	parser->sem_an_stack = stack_init(5);
+	if (parser->sem_an_stack == NULL) {
+		htab_free(parser->sym_tab_functions);
+		htab_free(parser->sym_tab_global);
+		stack_free(parser->sym_tab_stack, NULL);
+		stack_free(parser->dtree_stack, NULL);
+		free(parser);
+		grammar_free();
+		return NULL;
+	}
+
 	return parser;
 }
 
@@ -79,6 +90,7 @@ void parser_free(Parser* parser) {
 
 	htab_free(parser->sym_tab_global);
 	stack_free(parser->sym_tab_stack, NULL);
+	stack_free(parser->sem_an_stack, sem_an_free);
 	htab_free(parser->sym_tab_functions);
 	grammar_free();
 	expr_grammar_free();
@@ -101,10 +113,11 @@ int parse(Parser* parser) {
 	int rule_idx;  // Temp var for rule index returned from LL table
 	Rule* rule;  // Temp var for current rule
 	unsigned int* s_top;  // Temp var for current stack top
+	SemAnalyzer* sem_an;
 
 	// Start processing tokens
 	do {  // Token loop
-		token_free(token);  // Free last token, does nothing first iteration
+		token_free(token);  // Free last token, does nothing when token is NULL
 
 		// Get next token from scanner
 
@@ -120,9 +133,8 @@ int parse(Parser* parser) {
 
 		// If it is non terminal, rewrite it by rules, until there is terminal (token) in s_top
 		while (*s_top < TERMINALS_START && ret_code == EXIT_SUCCESS) {  // Non terminal loop
-			// Look at LL table to get index to rule with right production
-			if (*s_top == NT_EXPRESSION) {
-				// Return token tu buffer for expression parser
+			if (*s_top == NT_EXPRESSION) {  // If we are processing expression, call expression parser
+				// Return token to buffer for expression parser
 				scanner_unget_token(parser->scanner, token);
 				// Call expression parser
 				ret_code = parse_expression(parser);
@@ -135,7 +147,8 @@ int parse(Parser* parser) {
 				}
 
 				stack_pop(parser->dtree_stack);
-			} else {
+			} else {  // We are not processing expression
+				// Look at LL table to get index to rule with right production
 				rule_idx = sparse_table_get(grammar.LL_table, *s_top, get_token_column_value(token->id));
 
 				// Get the rule from grammar
@@ -144,7 +157,17 @@ int parse(Parser* parser) {
 				// If no rule can be applied, return syntax error
 				if (rule == NULL) {
 					ret_code = EXIT_SYNTAX_ERROR;
-				} else {
+				} else {  // Rule found
+					if (rule->sem_action != NULL) {  // If rule has semantic action
+						// Create semantic analyzer for the action and push it on stack
+						sem_an = sem_an_init(rule->sem_action);
+						if (sem_an == NULL) {
+							ret_code = EXIT_INTERN_ERROR;
+						} else {
+							stack_push(parser->sem_an_stack, sem_an);
+						}
+					}
+
 					// Pop the current non terminal on top of stack
 					stack_pop(parser->dtree_stack);
 
@@ -152,7 +175,6 @@ int parse(Parser* parser) {
 					for (int i = 0; rule->production[i] != END_OF_RULE; i++) {
 						stack_push(parser->dtree_stack, &rule->production[i]);
 					}
-
 				}
 			}
 			// See what is now on top of the stack
@@ -160,9 +182,34 @@ int parse(Parser* parser) {
 		}  // End non terminal loop
 
 		if (ret_code == EXIT_SUCCESS) {
-			// If the terminal (token) is the same as terminal on top of the stack and no error occured, pop it from stack
+			// If the terminal (token) is the same as terminal on top of the stack and no error occurred, pop it from stack
 			if (*s_top == token->id) {
 				stack_pop(parser->dtree_stack);
+
+				if (!stack_empty(parser->sem_an_stack)) {
+					// Handle semantics
+					sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
+					sem_an->sem_action(sem_an, parser, token);
+					token = NULL;  // Semantic action will take care of freeing token
+
+					Token* symbol = NULL;
+					// Finish up semantic analyzers
+					while (sem_an != NULL && sem_an->finished) {
+						// If semantic action is finished, pop it from stack
+						stack_pop(parser->sem_an_stack);
+						symbol = sem_an->symbol;  // Store possible symbol for parent semantic analyzer
+						sem_an_free(sem_an);  // Free finished semantic analyzer
+
+						// Get parent semantic action
+						sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
+						if (sem_an != NULL) {
+							// Call parent semantic action with symbol from child
+							sem_an->sem_action(sem_an, parser, symbol);
+						} else {
+							token_free(symbol);  // Just in case, free the symbol
+						}
+					}
+				}
 			} else {
 				// Else there is syntax error
 				ret_code = EXIT_SYNTAX_ERROR;
@@ -171,7 +218,7 @@ int parse(Parser* parser) {
 		} else {
 			break;
 		}
-	} while (token->id != TOKEN_EOF);  // End token loop
+	} while (token == NULL || token->id != TOKEN_EOF);  // End token loop
 
 	token_free(token);
 
