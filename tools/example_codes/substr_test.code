@@ -149,5 +149,22 @@ move LF@str TF@retval
 write LF@str
 write string@\010
 
+
+
+createframe
+defvar TF@str
+defvar TF@i
+defvar TF@n
+move TF@str string@Test5
+move TF@i int@1
+move TF@n int@3
+
+call substr
+
+move LF@str TF@retval
+
+write LF@str
+write string@\010
+
 popframe
 

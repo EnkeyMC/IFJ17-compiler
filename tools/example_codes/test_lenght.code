@@ -1,0 +1,14 @@
+.IFJcode17
+
+createframe
+pushframe
+
+defvar LF@str
+defvar LF@n
+move LF@str string@h\010p
+
+strlen LF@n LF@str
+
+write LF@n
+
+popframe
