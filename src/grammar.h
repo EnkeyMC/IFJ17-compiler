@@ -6,7 +6,7 @@
 #include "sem_analyzer.h"
 
 // Number of rules in grammar. Needs to be incremented by 1 because first rule is empty
-#define NUM_OF_RULES 80
+#define NUM_OF_RULES 76
 
 /// Get number of variable arguments
 #define NUM_ARGS(...)  (sizeof((unsigned[]){__VA_ARGS__})/sizeof(unsigned))
@@ -22,11 +22,11 @@
 typedef enum {
     NT_LINE,
     NT_LINE_END,
-    NT_STATEMENT,
+    NT_GLOBAL_STMT,
     NT_INNER_STMT,
     NT_STMT_SEQ,
     NT_VAR_DECL,
-    NT_VAR_DECL_NEXT,
+    NT_SHARED_VAR,
     NT_VAR_DEF,
     NT_INIT_OPT,
     NT_FUNC_DECL,
@@ -55,7 +55,7 @@ typedef enum {
     NT_STEP_OPT,
     NT_ID_OPT,
     NT_ASSIGN_OPERATOR,
-    NT_EXPRESSION,
+    NT_EXPRESSION,    // Nonterminal for operator-precedence grammar
     NT_LIST,    // Nonterminal for operator-precedence grammar
 
     // Special enum items
