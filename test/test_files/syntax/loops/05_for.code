@@ -1,6 +1,8 @@
 ' Extended for statement
 
+scope 
 For _ as integer = 0 TO 200 step 5
     print _;
 next _
 
+end scope

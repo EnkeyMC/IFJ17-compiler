@@ -1,5 +1,6 @@
 ' Empty do while loop
 
+scope
 do while true
     do while false
     loop
@@ -7,3 +8,5 @@ do while true
 
 
 loop
+
+end scope
