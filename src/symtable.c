@@ -28,7 +28,7 @@ static unsigned long hash_func(const char *str) {
 }
 
 HashTable *htab_init(size_t bucket_count) {
-	HashTable *htab_ptr = (HashTable*) malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item_t));
+	HashTable *htab_ptr = (HashTable*) malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item));
 	if (htab_ptr == NULL)
 		return NULL;
 	htab_ptr->bucket_count = bucket_count;
@@ -46,8 +46,8 @@ HashTable *htab_init(size_t bucket_count) {
  */
 static void htab_clear(HashTable *htab_ptr) {
 	for (size_t i = 0; i < htab_ptr->size; i++) {
-		htab_item_t *prev;
-		htab_item_t *next;
+		htab_item *prev;
+		htab_item *next;
 		for (prev = htab_ptr->ptr[i]; prev != NULL; prev = next) {
 			next = prev->next;
 			free(prev->key);
@@ -63,13 +63,13 @@ void htab_free(HashTable *htab_ptr) {
 	free(htab_ptr);
 }
 
-htab_item_t * htab_find(HashTable *htab_ptr, const char *key) {
+htab_item * htab_find(HashTable *htab_ptr, const char *key) {
 	if (htab_ptr == NULL || key == NULL)
 		return NULL;
 
 	unsigned long index = hash_func(key) % htab_ptr->bucket_count;
 
-	htab_item_t * item = htab_ptr->ptr[index];
+	htab_item * item = htab_ptr->ptr[index];
 	while (item != NULL) {
 		if (strcmp(key, item->key) == 0)
 			return item;
@@ -85,7 +85,7 @@ bool htab_remove(HashTable *htab_ptr, const char *key) {
 
 	unsigned long index = hash_func(key) % htab_ptr->bucket_count;
 
-	htab_item_t ** item = &(htab_ptr->ptr[index]);
+	htab_item ** item = &(htab_ptr->ptr[index]);
 	while (*item != NULL) {
 		if (strcmp(key, (*item)->key) == 0)
 			break;
@@ -95,7 +95,7 @@ bool htab_remove(HashTable *htab_ptr, const char *key) {
 	if (*item == NULL)	// Item not found
 		return false;
 
-	htab_item_t * tmp = *item;
+	htab_item * tmp = *item;
 	*item = (*item)->next;
 
 	free(tmp->key);
@@ -103,14 +103,14 @@ bool htab_remove(HashTable *htab_ptr, const char *key) {
 	return true;
 }
 
-htab_item_t * htab_lookup(HashTable *htab_ptr, const char *key) {
+htab_item * htab_lookup(HashTable *htab_ptr, const char *key) {
 	if (htab_ptr == NULL || key == NULL)
 		return NULL;
 
 	unsigned long index = hash_func(key) % htab_ptr->bucket_count;
 
 	// Item contains address of pointer to next item
-	htab_item_t ** item = &(htab_ptr->ptr[index]);
+	htab_item ** item = &(htab_ptr->ptr[index]);
 	while (*item != NULL) {
 		if (strcmp(key, (*item)->key) == 0) {
 			return *item;
@@ -120,7 +120,7 @@ htab_item_t * htab_lookup(HashTable *htab_ptr, const char *key) {
 	}
 
 	// Allocate memory for new item
-	htab_item_t * new_item = (htab_item_t*) malloc(sizeof(htab_item_t));
+	htab_item * new_item = (htab_item*) malloc(sizeof(htab_item));
 	if (new_item == NULL)
 		return NULL;
 
@@ -153,15 +153,15 @@ size_t htab_bucket_count(HashTable *htab_ptr) {
 	return htab_ptr != NULL ? htab_ptr->bucket_count : 0;
 }
 
-void htab_foreach(HashTable *htab_ptr, void (*func)(htab_item_t *item_ptr)) {
+void htab_foreach(HashTable *htab_ptr, void (*func)(htab_item *item_ptr)) {
 	if (htab_ptr == NULL || func == NULL)
 		return;
 
 	for (size_t i = 0; i < htab_ptr->bucket_count; i++)
-		for (htab_item_t *item = htab_ptr->ptr[i]; item != NULL; item = item->next)
+		for (htab_item *item = htab_ptr->ptr[i]; item != NULL; item = item->next)
 			func(item);
 }
 
-void print_item(htab_item_t * item_ptr) {
+void print_item(htab_item * item_ptr) {
 	printf("Key: '%s'\tType: %d\n", item_ptr->key, item_ptr->type);
 }
