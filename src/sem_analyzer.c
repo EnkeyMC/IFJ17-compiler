@@ -81,7 +81,7 @@ void sem_value_free(void* value) {
 
 static HashTable* get_current_sym_tab(Parser* parser) {
 	// Get local value table
-	HashTable* symtab = (HashTable*) stack_top(parser->sym_tab_stack);
+	HashTable* symtab = (HashTable*) dllist_get_first(parser->sym_tab_stack);
 	if (symtab == NULL) {
 		symtab = parser->sym_tab_global;  // If there is no local value table, use global
 	}
@@ -131,8 +131,8 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_BOOLEAN:
 					{
 						symtab = get_current_sym_tab(parser);
-						htab_item_t* item = htab_lookup(symtab, sem_an->value->token->str);
-						item->type = value.token->id;
+						htab_item* item = htab_lookup(symtab, sem_an->value->token->str);
+						item->id_data->type = value.token->id;
 
 						sem_an->state = SEM_STATE_EOL;
 					}

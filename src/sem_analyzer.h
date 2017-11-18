@@ -19,7 +19,7 @@ typedef enum {
 struct sem_analyzer_t;
 struct parser_t;
 struct token_t;
-struct htab_item;
+struct htab_item_t;
 
 
 typedef enum {
@@ -32,7 +32,7 @@ typedef struct sem_value_t {
     value_type_e value_type;
     union {
         struct token_t* token;
-        struct htab_item* id;
+        struct htab_item_t* id;
         DLList* list;
     };
 } SemValue;
