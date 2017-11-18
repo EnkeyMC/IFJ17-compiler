@@ -7,7 +7,7 @@ static const char* opcodes_str[] = {
 	FOREACH_OPCODE(GENERATE_STRING)
 };
 
-DLList* instruction_list;
+DLList* instruction_list = NULL;
 
 Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, Address addr3) {
 	Instruction* inst = (Instruction*) malloc(sizeof(Instruction));
@@ -99,6 +99,10 @@ void il_free() {
 bool il_add(Instruction* instruction) {
 	if (instruction == NULL)
 		return false;
+
+	// Just for the sake of tests
+	if (instruction_list == NULL)
+		return true;
 
 	return dllist_insert_last(instruction_list, instruction);
 }

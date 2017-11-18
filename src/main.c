@@ -7,6 +7,7 @@
  * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
  */
 
+#include <stdlib.h>
 #include "parser.h"
 #include "error_code.h"
 #include "3ac.h"
@@ -47,6 +48,10 @@ int main(int argc, char* argv[]) {
 
 	scanner_free(scanner);
 	parser_free(parser);
+
+	if (ret_code == EXIT_SUCCESS)
+		generate_code();
+
 	il_free();
 
 	if (in_file !=  NULL) {
