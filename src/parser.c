@@ -44,7 +44,7 @@ Parser* parser_init(Scanner* scanner) {
 		return NULL;
 	}
 
-	parser->sym_tab_stack = stack_init(1);
+	parser->sym_tab_stack = dllist_init(htab_free);
 	if (parser->sym_tab_stack == NULL) {
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
@@ -52,9 +52,9 @@ Parser* parser_init(Scanner* scanner) {
 		return NULL;
 	}
 
-	parser->sym_tab_global = htab_init(10);
+	parser->sym_tab_global = htab_init(HTAB_INIT_SIZE);
 	if (parser->sym_tab_global == NULL) {
-		stack_free(parser->sym_tab_stack, NULL);
+		dllist_free(parser->sym_tab_stack);
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
 		grammar_free();
@@ -64,7 +64,7 @@ Parser* parser_init(Scanner* scanner) {
 	parser->sym_tab_functions = htab_init(10);
 	if (parser->sym_tab_functions == NULL) {
 		htab_free(parser->sym_tab_global);
-		stack_free(parser->sym_tab_stack, NULL);
+		dllist_free(parser->sym_tab_stack);
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
 		grammar_free();
@@ -75,7 +75,7 @@ Parser* parser_init(Scanner* scanner) {
 	if (parser->sem_an_stack == NULL) {
 		htab_free(parser->sym_tab_functions);
 		htab_free(parser->sym_tab_global);
-		stack_free(parser->sym_tab_stack, NULL);
+		dllist_free(parser->sym_tab_stack);
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
 		grammar_free();
@@ -89,7 +89,7 @@ void parser_free(Parser* parser) {
 	assert(parser != NULL);
 
 	htab_free(parser->sym_tab_global);
-	stack_free(parser->sym_tab_stack, NULL);
+	dllist_free(parser->sym_tab_stack);
 	stack_free(parser->sem_an_stack, sem_an_free);
 	htab_free(parser->sym_tab_functions);
 	grammar_free();
