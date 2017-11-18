@@ -33,19 +33,19 @@ static bool add_built_ins(HashTable* htab) {
 		built_in = htab_func_lookup(htab, built_in_func[i]);
 		if (built_in == NULL) {
 			htab_func_free(htab);
-			return NULL;
+			return false;
 		}
 		func_set_rt(built_in, built_in_rts[i]);
 		func_set_def(built_in);
 		for (int k = 0; built_in_params[i][k] != '\0'; k++) {
 			if (! func_add_param(built_in, built_in_params[i][k])) {
 				htab_func_free(htab);
-				return NULL;
+				return false;
 			}
 		}
 	}
 
-	return htab;
+	return true;
 }
 
 Parser* parser_init(Scanner* scanner) {
