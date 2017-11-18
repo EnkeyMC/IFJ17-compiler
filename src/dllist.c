@@ -31,6 +31,32 @@ void dllist_free(DLList *l) {
 	free(l);
 }
 
+DLList* dllist_copy(DLList *l) {
+	assert(l != NULL);
+
+	DLList *l_copy = dllist_init(l->free_data);
+	if (l_copy == NULL)
+		return NULL;
+
+	dllist_activate_first(l);
+	if (dllist_active(l)) {
+		if (! dllist_insert_first(l_copy, dllist_get_active(l))) {
+			free(l_copy);
+			return NULL;
+		}
+		dllist_succ(l);
+		while (dllist_active(l)) {
+			if (! dllist_insert_last(l_copy, dllist_get_active(l))) {
+				dllist_free(l_copy);
+				return NULL;
+			}
+
+			dllist_succ(l);
+		}
+	}
+	return l_copy;
+}
+
 bool dllist_insert_first(DLList *l, void *data) {
 	assert(l != NULL);
 

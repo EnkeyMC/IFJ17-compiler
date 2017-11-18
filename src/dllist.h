@@ -44,6 +44,13 @@ DLList* dllist_init(free_data_f free_data);
 void dllist_free(DLList *l);
 
 /**
+ * Deep copy of a list
+ * @param l list to copy
+ * @return Pointer to newly created list or NULL if allocation fails
+ */
+DLList* dllist_copy(DLList *l);
+
+/**
  * Insert item on the first position in the list
  * @param l List
  * @param data generic data to insert

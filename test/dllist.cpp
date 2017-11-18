@@ -224,6 +224,51 @@ TEST_F(ListTestFixture, GetFirst) {
 	);
 }
 
+TEST_F(ListTestFixture, CopyListNoItem) {
+	DLList *copy = dllist_copy(l);
+	ASSERT_NE(copy, nullptr);
+
+	EXPECT_EQ(dllist_get_first(copy), nullptr);
+	EXPECT_EQ(dllist_get_last(copy), nullptr);
+	dllist_free(copy);
+}
+
+TEST_F(ListTestFixture, CopyListOneItem) {
+	dllist_insert_first(l, &numbers[0]);
+
+	DLList *copy = dllist_copy(l);
+	ASSERT_NE(copy, nullptr);
+
+	EXPECT_EQ(DEREF_DATA(dllist_get_first(copy), int), numbers[0]);
+	dllist_free(copy);
+
+	EXPECT_EQ(DEREF_DATA(dllist_get_first(l), int), numbers[0]);
+}
+
+TEST_F(ListTestFixture, CopyListMultipleItems) {
+	dllist_insert_first(l, &numbers[4]);
+	dllist_insert_first(l, &numbers[3]);
+	dllist_insert_first(l, &numbers[2]);
+	dllist_insert_first(l, &numbers[1]);
+	dllist_insert_first(l, &numbers[0]);
+
+	DLList *copy = dllist_copy(l);
+	ASSERT_NE(copy, nullptr);
+
+	int i;
+	dllist_activate_first(copy);
+	for (i = 0; i < nnums; i++) {
+		EXPECT_EQ(DEREF_DATA(dllist_get_active(copy), int), numbers[i]);
+		dllist_succ(copy);
+	}
+	dllist_free(copy);
+
+	dllist_activate_first(l);
+	for (i = 0; i < nnums; i++) {
+		EXPECT_EQ(DEREF_DATA(dllist_get_active(l), int), numbers[i]);
+		dllist_succ(l);
+	}
+}
 
 TEST_F(ListTestFixture, GetLast) {
 	EXPECT_EQ(dllist_get_last(l), nullptr);
