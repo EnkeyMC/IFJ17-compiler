@@ -116,13 +116,13 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 		while (item->type_id != EXPR_HANDLE_MARKER) {
 			if (sem_an != NULL) {  // Handle semantics
 				if (IS_TOKEN(item->type_id)) {
-					sem_an->sem_action(sem_an, parser, item->token);
+					sem_an->sem_action(sem_an, parser, SEM_VALUE_TOKEN(item->token));
 				} else if (IS_NONTERMINAL(item->type_id)){
 					sem_an_top = (SemAnalyzer*) stack_pop(parser->sem_an_stack);
 					assert(sem_an_top != NULL);
 
-					// Pass symbol to current semantic action
-					sem_an->sem_action(sem_an, parser, sem_an_top->symbol);
+					// Pass value to current semantic action
+					sem_an->sem_action(sem_an, parser, *sem_an_top->value);
 					sem_an_free(sem_an_top);
 				}
 			}

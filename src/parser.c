@@ -189,24 +189,22 @@ int parse(Parser* parser) {
 				if (!stack_empty(parser->sem_an_stack)) {
 					// Handle semantics
 					sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
-					ret_code = sem_an->sem_action(sem_an, parser, token);
+					ret_code = sem_an->sem_action(sem_an, parser, SEM_VALUE_TOKEN(token));
 					if (ret_code != EXIT_SUCCESS) {
 						break;
 					}
 
-					Token* symbol = NULL;
 					// Finish up semantic analyzers
 					while (sem_an != NULL && sem_an->finished) {
 						// If semantic action is finished, pop it from stack
 						stack_pop(parser->sem_an_stack);
-						symbol = sem_an->symbol;  // Store possible symbol for parent semantic analyzer
 						sem_an_to_free = sem_an;  // Store it for later freeing
 
 						// Get parent semantic action
 						sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
 						if (sem_an != NULL) {
-							// Call parent semantic action with symbol from child
-							sem_an->sem_action(sem_an, parser, symbol);
+							// Call parent semantic action with value from child
+							sem_an->sem_action(sem_an, parser, *sem_an_to_free->value);
 						}
 						sem_an_free(sem_an_to_free);  // Free finished semantic analyzer
 					}
