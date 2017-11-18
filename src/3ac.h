@@ -82,7 +82,8 @@ typedef enum {
 typedef enum {
     ADDR_TYPE_SYMBOL,  // Symbol from symtable
     ADDR_TYPE_CONST,  // Constant
-    ADDR_TYPE_EMPTY  // No operand
+    ADDR_TYPE_EMPTY,  // No operand
+    ADDR_TYPE_ERROR  // Error occurred allocating content of address
 } addr_type_e;
 
 /**
@@ -108,10 +109,40 @@ typedef struct instruction_t {
 extern DLList* instruction_list;  /// Global instruction list
 
 /**
+ * Initialize new intruction
+ * @param addr1 Address 1
+ * @param addr2 Address 2
+ * @param addr3 Address 3
+ * @return new instruction, NULL on error
+ */
+Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, Address addr3);
+
+/**
  * Free instruction
  * @param inst Instruction
  */
 void instruction_free(void* inst);
+
+/**
+ * Create new address for given symbol
+ * @param prefix symbol prefix ("GF@", "LF@", "TF@")
+ * @param symbol identifier (will be copied)
+ * @return Address
+ */
+Address addr_symbol(const char* prefix, const char* symbol);
+
+/**
+ * Create new address for given constant
+ * @param token constant in Token form (content will be copied)
+ * @return Address
+ */
+Address addr_constant(Token token);
+
+/**
+ * Free the content of address
+ * @param addr Address
+ */
+void address_free(Address addr);
 
 /**
  * Initialize instruction list
@@ -123,6 +154,13 @@ bool il_init();
  * Free instruction list
  */
 void il_free();
+
+/**
+ * Adds instruction to instruction list
+ * @param instruction Instruction to add
+ * @return true on success, false if instruction is NULL or allocation error
+ */
+bool il_add(Instruction* instruction);
 
 /**
  * Generate 3 address code

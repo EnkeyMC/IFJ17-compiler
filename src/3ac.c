@@ -1,5 +1,6 @@
 #include <malloc.h>
 #include <assert.h>
+#include <string.h>
 #include "3ac.h"
 
 static const char* opcodes_str[] = {
@@ -8,22 +9,80 @@ static const char* opcodes_str[] = {
 
 DLList* instruction_list;
 
+Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, Address addr3) {
+	Instruction* inst = (Instruction*) malloc(sizeof(Instruction));
+	if (inst == NULL)
+		return NULL;
+
+	if (addr1.type == ADDR_TYPE_ERROR ||
+		addr2.type == ADDR_TYPE_ERROR ||
+		addr3.type == ADDR_TYPE_ERROR)
+	{
+		address_free(addr1);
+		address_free(addr2);
+		address_free(addr3);
+		free(inst);
+		return NULL;
+	}
+
+	inst->operation = operation;
+	inst->addresses[0] = addr1;
+	inst->addresses[1] = addr2;
+	inst->addresses[2] = addr3;
+
+	return inst;
+}
+
 void instruction_free(void* inst) {
 	Instruction* instruction = inst;
 	for (int i = 0; i < MAX_ADDRESSES; i++) {
-		switch (instruction->addresses[i].type) {
-			case ADDR_TYPE_SYMBOL:
-				free(instruction->addresses[i].symbol);
-				break;
-			case ADDR_TYPE_CONST:
-				token_free(instruction->addresses[i].constant);
-				break;
-			default:
-				break;
-		}
+		address_free(instruction->addresses[i]);
 	}
 
 	free(inst);
+}
+
+Address addr_symbol(const char* prefix, const char* symbol) {
+	Address addr;
+
+	addr.symbol = (char*) malloc(sizeof(char) * (strlen(prefix) + strlen(symbol) + 1));
+	if (addr.symbol == NULL) {
+		addr.type = ADDR_TYPE_ERROR;
+		return addr;
+	}
+
+	strcpy(addr.symbol, prefix);
+	strcat(addr.symbol, symbol);
+	addr.type = ADDR_TYPE_SYMBOL;
+
+	return addr;
+}
+
+Address addr_constant(Token token) {
+	Address addr;
+
+	addr.constant = token_copy(&token);
+	if (addr.constant == NULL) {
+		addr.type = ADDR_TYPE_ERROR;
+		return addr;
+	}
+
+	addr.type = ADDR_TYPE_CONST;
+
+	return addr;
+}
+
+void address_free(Address addr) {
+	switch (addr.type) {
+		case ADDR_TYPE_SYMBOL:
+			free(addr.symbol);
+			break;
+		case ADDR_TYPE_CONST:
+			token_free(addr.constant);
+			break;
+		default:
+			break;
+	}
 }
 
 bool il_init() {
@@ -35,6 +94,13 @@ bool il_init() {
 
 void il_free() {
 	dllist_free(instruction_list);
+}
+
+bool il_add(Instruction* instruction) {
+	if (instruction == NULL)
+		return false;
+
+	return dllist_insert_last(instruction_list, instruction);
 }
 
 static void print_instruction(Instruction* instruction) {
