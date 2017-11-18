@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include "dllist.h"
 
-#define SEM_VALUE_TOKEN(value) {.value_type = VTYPE_TOKEN, {.token = (value)}}
+#define SEM_VALUE_TOKEN(value) ((SemValue){.value_type = VTYPE_TOKEN, {.token = (value)}})
 
 /**
  * Enumeration of semantic states
