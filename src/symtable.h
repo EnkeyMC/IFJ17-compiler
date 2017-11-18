@@ -26,7 +26,6 @@ typedef struct htab_func_item_t {
 	token_e rt;	/// Return type
 	unsigned params_num;	/// Number of parameters
 	Buffer* params_buff;	/// String containing paramater types
-	DLList* sym_table_stack;	/// Local symbol tables
 	bool definition;	/// Was already defined?
 } htab_func_item;
 
@@ -61,13 +60,12 @@ typedef struct hash_table {
  * @return Pointer to empty hash table or NULL if allocation of memory failed
  */
 HashTable *htab_init(size_t bucket_count);
-HashTable *htab_func_init(size_t bucket_count);
 
 /**
  * Free whole hash table from memory
  * @param htab_ptr Pointer to hash table
  */
-void htab_free(void *htab_ptr);
+void htab_free(void* htab_ptr);
 void htab_func_free(HashTable *htab_ptr);
 
 /**
@@ -153,12 +151,5 @@ void func_set_rt(htab_item* item, token_e type);
  * @param item Item containing function data
  */
 void func_set_def(htab_item* item);
-
-/**
- * Create new local symtable a push it on stack (l->first == Top of the stack)
- * @param item Stores pointer to function data
- * @return pointer to new symtable on success, NULL otherwise
- */
-HashTable* func_new_scope(htab_item* item);
 
 #endif //IFJ17_COMPILER_SYMTABLE_H

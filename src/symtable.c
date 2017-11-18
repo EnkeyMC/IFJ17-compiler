@@ -28,7 +28,7 @@ static unsigned long hash_func(const char *str) {
 	return hash;
 }
 
-static HashTable* htab_initialize(size_t bucket_count) {
+HashTable* htab_init(size_t bucket_count) {
 	HashTable* htab_ptr = (HashTable*) malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item*));
 	if (htab_ptr == NULL)
 		return NULL;
@@ -37,41 +37,6 @@ static HashTable* htab_initialize(size_t bucket_count) {
 
 	for (size_t i = 0; i < bucket_count; i++)
 		htab_ptr->ptr[i] = NULL;
-
-	return htab_ptr;
-}
-
-HashTable* htab_init(size_t bucket_count) {
-	return htab_initialize(bucket_count);
-}
-
-HashTable *htab_func_init(size_t bucket_count) {
-	HashTable* htab_ptr = htab_initialize(bucket_count);
-	if (htab_ptr == NULL)
-		return NULL;
-
-	// Add built-in functions
-	const char *built_in_func[] = { "length", "substr", "asc", "chr" };
-	const char *built_in_params[]= { "s", "sii", "si", "i" };
-	token_e built_in_rts[]= {	// Return types
-		TOKEN_KW_INTEGER, TOKEN_KW_STRING, TOKEN_KW_INTEGER, TOKEN_KW_STRING
-	};
-	htab_item* built_in;
-	for (int i = 0; i < 4; i++) {
-		built_in = htab_func_lookup(htab_ptr, built_in_func[i]);
-		if (built_in == NULL) {
-			htab_func_free(htab_ptr);
-			return NULL;
-		}
-		func_set_rt(built_in, built_in_rts[i]);
-		func_set_def(built_in);
-		for (int k = 0; built_in_params[i][k] != '\0'; k++) {
-			if (! func_add_param(built_in, built_in_params[i][k])) {
-				htab_func_free(htab_ptr);
-				return NULL;
-			}
-		}
-	}
 
 	return htab_ptr;
 }
@@ -91,7 +56,6 @@ static void htab_clear(HashTable *htab_ptr, bool func) {
 			free(prev->key);
 			if (func) {
 				buffer_free(prev->func_data->params_buff);
-				dllist_free(prev->func_data->sym_table_stack);
 				free(prev->func_data);
 			}
 			else
@@ -103,7 +67,7 @@ static void htab_clear(HashTable *htab_ptr, bool func) {
 }
 
 void htab_free(void* htab_ptr) {
-	htab_clear(((HashTable*)htab_ptr), false);
+	htab_clear((HashTable*)htab_ptr, false);
 }
 
 void htab_func_free(HashTable* htab_ptr) {
@@ -148,7 +112,6 @@ static bool htab_remove_item(HashTable *htab_ptr, const char *key, bool func) {
 	free(tmp->key);
 	if (func) {
 		buffer_free(tmp->func_data->params_buff);
-		dllist_free(tmp->func_data->sym_table_stack);
 		free(tmp->func_data);
 	}
 	else
@@ -181,14 +144,6 @@ static bool alloc_func_item(htab_item* item) {
 	item->func_data->params_buff = buffer_init(BUFFER_INIT_SIZE);
 	if (item->func_data->params_buff == NULL) {
 		free(item->key);
-		free(item->func_data);
-		free(item);
-		return false;
-	}
-	item->func_data->sym_table_stack = dllist_init(htab_free);
-	if (item->func_data->sym_table_stack == NULL) {
-		free(item->key);
-		buffer_free(item->func_data->params_buff);
 		free(item->func_data);
 		free(item);
 		return false;
@@ -300,9 +255,7 @@ bool func_add_param(htab_item* item, char c) {
 	item->func_data->params_num++;
 	// Stores parameter types in following format: "p1#p2#p3#"
 	// where p1..p3 is one of { i, s, d, b }
-	if (buffer_append_c(item->func_data->params_buff, c))
-		return buffer_append_c(item->func_data->params_buff, '#');
-	return false;
+	return buffer_append_c(item->func_data->params_buff, c);
 }
 
 token_e func_get_param(htab_item* item, unsigned idx) {
@@ -311,7 +264,7 @@ token_e func_get_param(htab_item* item, unsigned idx) {
 	if (idx > item->func_data->params_num)
 		return END_OF_TERMINALS;
 
-	char param_type = item->func_data->params_buff->str[idx*2 -2];
+	char param_type = item->func_data->params_buff->str[idx-1];
 	switch (param_type) {
 		case 's': return TOKEN_KW_STRING;
 		case 'b': return TOKEN_KW_BOOLEAN;
@@ -331,21 +284,4 @@ void func_set_def(htab_item* item) {
 	assert(item != NULL);
 
 	item->func_data->definition = true;
-}
-
-HashTable* func_new_scope(htab_item* item) {
-	assert(item != NULL);
-
-	// Create new local symtable
-	HashTable* local = htab_init(HTAB_INIT_SIZE);
-	if (local == NULL)
-		return NULL;
-
-	// Push it on top of the stack
-	if (! dllist_insert_first(item->func_data->sym_table_stack, local)) {
-		free(local);
-		return NULL;
-	}
-
-	return local;
 }
