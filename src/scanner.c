@@ -346,6 +346,7 @@ Token* scanner_get_token(Scanner* scanner) {
 			ch = READ_CHAR();
 			if (ch == '=') {
 				token->id = TOKEN_ADD_ASIGN;
+				return token;
 			}
 			else {
 				ungetc(ch, scanner->stream);
