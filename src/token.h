@@ -3,6 +3,8 @@
 
 #include "grammar.h"
 
+#define IS_TOKEN(expr) ((expr) >= TERMINALS_START && (expr) < END_OF_TERMINALS)
+
 typedef enum {
 // ARITMETIC OPERATORS
     TOKEN_EQUAL = TERMINALS_START,

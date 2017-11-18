@@ -11,6 +11,8 @@
 /// Get number of variable arguments
 #define NUM_ARGS(...)  (sizeof((unsigned[]){__VA_ARGS__})/sizeof(unsigned))
 
+#define IS_NONTERMINAL(expr) ((expr) < NT_ENUM_SIZE)
+
 /**
  * Enum of non terminals.
  *

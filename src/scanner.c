@@ -67,16 +67,12 @@ static token_e get_string_token(const char* str) {
 	if (len > 1) {
 		if (str[0] == 'a') {
 			if (STR_IS("as")) 			return TOKEN_KW_AS;
-			if (STR_IS("asc"))			return TOKEN_KW_ASC;
 			if (STR_IS("and"))			return TOKEN_KW_AND;
 		} else if (str[0] == 'd') {
 			if (STR_IS("do"))			return TOKEN_KW_DO;
 			if (STR_IS("dim"))			return TOKEN_KW_DIM;
 			if (STR_IS("declare"))		return TOKEN_KW_DECLARE;
 			if (STR_IS("double"))		return TOKEN_KW_DOUBLE;
-		} else if (str[0] == 'c') {
-			if (STR_IS("chr")) 			return TOKEN_KW_CHR;
-			if (STR_IS("continue")) 	return TOKEN_KW_CONTINUE;
 		} else if (str[0] == 'e') {
 			if (STR_IS("else"))			return TOKEN_KW_ELSE;
 			if (STR_IS("end"))			return TOKEN_KW_END;
@@ -91,7 +87,6 @@ static token_e get_string_token(const char* str) {
 			if (STR_IS("input")) 		return TOKEN_KW_INPUT;
 			if (STR_IS("integer")) 		return TOKEN_KW_INTEGER;
 		} else if (str[0] == 'l') {
-			if (STR_IS("length")) 		return TOKEN_KW_LENGTH;
 			if (STR_IS("loop")) 		return TOKEN_KW_LOOP;
 		} else if (str[0] == 'n') {
 			if (STR_IS("next")) 		return TOKEN_KW_NEXT;
@@ -100,7 +95,6 @@ static token_e get_string_token(const char* str) {
 			if (STR_IS("scope")) 		return TOKEN_KW_SCOPE;
 			if (STR_IS("string"))		return TOKEN_KW_STRING;
 			if (STR_IS("step"))			return TOKEN_KW_STEP;
-			if (STR_IS("substr")) 		return TOKEN_KW_SUBSTR;
 			if (STR_IS("shared")) 		return TOKEN_KW_SHARED;
 			if (STR_IS("static")) 		return TOKEN_KW_STATIC;
 		} else if (str[0] == 't') {
@@ -119,6 +113,8 @@ static token_e get_string_token(const char* str) {
 			return TOKEN_KW_BOOLEAN;
 		} else if (STR_IS("until")) {
 			return TOKEN_KW_UNTIL;
+		} else if (STR_IS("continue")) {
+			return TOKEN_KW_CONTINUE;
 		}
 	}
 

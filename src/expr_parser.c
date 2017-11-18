@@ -34,24 +34,20 @@ int parse_expression(Parser *parser) {
 		// look for next action in the precedence table
 		unsigned action = GET_ACTION(s, token->id);
 		while (action == EXPR_REDUCE_MARKER) {
-			if (ext_stack_reduce(s))
+			ret_code = ext_stack_reduce(s, parser);
+			if (ret_code == EXIT_SUCCESS)
 				action = GET_ACTION(s, token->id);
-			else {
-				// haven't found any rule to reduce the stack
-				ret_code = EXIT_SYNTAX_ERROR;
+			else
 				break;
-			}
 		}
 
 		if (action == EXPR_PUSH_MARKER) {
-			if (! ext_stack_push(s, token->id)) {
+			if (! ext_stack_push(s, token->id, token)) {
 				ret_code = EXIT_INTERN_ERROR;
 			}
 		}
 		else if (action == EXPR_HANDLE_MARKER) {
-			if (token->id == TOKEN_KW_ASC || token->id == TOKEN_KW_SUBSTR || token->id == TOKEN_KW_CHR || token->id == TOKEN_KW_LENGTH )
-				token->id = TOKEN_IDENTIFIER;
-			if (! ext_stack_shift(s, token->id)) {
+			if (! ext_stack_shift(s, token)) {
 				ret_code = EXIT_INTERN_ERROR;
 			}
 		}
