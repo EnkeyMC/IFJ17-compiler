@@ -249,12 +249,26 @@ void print_func_item(htab_item * item_ptr) {
 
 // FUNCTIONS TO MODIFY FUNCTION DATA STORED IN HASH TABLE
 
-bool func_add_param(htab_item* item, char c) {
+bool func_add_param(htab_item* item, token_e type) {
 	assert(item != NULL);
 
+	char c;
+	switch (type) {
+		case TOKEN_KW_INTEGER:
+			c = 'i';
+			break;
+		case TOKEN_KW_DOUBLE:
+			c = 'd';
+			break;
+		case TOKEN_KW_STRING:
+			c = 's';
+			break;
+		case TOKEN_KW_BOOLEAN:
+			c = 'b';
+			break;
+		default: return false;
+	}
 	item->func_data->params_num++;
-	// Stores parameter types in following format: "p1#p2#p3#"
-	// where p1..p3 is one of { i, s, d, b }
 	return buffer_append_c(item->func_data->params_buff, c);
 }
 

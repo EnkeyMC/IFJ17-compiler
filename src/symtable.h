@@ -126,10 +126,10 @@ void print_func_item(htab_item *item_ptr);
 /**
  * Add parameter type to function record in hash table
  * @param item Pointer to hash table item (that stores function data)
- * @param c symbol representing data type ('i'-integer,'s'-string,'b'-boolean,'d'-double
+ * @param type parameter data type
  * @return true on success, false otherwise
  */
-bool func_add_param(htab_item* item, char c);
+bool func_add_param(htab_item* item, token_e type);
 
 /**
  * Get type of function parameter from given index

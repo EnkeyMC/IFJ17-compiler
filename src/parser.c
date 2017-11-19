@@ -31,10 +31,7 @@
  */
 static bool add_built_ins(HashTable* htab) {
 	const char *built_in_func[] = { "length", "substr", "asc", "chr" };
-	const char *built_in_params[]= { "s", "sii", "si", "i" };
-	token_e built_in_rts[]= {	// Return types
-		TOKEN_KW_INTEGER, TOKEN_KW_STRING, TOKEN_KW_INTEGER, TOKEN_KW_STRING
-	};
+
 	htab_item* built_in;
 	for (int i = 0; i < 4; i++) {
 		built_in = htab_func_lookup(htab, built_in_func[i]);
@@ -42,13 +39,52 @@ static bool add_built_ins(HashTable* htab) {
 			htab_func_free(htab);
 			return false;
 		}
-		func_set_rt(built_in, built_in_rts[i]);
+
 		func_set_def(built_in);
-		for (int k = 0; built_in_params[i][k] != '\0'; k++) {
-			if (! func_add_param(built_in, built_in_params[i][k])) {
-				htab_func_free(htab);
-				return false;
-			}
+		// Set parameter types and return types
+		switch (i) {
+			// length
+			case 0:
+				func_set_rt(built_in, TOKEN_KW_STRING);
+				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
+					htab_func_free(htab);
+					return false;
+				}
+				break;
+			// substr
+			case 1:
+				func_set_rt(built_in, TOKEN_KW_INTEGER);
+				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
+					htab_func_free(htab);
+					return false;
+				}
+				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
+					htab_func_free(htab);
+					return false;
+				}
+				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
+					htab_func_free(htab);
+					return false;
+				}
+				break;
+			case 2:
+				func_set_rt(built_in, TOKEN_KW_STRING);
+				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
+					htab_func_free(htab);
+					return false;
+				}
+				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
+					htab_func_free(htab);
+					return false;
+				}
+				break;
+			case 3:
+				func_set_rt(built_in, TOKEN_KW_INTEGER);
+				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
+					htab_func_free(htab);
+					return false;
+				}
+			default: break;
 		}
 	}
 
