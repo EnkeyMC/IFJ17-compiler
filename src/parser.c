@@ -18,11 +18,6 @@
 #include "expr_parser.h"
 #include "3ac.h"
 
-#define IL_ADD(op, addr1, addr2, addr3) if (!il_add(instruction_init(op, addr1, addr2, addr3))) return false;
-#define MAKE_TOKEN_INT(num) token_make(TOKEN_INT, (union token_data){.i = (num)})
-#define MAKE_TOKEN_REAL(real) token_make(TOKEN_REAL, (union token_data){.d = (real)})
-#define MAKE_TOKEN_STRING(string) token_make(TOKEN_STRING, (union token_data){.str = (string)})
-#define MAKE_TOKEN_BOOL(boolean) token_make((boolean) ? TOKEN_KW_TRUE : TOKEN_KW_FALSE, (union token_data){.str = NULL})
 
 /**
  * Add built-in functions to HashTable
@@ -88,17 +83,17 @@ static bool add_built_ins(HashTable* htab) {
 		}
 	}
 
-	IL_ADD(OP_LABEL, addr_symbol("", "asc"), NO_ADDR, NO_ADDR);
-	IL_ADD(OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
-	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
-	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "strlength"), NO_ADDR, NO_ADDR);
-	IL_ADD(OP_SUB, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)));
-	IL_ADD(OP_STRLEN, addr_symbol(F_LOCAL, "strlength"), addr_symbol(F_LOCAL, "str"), NO_ADDR);
-	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "if1cond"), NO_ADDR, NO_ADDR);
-	IL_ADD(OP_LT, addr_symbol(F_LOCAL, "if1cond"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(0)));
-	IL_ADD(OP_JUMPIFEQ, addr_symbol("", "wrongindex"), addr_symbol(F_LOCAL, "if1cond"), addr_constant(MAKE_TOKEN_BOOL(true)));
-	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "if2cond"), NO_ADDR, NO_ADDR);
-	IL_ADD(OP_GT, addr_symbol(F_LOCAL, "if2cond"), addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "strlength"));
+	IL_ADD(OP_LABEL, addr_symbol("", "asc"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "strlength"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(OP_SUB, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)), false);
+	IL_ADD(OP_STRLEN, addr_symbol(F_LOCAL, "strlength"), addr_symbol(F_LOCAL, "str"), NO_ADDR, false);
+	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "if1cond"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(OP_LT, addr_symbol(F_LOCAL, "if1cond"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(0)), false);
+	IL_ADD(OP_JUMPIFEQ, addr_symbol("", "wrongindex"), addr_symbol(F_LOCAL, "if1cond"), addr_constant(MAKE_TOKEN_BOOL(true)), false);
+	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "if2cond"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(OP_GT, addr_symbol(F_LOCAL, "if2cond"), addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "strlength"), false);
 	// TODO rest of instructions
 
 
@@ -298,7 +293,7 @@ int parse(Parser* parser) {
 
 						// Get parent semantic action
 						sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
-						if (sem_an != NULL) {
+						if (sem_an != NULL && sem_an_to_free->value != NULL) {
 							// Call parent semantic action with value from child
 							sem_an->sem_action(sem_an, parser, *sem_an_to_free->value);
 						}

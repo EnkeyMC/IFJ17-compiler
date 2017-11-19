@@ -58,6 +58,19 @@ int parse_expression(Parser *parser) {
 			break;
 	} while (ret_code == EXIT_SUCCESS);
 
+	if (ret_code == EXIT_SUCCESS) {
+		// After expression evaluation prepare value for parent SemAnalyzer
+		SemAnalyzer* sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
+
+		if (sem_an != NULL) {
+			// Reuse the SemAnalyzer and call sem_expr_end
+			sem_an->sem_action = sem_expr_end;
+			sem_an->state = SEM_STATE_START;
+			assert(sem_an->value != NULL);
+			sem_an->sem_action(sem_an, parser, *sem_an->value);
+		}
+	}
+
 	// Return token that is not part of expression
 	scanner_unget_token(parser->scanner, token);
 

@@ -13,7 +13,8 @@ typedef enum {
     SEM_STATE_START,
     SEM_STATE_VAR_TYPE,
 	SEM_STATE_FUNC_RETURN_TYPE,
-    SEM_STATE_EOL
+    SEM_STATE_EOL,
+    SEM_STATE_SCOPE_END
 } sem_state_e;
 
 // Forward declarations
@@ -86,8 +87,12 @@ void sem_value_free(void* value);
 
 // SEMANTIC FUNCTIONS
 
+int sem_expr_end(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+
 int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_func_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_param_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_scope(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_print(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 #endif //IFJ17_COMPILER_SEM_ANALYZER_H

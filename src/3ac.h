@@ -72,6 +72,14 @@
 #define F_LOCAL "LF@"
 #define F_TMP "TF@"
 
+// Helper macros for adding instructions
+#define IL_ADD(op, addr1, addr2, addr3, ret) if (!il_add(instruction_init(op, addr1, addr2, addr3))) return ret;
+#define MAKE_TOKEN_INT(num) token_make(TOKEN_INT, (union token_data){.i = (num)})
+#define MAKE_TOKEN_REAL(real) token_make(TOKEN_REAL, (union token_data){.d = (real)})
+#define MAKE_TOKEN_STRING(string) token_make(TOKEN_STRING, (union token_data){.str = (string)})
+#define MAKE_TOKEN_BOOL(boolean) token_make((boolean) ? TOKEN_KW_TRUE : TOKEN_KW_FALSE, (union token_data){.str = NULL})
+
+
 #define MAX_ADDRESSES 3
 
 /**

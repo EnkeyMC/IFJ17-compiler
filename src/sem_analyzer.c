@@ -5,11 +5,13 @@
 #include "error_code.h"
 #include "token.h"
 #include "parser.h"
+#include "3ac.h"
 
 #define SEM_FSM switch(sem_an->state)
 #define SEM_STATE(state) case state:
 #define END_STATE break
 #define SEM_ERROR_STATE default: return EXIT_INTERN_ERROR
+#define SEM_NEXT_STATE(s) sem_an->state = s
 
 SemAnalyzer* sem_an_init(semantic_action_f sem_action) {
 	SemAnalyzer* sem_an = (SemAnalyzer*) malloc(sizeof(SemAnalyzer));
@@ -39,6 +41,8 @@ SemValue* sem_value_copy(const SemValue* value) {
 	SemValue* new_val = (SemValue*) malloc(sizeof(SemValue));
 	if (new_val == NULL)
 		return NULL;
+
+	new_val->value_type = value->value_type;
 
 	switch (value->value_type) {
 		case VTYPE_TOKEN:
@@ -115,6 +119,33 @@ static void delete_scope(Parser* parser) {
 }
 // SEMANTIC FUNCTIONS
 
+/**
+ * Called at the end of evaluating expression to prepare value for parent SemAnalyzer
+ * @param sem_an SemAnalyzer
+ * @param parser Parser
+ * @param value SemValue
+ * @return exit code
+ */
+int sem_expr_end(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			assert(value.value_type == VTYPE_ID);
+			sem_an->value = sem_value_copy(&value);
+
+			IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, sem_an->value->id->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+			IL_ADD(OP_POPS, addr_symbol(F_LOCAL, sem_an->value->id->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+			sem_an->finished = true;
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
 int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	assert(sem_an != NULL);
 	assert(parser != NULL);
@@ -141,10 +172,9 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 				}
 
-				sem_an->state = SEM_STATE_VAR_TYPE;  // Set next state
+				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
 			}
-		}
-		END_STATE;
+		} END_STATE;
 
 		SEM_STATE(SEM_STATE_VAR_TYPE) {
 			if (value.value_type == VTYPE_TOKEN) {
@@ -154,18 +184,16 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN: {
 						symtab = get_current_sym_tab(parser);
-//<<<<<<< c3743f9695e0635d10f53ad14fa69206d7bf2347
 						htab_item *item = htab_find(symtab, sem_an->value->token->data.str);
 						item->id_data->type = value.token->id;
 
-						sem_an->state = SEM_STATE_EOL;
+						SEM_NEXT_STATE(SEM_STATE_EOL);
 					}
 					default:
 						break;
 				}
 			}
-		}
-		END_STATE;
+		} END_STATE;
 
 		SEM_STATE(SEM_STATE_EOL) {
 			if (value.value_type == VTYPE_TOKEN) {
@@ -177,8 +205,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						break;
 				}
 			}
-		}
-		END_STATE;
+		} END_STATE;
 
 		SEM_ERROR_STATE;
 	}
@@ -218,7 +245,7 @@ int sem_param_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 				}
 
-				sem_an->state = SEM_STATE_VAR_TYPE;  // Set next state
+				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
 			}
 		} END_STATE;
 
@@ -287,7 +314,7 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 				}
 
-				sem_an->state = SEM_STATE_VAR_TYPE;  // Set next state
+				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
 			}
 		} END_STATE;
 
@@ -311,7 +338,7 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// End of parametr declarations
 			else if (value.value_type == VTYPE_TOKEN
 					 && value.token->id == TOKEN_RPAR) {
-				sem_an->state = SEM_STATE_FUNC_RETURN_TYPE;
+				SEM_NEXT_STATE(SEM_STATE_FUNC_RETURN_TYPE);
 			}
 		} END_STATE;
 
@@ -327,7 +354,7 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						htab_item* item = htab_find(symtab_func, sem_an->value->token->data.str);
 						func_set_rt(item, value.token->id);
 
-						sem_an->state = SEM_STATE_EOL;
+						SEM_NEXT_STATE(SEM_STATE_EOL);
 					}
 					default:
 						break;
@@ -343,6 +370,56 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				}
 			}
 		}
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_SCOPE)
+			{
+				create_scope(parser);
+				SEM_NEXT_STATE(SEM_STATE_SCOPE_END);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_SCOPE_END) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_SCOPE)
+			{
+				delete_scope(parser);
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_print(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_ID) {
+				IL_ADD(OP_WRITE, addr_symbol(F_LOCAL, value.id->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+			} else if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				sem_an->finished = true;
+			}
+		} END_STATE;
 
 		SEM_ERROR_STATE;
 	}
