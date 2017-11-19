@@ -13,19 +13,20 @@
 #include "3ac.h"
 
 int main(int argc, char* argv[]) {
-	Scanner* scanner = scanner_init();
-	if (scanner == NULL)
-		return EXIT_INTERN_ERROR;
-
-	Parser* parser = parser_init(scanner);
-	if (parser == NULL) {
-		scanner_free(scanner);
+	if (!il_init()) {
 		return EXIT_INTERN_ERROR;
 	}
 
-	if (!il_init()) {
+	Scanner* scanner = scanner_init();
+	if (scanner == NULL) {
+		il_free();
+		return EXIT_INTERN_ERROR;
+	}
+
+	Parser* parser = parser_init(scanner);
+	if (parser == NULL) {
+		il_free();
 		scanner_free(scanner);
-		parser_free(parser);
 		return EXIT_INTERN_ERROR;
 	}
 

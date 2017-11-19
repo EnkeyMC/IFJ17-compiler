@@ -67,6 +67,11 @@
 #define GENERATE_ENUM(ENUM) OP_##ENUM,
 #define GENERATE_STRING(STR) #STR,
 
+#define NO_ADDR ((Address) {.type = ADDR_TYPE_EMPTY})
+#define F_GLOBAL "GF@"
+#define F_LOCAL "LF@"
+#define F_TMP "TF@"
+
 #define MAX_ADDRESSES 3
 
 /**

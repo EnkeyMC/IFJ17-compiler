@@ -16,6 +16,13 @@
 #include "error_code.h"
 #include "expr_grammar.h"
 #include "expr_parser.h"
+#include "3ac.h"
+
+#define IL_ADD(op, addr1, addr2, addr3) if (!il_add(instruction_init(op, addr1, addr2, addr3))) return false;
+#define MAKE_TOKEN_INT(num) ((Token){.id = TOKEN_INT, .i = (num)})
+#define MAKE_TOKEN_REAL(real) ((Token){.id = TOKEN_REAL, .d = (real)})
+#define MAKE_TOKEN_STRING(string) ((Token){.id = TOKEN_STRING, .str = (string)})
+#define MAKE_TOKEN_BOOL(boolean) ((Token){.id = ((boolean) ? TOKEN_KW_TRUE : TOKEN_KW_FALSE)})
 
 /**
  * Add built-in functions to HashTable
@@ -44,6 +51,20 @@ static bool add_built_ins(HashTable* htab) {
 			}
 		}
 	}
+
+	IL_ADD(OP_LABEL, addr_symbol("", "asc"), NO_ADDR, NO_ADDR);
+	IL_ADD(OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "strlength"), NO_ADDR, NO_ADDR);
+	IL_ADD(OP_SUB, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)));
+	IL_ADD(OP_STRLEN, addr_symbol(F_LOCAL, "strlength"), addr_symbol(F_LOCAL, "str"), NO_ADDR);
+	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "if1cond"), NO_ADDR, NO_ADDR);
+	IL_ADD(OP_LT, addr_symbol(F_LOCAL, "if1cond"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(0)));
+	IL_ADD(OP_JUMPIFEQ, addr_symbol("", "wrongindex"), addr_symbol(F_LOCAL, "if1cond"), addr_constant(MAKE_TOKEN_BOOL(true)));
+	IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, "if2cond"), NO_ADDR, NO_ADDR);
+	IL_ADD(OP_GT, addr_symbol(F_LOCAL, "if2cond"), addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "strlength"));
+	// TODO rest of instructions
+
 
 	return true;
 }

@@ -128,8 +128,14 @@ static void print_instruction(Instruction* instruction) {
 					case TOKEN_REAL:
 						printf("float@%g ", instruction->addresses[i].constant->d);
 						break;
+					case TOKEN_KW_TRUE:
+						printf("bool@true");
+						break;
+					case TOKEN_KW_FALSE:
+						printf("bool@false");
+						break;
 					default:
-						assert("I shouldn't be here");
+						assert(!"I shouldn't be here");
 						break;
 				}
 				break;
@@ -137,6 +143,8 @@ static void print_instruction(Instruction* instruction) {
 				break;
 		}
 	}
+
+	printf("\n");
 }
 
 void generate_code() {
