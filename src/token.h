@@ -89,17 +89,21 @@ typedef enum {
     TOKEN_ENUM_END  // Mark starting point for precedence table items
 } token_e;
 
+/**
+ * Union for token data
+ */
+union token_data {
+    int i;
+    double d;
+    char* str;
+};
 
 /**
  * Token structure type
  */
 typedef struct token_t {
     token_e id;		/// Type of token
-    union {
-        unsigned int i;
-        double d;
-        char* str;
-    };  /// Token data
+    union token_data data;  /// Token data
 } Token;
 
 /**
@@ -121,5 +125,13 @@ unsigned int get_token_column_value(token_e token);
  * @return copied token, NULL on error
  */
 Token* token_copy(Token* token);
+
+/**
+ * Make new token with given type and data
+ * @param type Type of token
+ * @param data Token data
+ * @return Token
+ */
+Token token_make(token_e type, union token_data data);
 
 #endif //IFJ17_COMPILER_TOKEN_H

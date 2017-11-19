@@ -4,9 +4,12 @@
 #include "sem_analyzer.h"
 #include "error_code.h"
 #include "token.h"
-#include "stack.h"
 #include "parser.h"
 
+#define SEM_FSM switch(sem_an->state)
+#define SEM_STATE(state) case state:
+#define END_STATE break
+#define SEM_ERROR_STATE default: return EXIT_INTERN_ERROR
 
 SemAnalyzer* sem_an_init(semantic_action_f sem_action) {
 	SemAnalyzer* sem_an = (SemAnalyzer*) malloc(sizeof(SemAnalyzer));
@@ -118,11 +121,10 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	HashTable* symtab = NULL;
 
-	switch (sem_an->state) {
-		case SEM_STATE_START:
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN
-				&& value.token->id == TOKEN_IDENTIFIER)
-			{
+				&& value.token->id == TOKEN_IDENTIFIER) {
 				sem_an->value = sem_value_copy(&value);
 				if (sem_an->value == NULL)
 					return EXIT_INTERN_ERROR;
@@ -130,29 +132,30 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				symtab = get_current_sym_tab(parser);
 
 				// Check variable redefinition
-				if (htab_find(symtab, value.token->str) != NULL) {
+				if (htab_find(symtab, value.token->data.str) != NULL) {
 					return EXIT_SEMANTIC_PROG_ERROR;
 				}
 
 				// Put variable in value table
-				if (htab_lookup(symtab, value.token->str) == NULL) {
+				if (htab_lookup(symtab, value.token->data.str) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
 
 				sem_an->state = SEM_STATE_VAR_TYPE;  // Set next state
 			}
-			break;
+		}
+		END_STATE;
 
-		case SEM_STATE_VAR_TYPE:
+		SEM_STATE(SEM_STATE_VAR_TYPE) {
 			if (value.value_type == VTYPE_TOKEN) {
 				switch (value.token->id) {
 					case TOKEN_KW_INTEGER:
 					case TOKEN_KW_DOUBLE:
 					case TOKEN_KW_STRING:
-					case TOKEN_KW_BOOLEAN:
-					{
+					case TOKEN_KW_BOOLEAN: {
 						symtab = get_current_sym_tab(parser);
-						htab_item* item = htab_find(symtab, sem_an->value->token->str);
+//<<<<<<< c3743f9695e0635d10f53ad14fa69206d7bf2347
+						htab_item *item = htab_find(symtab, sem_an->value->token->data.str);
 						item->id_data->type = value.token->id;
 
 						sem_an->state = SEM_STATE_EOL;
@@ -161,9 +164,10 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						break;
 				}
 			}
-			break;
+		}
+		END_STATE;
 
-		case SEM_STATE_EOL:
+		SEM_STATE(SEM_STATE_EOL) {
 			if (value.value_type == VTYPE_TOKEN) {
 				switch (value.token->id) {
 					case TOKEN_EOL:
@@ -173,9 +177,10 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						break;
 				}
 			}
-			break;
-		default:
-			return EXIT_INTERN_ERROR;
+		}
+		END_STATE;
+
+		SEM_ERROR_STATE;
 	}
 
 	return EXIT_SUCCESS;
@@ -188,11 +193,10 @@ int sem_param_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	HashTable* symtab_func = NULL;
 	HashTable* symtab = NULL;
 
-	switch (sem_an->state) {
-		case SEM_STATE_START:
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN
-				&& value.token->id == TOKEN_IDENTIFIER)
-			{
+				&& value.token->id == TOKEN_IDENTIFIER) {
 				sem_an->value = sem_value_copy(&value);
 				if (sem_an->value == NULL)
 					return EXIT_INTERN_ERROR;
@@ -201,33 +205,32 @@ int sem_param_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				symtab = get_current_sym_tab(parser);
 
 				// Check variable redefinition
-				if (htab_find(symtab, value.token->str) != NULL) {
+				if (htab_find(symtab, value.token->data.str) != NULL) {
 					return EXIT_SEMANTIC_PROG_ERROR;
 				}
 				// Check collision with function name
-				if (htab_find(symtab_func, value.token->str) != NULL) {
+				if (htab_find(symtab_func, value.token->data.str) != NULL) {
 					return EXIT_SEMANTIC_PROG_ERROR;
 				}
 
 				// Put variable in local symtable
-				if (htab_lookup(symtab, value.token->str) == NULL) {
+				if (htab_lookup(symtab, value.token->data.str) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
 
 				sem_an->state = SEM_STATE_VAR_TYPE;  // Set next state
 			}
-			break;
+		} END_STATE;
 
-		case SEM_STATE_VAR_TYPE:
+		SEM_STATE(SEM_STATE_VAR_TYPE) {
 			if (value.value_type == VTYPE_TOKEN) {
 				switch (value.token->id) {
 					case TOKEN_KW_INTEGER:
 					case TOKEN_KW_DOUBLE:
 					case TOKEN_KW_STRING:
-					case TOKEN_KW_BOOLEAN:
-					{
+					case TOKEN_KW_BOOLEAN: {
 						symtab = get_current_sym_tab(parser);
-						htab_item* item = htab_find(symtab, sem_an->value->token->str);
+						htab_item *item = htab_find(symtab, sem_an->value->token->data.str);
 						item->id_data->type = value.token->id;
 
 						token_free(sem_an->value->token);
@@ -239,10 +242,9 @@ int sem_param_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						break;
 				}
 			}
-			break;
+		} END_STATE;
 
-		default:
-			return EXIT_INTERN_ERROR;
+		SEM_ERROR_STATE;
 	}
 
 	return EXIT_SUCCESS;
@@ -255,11 +257,10 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	HashTable* symtab_func = NULL;
 	HashTable* symtab_global  = NULL;
 
-	switch (sem_an->state) {
-		case SEM_STATE_START:
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN
-				&& value.token->id == TOKEN_IDENTIFIER)
-			{
+				&& value.token->id == TOKEN_IDENTIFIER) {
 				sem_an->value = sem_value_copy(&value);
 				if (sem_an->value == NULL)
 					return EXIT_INTERN_ERROR;
@@ -269,15 +270,15 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				symtab_global = parser->sym_tab_global;
 
 				// Check function redefinition/redeclaration
-				if (htab_find(symtab_func, value.token->str) != NULL) {
+				if (htab_find(symtab_func, value.token->data.str) != NULL) {
 					return EXIT_SEMANTIC_PROG_ERROR;
 				}
-				if (htab_find(symtab_global, value.token->str) != NULL) {
+				if (htab_find(symtab_global, value.token->data.str) != NULL) {
 					return EXIT_SEMANTIC_PROG_ERROR;
 				}
 
 				// Put function name in symtable
-				if (htab_func_lookup(symtab_func, value.token->str) == NULL) {
+				if (htab_func_lookup(symtab_func, value.token->data.str) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
 
@@ -288,33 +289,33 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 				sem_an->state = SEM_STATE_VAR_TYPE;  // Set next state
 			}
-			break;
+		} END_STATE;
 
 		// Determine parameter type
-		case SEM_STATE_VAR_TYPE:
+		SEM_STATE(SEM_STATE_VAR_TYPE) {
 			if (value.value_type == VTYPE_ID) {
 				switch (value.id->id_data->type) {
 					case TOKEN_KW_INTEGER:
 					case TOKEN_KW_DOUBLE:
 					case TOKEN_KW_STRING:
-					case TOKEN_KW_BOOLEAN:
-					{
+					case TOKEN_KW_BOOLEAN: {
 						symtab_func = parser->sym_tab_functions;
-						htab_item* item = htab_find(symtab_func, sem_an->value->token->str);
-						if (! func_add_param(item, value.id->id_data->type))
+						htab_item *item = htab_find(symtab_func, sem_an->value->token->data.str);
+						if (!func_add_param(item, value.id->id_data->type))
 							return EXIT_INTERN_ERROR;
 					}
-					default: break;
+					default:
+						break;
 				};
 			}
-			// End of parametr declarations
+				// End of parametr declarations
 			else if (value.value_type == VTYPE_TOKEN
-					&& value.token->id == TOKEN_RPAR) {
+					 && value.token->id == TOKEN_RPAR) {
 				sem_an->state = SEM_STATE_FUNC_RETURN_TYPE;
 			}
-			break;
+		} END_STATE;
 
-		case SEM_STATE_FUNC_RETURN_TYPE:
+		SEM_STATE(SEM_STATE_FUNC_RETURN_TYPE) {
 			if (value.value_type == VTYPE_TOKEN) {
 				switch (value.token->id) {
 					case TOKEN_KW_INTEGER:
@@ -323,7 +324,7 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_BOOLEAN:
 					{
 						symtab_func = parser->sym_tab_functions;
-						htab_item* item = htab_find(symtab_func, sem_an->value->token->str);
+						htab_item* item = htab_find(symtab_func, sem_an->value->token->data.str);
 						func_set_rt(item, value.token->id);
 
 						sem_an->state = SEM_STATE_EOL;
@@ -332,23 +333,18 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						break;
 				}
 			}
-			break;
+		} END_STATE;
 
-		case SEM_STATE_EOL:
+		SEM_STATE(SEM_STATE_EOL) {
 			if (value.value_type == VTYPE_TOKEN) {
-				switch (value.token->id) {
-					case TOKEN_EOL:
-						// Delete local symtable
-						delete_scope(parser);
-						sem_an->finished = true;
-						break;
-					default:
-						break;
+				if (value.token->id == TOKEN_EOL) {
+					delete_scope(parser);
+					sem_an->finished = true;
 				}
 			}
-			break;
-		default:
-			return EXIT_INTERN_ERROR;
+		}
+
+		SEM_ERROR_STATE;
 	}
 
 	return EXIT_SUCCESS;

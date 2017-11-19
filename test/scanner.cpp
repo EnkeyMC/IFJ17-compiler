@@ -311,7 +311,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, (unsigned) 0);
+	EXPECT_EQ(token->data.i, 0);
 	token_free(token);
 
 	// EOL
@@ -325,7 +325,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, (unsigned) 5);
+	EXPECT_EQ(token->data.i, 5);
 	token_free(token);
 
 	// EOL
@@ -339,7 +339,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, (unsigned) 19549);
+	EXPECT_EQ(token->data.i, 19549);
 	token_free(token);
 
 	// EOL
@@ -363,7 +363,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_DOUBLE_EQ(token->d, 5e-5);
+	EXPECT_DOUBLE_EQ(token->data.d, 5e-5);
 	token_free(token);
 
 	// EOL
@@ -377,7 +377,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_EQ(token->d, 3E+6);
+	EXPECT_EQ(token->data.d, 3E+6);
 	token_free(token);
 
 	// EOL
@@ -391,7 +391,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_EQ(token->d, 0.8125);
+	EXPECT_EQ(token->data.d, 0.8125);
 	token_free(token);
 
 	// EOL
@@ -405,7 +405,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_EQ(token->d, 0.5e-2);
+	EXPECT_EQ(token->data.d, 0.5e-2);
 	token_free(token);
 
 	// EOL
@@ -419,7 +419,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_EQ(token->d, 0.3e20);
+	EXPECT_EQ(token->data.d, 0.3e20);
 	token_free(token);
 
 	// EOL
@@ -443,7 +443,7 @@ TEST_F(ScannerTestFixture, ParseString) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_STRING);
-	EXPECT_STREQ(token->str, "Test string \\001\\n");
+	EXPECT_STREQ(token->data.str, "Test string \\001\\n");
 	token_free(token);
 
 	// EOL
@@ -457,7 +457,7 @@ TEST_F(ScannerTestFixture, ParseString) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_STRING);
-	EXPECT_STREQ(token->str, "\\\\\\n Test\\ttwo");
+	EXPECT_STREQ(token->data.str, "\\\\\\n Test\\ttwo");
 	token_free(token);
 
 	// EOL

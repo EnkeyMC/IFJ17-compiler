@@ -34,7 +34,7 @@ Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, 
 }
 
 void instruction_free(void* inst) {
-	Instruction* instruction = inst;
+	Instruction* instruction = (Instruction*) inst;
 	for (int i = 0; i < MAX_ADDRESSES; i++) {
 		address_free(instruction->addresses[i]);
 	}
@@ -120,13 +120,13 @@ static void print_instruction(Instruction* instruction) {
 			case ADDR_TYPE_CONST:
 				switch (instruction->addresses[i].constant->id) {
 					case TOKEN_STRING:
-						printf("string@%s ", instruction->addresses[i].constant->str);
+						printf("string@%s ", instruction->addresses[i].constant->data.str);
 						break;
 					case TOKEN_INT:
-						printf("int@%d ", instruction->addresses[i].constant->i);
+						printf("int@%d ", instruction->addresses[i].constant->data.i);
 						break;
 					case TOKEN_REAL:
-						printf("float@%g ", instruction->addresses[i].constant->d);
+						printf("float@%g ", instruction->addresses[i].constant->data.d);
 						break;
 					case TOKEN_KW_TRUE:
 						printf("bool@true");
@@ -154,7 +154,7 @@ void generate_code() {
 
 		Instruction* instruction;
 		while (dllist_active(instruction_list)) {
-			instruction = dllist_get_active(instruction_list);
+			instruction = (Instruction*) dllist_get_active(instruction_list);
 			assert(instruction != NULL);
 			print_instruction(instruction);
 			dllist_succ(instruction_list);

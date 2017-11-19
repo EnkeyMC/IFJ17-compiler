@@ -9,6 +9,7 @@
 
 #include <cstdio>
 #include "gtest/gtest.h"
+#include "3ac.c"
 #include "parser.c"
 #include "sem_analyzer.c"
 
