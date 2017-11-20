@@ -310,7 +310,7 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				}
 
 				// Create new local symtable
-				if ((create_scope(parser)) == NULL) {
+				if (create_scope(parser) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
 
@@ -369,7 +369,7 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					sem_an->finished = true;
 				}
 			}
-		}
+		} END_STATE;
 
 		SEM_ERROR_STATE;
 	}
