@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <malloc.h>
 #include <assert.h>
 #include <stdlib.h>
@@ -85,6 +86,37 @@ void sem_value_free(void* value) {
 
 	free(value);
 }
+
+// ------------------------
+// SEMANTIC STACK FUNCTIONS
+// ------------------------
+
+bool sem_stack_empty(DLList *s) {
+	assert(s != NULL);
+
+	return dllist_empty(s);
+}
+
+void* sem_stack_top(DLList *s) {
+	assert(s != NULL);
+
+	return dllist_get_first(s);
+}
+
+void* sem_stack_pop(DLList *s) {
+	assert(s != NULL);
+
+	return dllist_delete_first(s);
+}
+
+bool sem_stack_push(DLList *s, void* item) {
+	assert(s != NULL);
+
+	return dllist_insert_first(s, item);
+}
+// ----------------
+// SEMANTIC ACTIONS
+// ----------------
 
 static HashTable* get_current_sym_tab(Parser* parser) {
 	// Get local value table

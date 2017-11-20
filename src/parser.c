@@ -213,7 +213,7 @@ Parser* parser_init(Scanner* scanner) {
 	}
 
 
-	parser->sem_an_stack = stack_init(5);
+	parser->sem_an_stack = dllist_init(sem_an_free);
 	if (parser->sem_an_stack == NULL) {
 		htab_func_free(parser->sym_tab_functions);
 		htab_free(parser->sym_tab_global);
@@ -232,7 +232,7 @@ void parser_free(Parser* parser) {
 
 	htab_free(parser->sym_tab_global);
 	dllist_free(parser->sym_tab_stack);
-	stack_free(parser->sem_an_stack, sem_an_free);
+	dllist_free(parser->sem_an_stack);
 	htab_func_free(parser->sym_tab_functions);
 	grammar_free();
 	expr_grammar_free();
@@ -306,7 +306,7 @@ int parse(Parser* parser) {
 						if (sem_an == NULL) {
 							ret_code = EXIT_INTERN_ERROR;
 						} else {
-							stack_push(parser->sem_an_stack, sem_an);
+							sem_stack_push(parser->sem_an_stack, sem_an);
 						}
 					}
 
@@ -328,19 +328,19 @@ int parse(Parser* parser) {
 			if (*s_top == token->id) {
 				stack_pop(parser->dtree_stack);
 
-				if (!stack_empty(parser->sem_an_stack)) {
+				if (!sem_stack_empty(parser->sem_an_stack)) {
 					// Handle semantics
-					sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
+					sem_an = (SemAnalyzer*) sem_stack_top(parser->sem_an_stack);
 					ret_code = sem_an->sem_action(sem_an, parser, SEM_VALUE_TOKEN(token));
 
 					// Finish up semantic analyzers
 					while (sem_an != NULL && sem_an->finished && (ret_code == EXIT_SUCCESS)) {
 						// If semantic action is finished, pop it from stack
-						stack_pop(parser->sem_an_stack);
+						sem_stack_pop(parser->sem_an_stack);
 						sem_an_to_free = sem_an;  // Store it for later freeing
 
 						// Get parent semantic action
-						sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
+						sem_an = (SemAnalyzer*) sem_stack_top(parser->sem_an_stack);
 						if (sem_an != NULL && sem_an_to_free->value != NULL) {
 							// Call parent semantic action with value from child
 							ret_code = sem_an->sem_action(sem_an, parser, *sem_an_to_free->value);

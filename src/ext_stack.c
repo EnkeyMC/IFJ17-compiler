@@ -118,7 +118,7 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 				if (IS_TOKEN(item->type_id)) {
 					sem_an->sem_action(sem_an, parser, SEM_VALUE_TOKEN(item->token));
 				} else if (IS_NONTERMINAL(item->type_id)){
-					sem_an_top = (SemAnalyzer*) stack_pop(parser->sem_an_stack);
+					sem_an_top = (SemAnalyzer*) sem_stack_pop(parser->sem_an_stack);
 					assert(sem_an_top != NULL);
 
 					// Pass value to current semantic action
@@ -134,7 +134,7 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 
 		// Push current semantic analyzer on stack
 		if (sem_an != NULL) {
-			if (!stack_push(parser->sem_an_stack, sem_an)) {
+			if (!sem_stack_push(parser->sem_an_stack, sem_an)) {
 				free(sem_an);
 				return EXIT_INTERN_ERROR;
 			}

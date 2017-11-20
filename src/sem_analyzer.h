@@ -84,8 +84,42 @@ SemValue* sem_value_copy(const SemValue* value);
  */
 void sem_value_free(void* value);
 
+// ------------------------
+// SEMANTIC STACK FUNCTIONS
+// ------------------------
 
+/**
+ * Return whether stack is empty or not
+ * @param s valid Stack object
+ * @return true if empty, false otherwise
+ */
+bool sem_stack_empty(DLList *s);
+
+/**
+ * Return item on the top of the stack, does not remove it from the stack
+ * @param s valid Stack object
+ * @return item from top of the stack, NULL if stack is empty
+ */
+void* sem_stack_top(DLList *s);
+
+/**
+ * Return item on the top of the stack and remove it from the stack
+ * @param s valid Stack object
+ * @return item from top of the stack, NULL if stack is empty
+ */
+void* sem_stack_pop(DLList *s);
+
+/**
+ * Push item to a top of the stack
+ * @param s valid Stack object
+ * @param item to push to stack
+ * @return true on success, false on allocation error
+ */
+bool sem_stack_push(DLList *s, void* item);
+
+// ------------------
 // SEMANTIC FUNCTIONS
+// ------------------
 
 int sem_expr_end(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 

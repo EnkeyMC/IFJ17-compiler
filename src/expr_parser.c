@@ -60,7 +60,7 @@ int parse_expression(Parser *parser) {
 
 	if (ret_code == EXIT_SUCCESS) {
 		// After expression evaluation prepare value for parent SemAnalyzer
-		SemAnalyzer* sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
+		SemAnalyzer* sem_an = (SemAnalyzer*) sem_stack_top(parser->sem_an_stack);
 
 		if (sem_an != NULL) {
 			// Reuse the SemAnalyzer and call sem_expr_end

@@ -21,7 +21,7 @@
 typedef struct parser_t {
     Scanner* scanner;  /// Input scanner
     Stack* dtree_stack;  /// Stack for simulating syntax derivation tree
-    Stack* sem_an_stack;  /// Stack of semantic analyzers
+    DLList* sem_an_stack;  /// Stack of semantic analyzers
     DLList* sym_tab_stack;  /// Stack of local symbol tables
     HashTable* sym_tab_global;  /// Global symbol table
     HashTable* sym_tab_functions;  /// Functions symbol table3
