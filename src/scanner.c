@@ -127,6 +127,34 @@ void scanner_unget_token(Scanner* scanner, Token* token) {
 	scanner->backlog_token = token;
 }
 
+char* convert_white_char(const char* str) {
+ 	char* esc_str;
+	int ch;
+ 	char esc_seq[5];
+
+	Buffer *buffer = buffer_init(strlen(str));
+
+ 	for (unsigned int i = 0; i < strlen(str); i++) {
+		ch = str[i];
+		if ((ch >= 0 && ch <= 32) || ch == 35 || ch == 92) {
+			sprintf(esc_seq, "\\%3d", ch);
+		} else {
+			esc_seq[0] = str[i];
+			esc_seq[1] = '\0';
+		}
+		buffer_append_str(buffer, esc_seq);
+ 	}
+	esc_str = (char*) malloc(sizeof(char)*(buffer->len+1));
+	if (esc_str == NULL) {
+		buffer_free(buffer);
+		return  NULL;
+	}
+	strcpy(esc_str, buffer->str);
+	buffer_free(buffer);
+
+	return esc_str;
+}
+
 Token* scanner_get_token(Scanner* scanner) {
 	assert(scanner != NULL);
 	assert(scanner->stream != NULL);
@@ -624,7 +652,8 @@ Token* scanner_get_token(Scanner* scanner) {
 
 		STATE(string_end) {
 			token->id = TOKEN_STRING;
-			if (!str_duplicate(&token->data.str, scanner->buffer->str)) {
+			token->data.str = convert_white_char(scanner->buffer->str);
+			if (token->data.str == NULL) {
 				free(token);
 				return NULL;
 			}

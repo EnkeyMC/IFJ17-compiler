@@ -50,4 +50,12 @@ Token* scanner_get_token(Scanner* scanner);
  */
 void scanner_unget_token(Scanner* scanner, Token* token);
 
+/**
+ * Convert white chars to escape sequences
+ *  @param string to convert
+ *  @return string with escape sequences
+ */
+
+char* convert_white_char(const char* str);
+
 #endif //IFJ17_COMPILER_SCANNER_H
