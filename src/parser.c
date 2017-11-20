@@ -40,7 +40,7 @@ static bool add_built_ins(HashTable* htab) {
 		switch (i) {
 			// length
 			case 0:
-				func_set_rt(built_in, TOKEN_KW_STRING);
+				func_set_rt(built_in, TOKEN_KW_INTEGER);
 				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
 					htab_func_free(htab);
 					return false;
@@ -48,7 +48,7 @@ static bool add_built_ins(HashTable* htab) {
 				break;
 			// substr
 			case 1:
-				func_set_rt(built_in, TOKEN_KW_INTEGER);
+				func_set_rt(built_in, TOKEN_KW_STRING);
 				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
 					htab_func_free(htab);
 					return false;
@@ -63,7 +63,7 @@ static bool add_built_ins(HashTable* htab) {
 				}
 				break;
 			case 2:
-				func_set_rt(built_in, TOKEN_KW_STRING);
+				func_set_rt(built_in, TOKEN_KW_INTEGER);
 				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
 					htab_func_free(htab);
 					return false;
@@ -74,7 +74,7 @@ static bool add_built_ins(HashTable* htab) {
 				}
 				break;
 			case 3:
-				func_set_rt(built_in, TOKEN_KW_INTEGER);
+				func_set_rt(built_in, TOKEN_KW_STRING);
 				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
 					htab_func_free(htab);
 					return false;
@@ -281,12 +281,9 @@ int parse(Parser* parser) {
 					// Handle semantics
 					sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
 					ret_code = sem_an->sem_action(sem_an, parser, SEM_VALUE_TOKEN(token));
-					if (ret_code != EXIT_SUCCESS) {
-						break;
-					}
 
 					// Finish up semantic analyzers
-					while (sem_an != NULL && sem_an->finished) {
+					while (sem_an != NULL && sem_an->finished && (ret_code == EXIT_SUCCESS)) {
 						// If semantic action is finished, pop it from stack
 						stack_pop(parser->sem_an_stack);
 						sem_an_to_free = sem_an;  // Store it for later freeing
@@ -295,9 +292,13 @@ int parse(Parser* parser) {
 						sem_an = (SemAnalyzer*) stack_top(parser->sem_an_stack);
 						if (sem_an != NULL && sem_an_to_free->value != NULL) {
 							// Call parent semantic action with value from child
-							sem_an->sem_action(sem_an, parser, *sem_an_to_free->value);
+							ret_code = sem_an->sem_action(sem_an, parser, *sem_an_to_free->value);
 						}
 						sem_an_free(sem_an_to_free);  // Free finished semantic analyzer
+					}
+
+					if (ret_code != EXIT_SUCCESS) {
+						break;
 					}
 				}
 			} else {
