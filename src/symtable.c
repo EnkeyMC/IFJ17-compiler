@@ -254,6 +254,7 @@ void print_func_item(htab_item * item_ptr) {
 	printf("Key: '%s'\tReturn type: %d\n", item_ptr->key, item_ptr->func_data->rt);
 	printf("\tNumber of params: '%u'\tParam types: %s\n", item_ptr->func_data->par_num, item_ptr->func_data->par_types->str);
 	printf("\tDefinition provided?: '%s'\n", item_ptr->func_data->definition ? "true" : "false");
+	printf("\tParameter names: '%s'\n", item_ptr->func_data->par_names->str);
 	printf("---------------------------------------------------------------'\n");
 }
 

@@ -458,3 +458,184 @@ int sem_print(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	return EXIT_SUCCESS;
 }
+
+int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	HashTable* symtab_func = NULL;
+	HashTable* symtab_global  = NULL;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_TOKEN
+				&& value.token->id == TOKEN_IDENTIFIER) {
+				sem_an->value = sem_value_copy(&value);
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+
+				// Get symtable storing functions
+				symtab_func = parser->sym_tab_functions;
+				symtab_global = parser->sym_tab_global;
+
+				// Check collision with global variable
+				if (htab_find(symtab_global, value.token->data.str) != NULL) {
+					return EXIT_SEMANTIC_PROG_ERROR;
+				}
+				// Function can be already declared, but it must not be defined
+				htab_item *item = htab_find(symtab_func, value.token->data.str);
+				if (item != NULL) {
+					if (item->func_data->definition == true) // Already defined
+						return EXIT_SEMANTIC_PROG_ERROR;
+					else {
+						// Create new local symtable
+						if (create_scope(parser) == NULL)
+							return EXIT_INTERN_ERROR;
+						// Function was declared
+						SEM_NEXT_STATE(SEM_STATE_DECLARED_VAR_TYPE);
+						break;
+					}
+				}
+
+				// Function was NOT declared
+				// add it to symtable
+				if (htab_func_lookup(symtab_func, value.token->data.str) == NULL) {
+					return EXIT_INTERN_ERROR;
+				}
+
+				// Create new local symtable
+				if (create_scope(parser) == NULL) {
+					return EXIT_INTERN_ERROR;
+				}
+
+				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
+			}
+		} END_STATE;
+
+		// Check parameters with function declaration
+		SEM_STATE(SEM_STATE_DECLARED_VAR_TYPE) {
+			static unsigned idx = 1;
+			if (value.value_type == VTYPE_ID) {
+				switch (value.id->id_data->type) {
+					case TOKEN_KW_INTEGER:
+					case TOKEN_KW_DOUBLE:
+					case TOKEN_KW_STRING:
+					case TOKEN_KW_BOOLEAN: {
+						symtab_func = parser->sym_tab_functions;
+						htab_item *item = htab_find(symtab_func, sem_an->value->token->data.str);
+						// Type in declaration and definition does not match
+						if (value.id->id_data->type != func_get_param(item, idx))
+							return EXIT_SEMANTIC_PROG_ERROR;
+						idx++;
+						if (!func_store_param_name(item, value.id->key))
+							return EXIT_INTERN_ERROR;
+					}
+					default:
+						break;
+				};
+			}
+				// End of parametr declarations
+			else if (value.value_type == VTYPE_TOKEN
+					 && value.token->id == TOKEN_RPAR) {
+				symtab_func = parser->sym_tab_functions;
+				htab_item *item = htab_find(symtab_func, sem_an->value->token->data.str);
+				// Function definition did not provide enough parameters
+				if (item->func_data->par_num != idx -1)
+					return EXIT_SEMANTIC_PROG_ERROR;
+
+				idx = 1;
+				SEM_NEXT_STATE(SEM_STATE_DECLARED_RETURN_TYPE);
+			}
+		} END_STATE;
+
+		// Determine parameter type
+		SEM_STATE(SEM_STATE_VAR_TYPE) {
+			if (value.value_type == VTYPE_ID) {
+				switch (value.id->id_data->type) {
+					case TOKEN_KW_INTEGER:
+					case TOKEN_KW_DOUBLE:
+					case TOKEN_KW_STRING:
+					case TOKEN_KW_BOOLEAN: {
+						symtab_func = parser->sym_tab_functions;
+						htab_item *item = htab_find(symtab_func, sem_an->value->token->data.str);
+						if (!func_store_param_name(item, value.id->key))
+							return EXIT_INTERN_ERROR;
+						if (!func_add_param(item, value.id->id_data->type))
+							return EXIT_INTERN_ERROR;
+					}
+					default:
+						break;
+				};
+			}
+				// End of parametr declarations
+			else if (value.value_type == VTYPE_TOKEN
+					 && value.token->id == TOKEN_RPAR) {
+				SEM_NEXT_STATE(SEM_STATE_FUNC_RETURN_TYPE);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DECLARED_RETURN_TYPE) {
+			if (value.value_type == VTYPE_TOKEN) {
+				switch (value.token->id) {
+					case TOKEN_KW_INTEGER:
+					case TOKEN_KW_DOUBLE:
+					case TOKEN_KW_STRING:
+					case TOKEN_KW_BOOLEAN:
+					{
+						symtab_func = parser->sym_tab_functions;
+						htab_item* item = htab_find(symtab_func, sem_an->value->token->data.str);
+						if (item->func_data->rt != value.token->id)
+							return EXIT_SEMANTIC_PROG_ERROR;
+						func_set_def(item);
+
+						SEM_NEXT_STATE(SEM_STATE_FUNC_END);
+					}
+					default:
+						break;
+				}
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_FUNC_RETURN_TYPE) {
+			if (value.value_type == VTYPE_TOKEN) {
+				switch (value.token->id) {
+					case TOKEN_KW_INTEGER:
+					case TOKEN_KW_DOUBLE:
+					case TOKEN_KW_STRING:
+					case TOKEN_KW_BOOLEAN:
+					{
+						symtab_func = parser->sym_tab_functions;
+						htab_item* item = htab_find(symtab_func, sem_an->value->token->data.str);
+						func_set_rt(item, value.token->id);
+						func_set_def(item);
+
+						SEM_NEXT_STATE(SEM_STATE_FUNC_END);
+					}
+					default:
+						break;
+				}
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_FUNC_END) {
+			if (value.value_type == VTYPE_TOKEN) {
+				if (value.token->id == TOKEN_KW_FUNCTION) {
+					SEM_NEXT_STATE(SEM_STATE_EOL);
+				}
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_EOL) {
+			if (value.value_type == VTYPE_TOKEN) {
+				if (value.token->id == TOKEN_EOL) {
+					delete_scope(parser);
+					sem_an->finished = true;
+				}
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}

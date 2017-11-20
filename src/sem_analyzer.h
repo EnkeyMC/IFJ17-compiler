@@ -13,6 +13,9 @@ typedef enum {
     SEM_STATE_START,
     SEM_STATE_VAR_TYPE,
 	SEM_STATE_FUNC_RETURN_TYPE,
+	SEM_STATE_DECLARED_VAR_TYPE,
+	SEM_STATE_DECLARED_RETURN_TYPE,
+	SEM_STATE_FUNC_END,
     SEM_STATE_EOL,
     SEM_STATE_SCOPE_END
 } sem_state_e;
@@ -125,6 +128,7 @@ int sem_expr_end(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_func_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_func_def(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_param_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_scope(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_print(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
