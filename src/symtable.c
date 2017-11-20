@@ -55,7 +55,8 @@ static void htab_clear(HashTable *htab_ptr, bool func) {
 			next = prev->next;
 			free(prev->key);
 			if (func) {
-				buffer_free(prev->func_data->params_buff);
+				buffer_free(prev->func_data->par_types);
+				buffer_free(prev->func_data->par_names);
 				free(prev->func_data);
 			}
 			else
@@ -111,7 +112,8 @@ static bool htab_remove_item(HashTable *htab_ptr, const char *key, bool func) {
 
 	free(tmp->key);
 	if (func) {
-		buffer_free(tmp->func_data->params_buff);
+		buffer_free(tmp->func_data->par_types);
+		buffer_free(tmp->func_data->par_names);
 		free(tmp->func_data);
 	}
 	else
@@ -141,15 +143,23 @@ static bool alloc_func_item(htab_item* item) {
 		free(item);
 		return false;
 	}
-	item->func_data->params_buff = buffer_init(BUFFER_INIT_SIZE);
-	if (item->func_data->params_buff == NULL) {
+	item->func_data->par_types = buffer_init(BUFFER_INIT_SIZE);
+	if (item->func_data->par_types == NULL) {
 		free(item->key);
 		free(item->func_data);
 		free(item);
 		return false;
 	}
+	item->func_data->par_names = buffer_init(BUFFER_INIT_SIZE);
+	if (item->func_data->par_names == NULL) {
+		free(item->key);
+		buffer_free(item->func_data->par_types);
+		free(item->func_data);
+		free(item);
+		return false;
+	}
 	item->func_data->rt = END_OF_TERMINALS;
-	item->func_data->params_num = 0;
+	item->func_data->par_num = 0;
 	item->func_data->definition = false;
 
 	return true;
@@ -242,7 +252,7 @@ void print_id_item(htab_item * item_ptr) {
 
 void print_func_item(htab_item * item_ptr) {
 	printf("Key: '%s'\tReturn type: %d\n", item_ptr->key, item_ptr->func_data->rt);
-	printf("\tNumber of params: '%u'\tParam types: %s\n", item_ptr->func_data->params_num, item_ptr->func_data->params_buff->str);
+	printf("\tNumber of params: '%u'\tParam types: %s\n", item_ptr->func_data->par_num, item_ptr->func_data->par_types->str);
 	printf("\tDefinition provided?: '%s'\n", item_ptr->func_data->definition ? "true" : "false");
 	printf("---------------------------------------------------------------'\n");
 }
@@ -268,17 +278,18 @@ bool func_add_param(htab_item* item, token_e type) {
 			break;
 		default: return false;
 	}
-	item->func_data->params_num++;
-	return buffer_append_c(item->func_data->params_buff, c);
+	item->func_data->par_num++;
+	return buffer_append_c(item->func_data->par_types, c);
 }
 
 token_e func_get_param(htab_item* item, unsigned idx) {
 	assert(item != NULL);
+	assert(idx != 0);
 
-	if (idx > item->func_data->params_num)
+	if (idx > item->func_data->par_num)
 		return END_OF_TERMINALS;
 
-	char param_type = item->func_data->params_buff->str[idx-1];
+	char param_type = item->func_data->par_types->str[idx-1];
 	switch (param_type) {
 		case 's': return TOKEN_KW_STRING;
 		case 'b': return TOKEN_KW_BOOLEAN;
@@ -286,6 +297,46 @@ token_e func_get_param(htab_item* item, unsigned idx) {
 		case 'd': return TOKEN_KW_DOUBLE;
 		default: return END_OF_TERMINALS;
 	}
+}
+
+char* func_get_param_name(htab_item* item, unsigned idx) {
+	assert(item != NULL);
+	assert(idx != 0);
+
+	if (idx > item->func_data->par_num)
+		return NULL;
+
+	unsigned markers_found = 0;
+	char* start = item->func_data->par_names->str;
+	while (markers_found != (idx -1)) {
+		start++;
+		if (*start == '#') {
+			start++;
+			markers_found++;
+		}
+	}
+
+	unsigned len = 0;
+	while (*(start + len) != '#')
+		len++;
+
+	char* param_name = (char*) malloc(sizeof(char) * (len + 1));
+	if (param_name == NULL)
+		return NULL;
+
+	if (! strncpy(param_name, start, len))
+		return NULL;
+	param_name[len] = '\0';
+	return param_name;
+}
+
+bool func_store_param_name(htab_item* item, const char* name) {
+	assert(item != NULL);
+	assert(name != NULL);
+
+	if (buffer_append_str(item->func_data->par_names, name))
+		return buffer_append_c(item->func_data->par_names, '#');
+	return false;
 }
 
 void func_set_rt(htab_item* item, token_e type) {

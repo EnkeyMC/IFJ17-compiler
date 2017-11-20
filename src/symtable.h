@@ -16,7 +16,7 @@
 #include "dllist.h"
 #include "buffer.h"
 
-#define BUFFER_INIT_SIZE 12
+#define BUFFER_INIT_SIZE 42
 #define HTAB_INIT_SIZE 67
 
 /**
@@ -24,8 +24,9 @@
  */
 typedef struct htab_func_item_t {
 	token_e rt;	/// Return type
-	unsigned params_num;	/// Number of parameters
-	Buffer* params_buff;	/// String containing paramater types
+	unsigned par_num;	/// Number of parameters
+	Buffer* par_types;	/// String containing paramater types
+	Buffer* par_names;	/// String containing paramater names
 	bool definition;	/// Was already defined?
 } htab_func_item;
 
@@ -134,7 +135,7 @@ bool func_add_param(htab_item* item, token_e type);
 /**
  * Get type of function parameter from given index
  * @param item Pointer to hash table item (that stores function data)
- * @param idx Parameter index - INDEXING START AT 1 !!!
+ * @param idx Parameter index - INDEXING STARTS AT 1 !!!
  * @return Parameter data type (e.g. TOKEN_KW_STRING, TOKEN_KW_INTEGER,...) on success, END_OF_TERMINALS otherwise
  */
 token_e func_get_param(htab_item* item, unsigned idx);
@@ -151,5 +152,21 @@ void func_set_rt(htab_item* item, token_e type);
  * @param item Item containing function data
  */
 void func_set_def(htab_item* item);
+
+/**
+ * Get parameter name
+ * @param item Item with function data
+ * @param idx Parameter index - INDEXING STARTS AT 1 !!!
+ * @return Copy of parameter name on success, NULL otherwise
+ */
+char* func_get_param_name(htab_item* item, unsigned idx);
+
+/**
+ * Store parameter name in function atribute
+ * @param item Item with function data
+ * @param name name of the parameter
+ * @return true on succes, false othetwise
+ */
+bool func_store_param_name(htab_item* item, const char* name);
 
 #endif //IFJ17_COMPILER_SYMTABLE_H
