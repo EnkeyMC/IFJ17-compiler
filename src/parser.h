@@ -47,4 +47,10 @@ void parser_free(Parser* parser);
  */
 int parse(Parser* parser);
 
+/**
+ * Generates unique identifier
+ * @return identifier, NULL on error
+ */
+char* generate_uid();
+
 #endif //IFJ17_COMPILER_PARSER_H

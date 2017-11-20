@@ -68,16 +68,16 @@
 #define GENERATE_STRING(STR) #STR,
 
 #define NO_ADDR ((Address) {.type = ADDR_TYPE_EMPTY, {NULL}})
-#define F_GLOBAL "GF@"
-#define F_LOCAL "LF@"
-#define F_TMP "TF@"
+#define F_GLOBAL scope_prefix[0]
+#define F_LOCAL scope_prefix[1]
+#define F_TMP scope_prefix[2]
 
 // Helper macros for adding instructions
 #define IL_ADD(op, addr1, addr2, addr3, ret) if (!il_add(instruction_init(op, addr1, addr2, addr3))) return ret;
 #define MAKE_TOKEN_INT(num) token_make(TOKEN_INT, (union token_data){.i = (num)})
 #define MAKE_TOKEN_REAL(real) token_make(TOKEN_REAL, (union token_data){.d = (real)})
-#define MAKE_TOKEN_STRING(string) token_make(TOKEN_STRING, (union token_data){.str = (string)})
-#define MAKE_TOKEN_BOOL(boolean) token_make((boolean) ? TOKEN_KW_TRUE : TOKEN_KW_FALSE, (union token_data){.str = NULL})
+#define MAKE_TOKEN_STRING(string) token_make_str(string)
+#define MAKE_TOKEN_BOOL(boolean) token_make((boolean) ? TOKEN_KW_TRUE : TOKEN_KW_FALSE, (union token_data){.i = 0})
 
 
 #define MAX_ADDRESSES 3
@@ -118,6 +118,8 @@ typedef struct instruction_t {
     opcode_e operation;  /// Instruction operation code
     Address addresses[MAX_ADDRESSES];  /// Array of addresses
 } Instruction;
+
+extern const char* scope_prefix[3];  /// Array of scope prefixes, use macros F_LOCAL,...
 
 extern DLList* instruction_list;  /// Global instruction list
 

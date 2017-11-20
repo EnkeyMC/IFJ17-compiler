@@ -41,6 +41,21 @@ protected:
 	}
 };
 
+TEST(UIDGeneratorTest, UIDS200) {
+	constexpr int n = 500;
+	char* uids[n];
+	for (int i = 0; i < n; i++) {
+		uids[i] = generate_uid();
+
+		for (int j = 0; j < i; j++) {
+			EXPECT_STRNE(uids[j], uids[i]);
+		}
+	}
+
+	for (int i = 0; i < n; i++) {
+		free(uids[i]);
+	}
+}
 
 TEST_F(ParserTestFixture, SuccEmpty) {
 	SetInputFile("test_files/empty.fbc");

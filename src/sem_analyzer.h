@@ -17,6 +17,8 @@ typedef enum {
 	SEM_STATE_DECLARED_RETURN_TYPE,
 	SEM_STATE_FUNC_END,
     SEM_STATE_EOL,
+    SEM_STATE_OPERATOR,
+    SEM_STATE_OPERAND,
     SEM_STATE_SCOPE_END
 } sem_state_e;
 
@@ -75,6 +77,12 @@ SemAnalyzer* sem_an_init(semantic_action_f sem_action);
 void sem_an_free(void* sem_an);
 
 /**
+ * Initialize new semantic value
+ * @return new SemValue, NULL on error
+ */
+SemValue* sem_value_init();
+
+/**
  * Deep copy semantic value, but only move VTYPE_LIST
  * @param value semantic value
  * @return deep copy of value, NULL on error
@@ -125,6 +133,12 @@ bool sem_stack_push(DLList *s, void* item);
 // ------------------
 
 int sem_expr_end(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+
+int sem_expr_id(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_const(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_and_or(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_lte_gte(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+
 
 int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_func_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);

@@ -1,6 +1,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <string.h>
+#include <stdio.h>
 #include "3ac.h"
 
 static const char* opcodes_str[] = {
@@ -8,6 +9,8 @@ static const char* opcodes_str[] = {
 };
 
 DLList* instruction_list = NULL;
+
+const char* scope_prefix[3] = {"GF@", "LF@", "TF@"};
 
 Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, Address addr3) {
 	Instruction* inst = (Instruction*) malloc(sizeof(Instruction));

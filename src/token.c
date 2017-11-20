@@ -1,6 +1,8 @@
 #include <malloc.h>
 #include <memory.h>
+#include <stdlib.h>
 #include "token.h"
+#include "error_code.h"
 
 void token_free(Token* token) {
 	if (token == NULL)
@@ -54,5 +56,17 @@ Token token_make(token_e type, union token_data data) {
 	Token token;
 	token.id = type;
 	token.data = data;
+	return token;
+}
+
+Token token_make_str(const char* string) {
+	Token token;
+	token.id = TOKEN_STRING;
+	char* copy = (char*) malloc(sizeof(char) * (strlen(string) + 1));
+	if (copy == NULL) exit(EXIT_INTERN_ERROR);  // I do not have time to make proper exit, sorry
+
+	strcpy(copy, string);
+
+	token.data.str = copy;
 	return token;
 }

@@ -134,4 +134,11 @@ Token* token_copy(Token* token);
  */
 Token token_make(token_e type, union token_data data);
 
+/**
+ * Make new token with string type
+ * @param string String is copied to token
+ * @return Token
+ */
+Token token_make_str(const char* string);
+
 #endif //IFJ17_COMPILER_TOKEN_H
