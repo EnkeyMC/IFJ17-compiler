@@ -138,6 +138,9 @@ int sem_expr_id(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_const(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_and_or(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_lte_gte(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_eq_ne(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_div(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 
 int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);

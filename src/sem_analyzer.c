@@ -389,7 +389,7 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	assert(sem_an != NULL);
 	assert(parser != NULL);
 
-	static token_e op_type;
+	static token_e op_type;  // First operand type
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -536,6 +536,406 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			free(id);
 
 			item->id_data->type = TOKEN_KW_BOOLEAN;
+
+			// Reuse SemValue and make it VTYPE_ID
+			token_free(sem_an->value->token);
+			sem_an->value->value_type = VTYPE_ID;
+			sem_an->value->id = item;
+
+			sem_an->finished = true;
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	static token_e op_type;  // First operand type
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			assert(value.value_type == VTYPE_ID);
+
+			// Remeber operand type
+			op_type = value.id->id_data->type;
+
+			if (op_type != TOKEN_INT && op_type != TOKEN_REAL && op_type != TOKEN_STRING && op_type != TOKEN_KW_BOOLEAN) {
+				return EXIT_SEMANTIC_PROG_ERROR;
+			}
+
+			SEM_NEXT_STATE(SEM_STATE_OPERATOR);
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_OPERATOR) {
+			assert(value.value_type == VTYPE_TOKEN);
+
+			sem_an->value = sem_value_init();
+			if (sem_an->value == NULL)
+				return EXIT_INTERN_ERROR;
+
+			// Save operator
+			sem_an->value->value_type = VTYPE_TOKEN;
+			sem_an->value->token = token_copy(value.token);
+			if (sem_an->value->token == NULL)
+				return EXIT_INTERN_ERROR;
+
+			SEM_NEXT_STATE(SEM_STATE_OPERAND);
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_OPERAND) {
+			assert(value.value_type == VTYPE_ID);
+
+			token_e type = value.id->id_data->type;
+
+			// Check operand types and implicitly cast if possible
+			switch (op_type) {
+				case TOKEN_STRING:
+					if (type != TOKEN_STRING)
+						return EXIT_SEMANTIC_COMP_ERROR;
+					break;
+				case TOKEN_INT:
+					if (type == TOKEN_REAL) {
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					} else if (type != TOKEN_INT) {
+						return EXIT_SEMANTIC_COMP_ERROR;
+					}
+					break;
+				case TOKEN_REAL:
+					if (type == TOKEN_INT) {
+						// Cast second operand, we need to temporarly pop top operand to access the second one
+						char* tmp_var = generate_uid();
+						const char* prefix = get_current_scope_prefix(parser);
+						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(tmp_var);  // Free generated string
+					} else if (type != TOKEN_REAL) {
+						return EXIT_SEMANTIC_COMP_ERROR;
+					}
+					break;
+				case TOKEN_KW_BOOLEAN:
+					if (type != TOKEN_KW_BOOLEAN)
+						return EXIT_SEMANTIC_COMP_ERROR;
+				default:
+					return EXIT_SEMANTIC_COMP_ERROR;
+			}
+
+			switch (sem_an->value->token->id) {
+				case TOKEN_EQUAL:
+					IL_ADD(OP_EQS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					break;
+				case TOKEN_NE:
+					IL_ADD(OP_EQS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(OP_NOTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					break;
+				default:
+					assert(!"I shouldn't be here");
+					break;
+			}
+
+			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
+			HashTable* symtab = get_current_sym_tab(parser);
+			char* id = generate_uid();
+			if (id == NULL)
+				return EXIT_INTERN_ERROR;
+
+			htab_item* item = htab_lookup(symtab, id);
+			if (item == NULL) {
+				free(id);
+				return EXIT_INTERN_ERROR;
+			}
+
+			free(id);
+
+			item->id_data->type = TOKEN_KW_BOOLEAN;
+
+			// Reuse SemValue and make it VTYPE_ID
+			token_free(sem_an->value->token);
+			sem_an->value->value_type = VTYPE_ID;
+			sem_an->value->id = item;
+
+			sem_an->finished = true;
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	static token_e op_type;  // First operand type
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			assert(value.value_type == VTYPE_ID);
+
+			// Remeber operand type
+			op_type = value.id->id_data->type;
+
+			if (op_type != TOKEN_INT && op_type != TOKEN_REAL && op_type != TOKEN_STRING) {
+				return EXIT_SEMANTIC_PROG_ERROR;
+			}
+
+			SEM_NEXT_STATE(SEM_STATE_OPERATOR);
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_OPERATOR) {
+			assert(value.value_type == VTYPE_TOKEN);
+
+			sem_an->value = sem_value_init();
+			if (sem_an->value == NULL)
+				return EXIT_INTERN_ERROR;
+
+			// Save operator
+			sem_an->value->value_type = VTYPE_TOKEN;
+			sem_an->value->token = token_copy(value.token);
+			if (sem_an->value->token == NULL)
+				return EXIT_INTERN_ERROR;
+
+			SEM_NEXT_STATE(SEM_STATE_OPERAND);
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_OPERAND) {
+			assert(value.value_type == VTYPE_ID);
+
+			token_e type = value.id->id_data->type;
+
+			// Check operand types and implicitly cast if possible
+			switch (op_type) {
+				case TOKEN_STRING:
+					if (type != TOKEN_STRING && sem_an->value->token->id != TOKEN_ADD)
+						return EXIT_SEMANTIC_COMP_ERROR;
+					break;
+				case TOKEN_INT:
+					if (type == TOKEN_REAL) {
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						op_type = TOKEN_INT;
+					} else if (type != TOKEN_INT) {
+						return EXIT_SEMANTIC_COMP_ERROR;
+					}
+					break;
+				case TOKEN_REAL:
+					if (type == TOKEN_INT) {
+						// Cast second operand, we need to temporarly pop top operand to access the second one
+						char* tmp_var = generate_uid();
+						const char* prefix = get_current_scope_prefix(parser);
+						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(tmp_var);  // Free generated string
+						type = TOKEN_REAL;
+					} else if (type != TOKEN_REAL) {
+						return EXIT_SEMANTIC_COMP_ERROR;
+					}
+					break;
+				default:
+					return EXIT_SEMANTIC_COMP_ERROR;
+			}
+
+			switch (sem_an->value->token->id) {
+				case TOKEN_ADD:
+					if (op_type == TOKEN_STRING) {
+						// Cannot concatenate on stack, have to make temp vars
+						char* tmp1 = generate_uid();
+						if (tmp1 == NULL)
+							return EXIT_INTERN_ERROR;
+
+						char* tmp2 = generate_uid();
+						if (tmp2 == NULL) {
+							free(tmp1);
+							return EXIT_INTERN_ERROR;
+						}
+
+						const char* prefix = get_current_scope_prefix(parser);
+
+						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp1), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp2), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_POPS, addr_symbol(prefix, tmp1), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_POPS, addr_symbol(prefix, tmp2), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_CONCAT, addr_symbol(prefix, tmp1), addr_symbol(prefix, tmp2), addr_symbol(prefix, tmp1), EXIT_INTERN_ERROR);
+						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp1), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+						free(tmp1);
+						free(tmp2);
+					} else {
+						IL_ADD(OP_ADDS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					}
+					break;
+				case TOKEN_SUB:
+					IL_ADD(OP_SUBS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					break;
+				case TOKEN_MUL:
+					IL_ADD(OP_MULS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					break;
+				default:
+					assert(!"I shouldn't be here");
+					break;
+			}
+
+			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
+			HashTable* symtab = get_current_sym_tab(parser);
+			char* id = generate_uid();
+			if (id == NULL)
+				return EXIT_INTERN_ERROR;
+
+			htab_item* item = htab_lookup(symtab, id);
+			if (item == NULL) {
+				free(id);
+				return EXIT_INTERN_ERROR;
+			}
+
+			free(id);
+
+			item->id_data->type = type;
+
+			// Reuse SemValue and make it VTYPE_ID
+			token_free(sem_an->value->token);
+			sem_an->value->value_type = VTYPE_ID;
+			sem_an->value->id = item;
+
+			sem_an->finished = true;
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	static token_e op_type;  // First operand type
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			assert(value.value_type == VTYPE_ID);
+
+			// Remeber operand type
+			op_type = value.id->id_data->type;
+
+			if (op_type != TOKEN_INT && op_type != TOKEN_REAL) {
+				return EXIT_SEMANTIC_PROG_ERROR;
+			}
+
+			SEM_NEXT_STATE(SEM_STATE_OPERATOR);
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_OPERATOR) {
+			assert(value.value_type == VTYPE_TOKEN);
+
+			sem_an->value = sem_value_init();
+			if (sem_an->value == NULL)
+				return EXIT_INTERN_ERROR;
+
+			// Save operator
+			sem_an->value->value_type = VTYPE_TOKEN;
+			sem_an->value->token = token_copy(value.token);
+			if (sem_an->value->token == NULL)
+				return EXIT_INTERN_ERROR;
+
+			SEM_NEXT_STATE(SEM_STATE_OPERAND);
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_OPERAND) {
+			assert(value.value_type == VTYPE_ID);
+
+			token_e type = value.id->id_data->type;
+
+			// Check operand types and implicitly cast if possible
+			switch (sem_an->value->token->id) {
+				case TOKEN_DIVI:  // Needs to be casted to flat and then back to int
+					if (type == TOKEN_INT) {
+						// Cast second operand, we need to temporarly pop top operand to access the second one
+						char* tmp_var = generate_uid();
+						const char* prefix = get_current_scope_prefix(parser);
+						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(tmp_var);  // Free generated string
+						type = TOKEN_REAL;
+					} else if (type == TOKEN_REAL) {
+						// Cast second operand, we need to temporarly pop top operand to access the second one
+						char* tmp_var = generate_uid();
+						const char* prefix = get_current_scope_prefix(parser);
+						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(tmp_var);  // Free generated string
+					} else {
+						return EXIT_SEMANTIC_COMP_ERROR;
+					}
+
+					if (op_type == TOKEN_REAL) {
+						// Round to even
+						IL_ADD(OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						op_type = TOKEN_INT;
+					} else {  // TOKEN_INT
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					}
+
+					break;
+				case TOKEN_DIVR:
+					if (type == TOKEN_INT) {
+						// Cast second operand, we need to temporarly pop top operand to access the second one
+						char* tmp_var = generate_uid();
+						const char* prefix = get_current_scope_prefix(parser);
+						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(tmp_var);  // Free generated string
+						type = TOKEN_REAL;
+					} else if (type != TOKEN_REAL) {
+						return EXIT_SEMANTIC_COMP_ERROR;
+					}
+
+					if (op_type == TOKEN_INT) {
+						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					}
+					break;
+				default:
+					return EXIT_SEMANTIC_COMP_ERROR;
+			}
+
+			IL_ADD(OP_DIVS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+			if (sem_an->value->token->id == TOKEN_DIVI) {
+				IL_ADD(OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				type = TOKEN_INT;
+			}
+
+			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
+			HashTable* symtab = get_current_sym_tab(parser);
+			char* id = generate_uid();
+			if (id == NULL)
+				return EXIT_INTERN_ERROR;
+
+			htab_item* item = htab_lookup(symtab, id);
+			if (item == NULL) {
+				free(id);
+				return EXIT_INTERN_ERROR;
+			}
+
+			free(id);
+
+			item->id_data->type = type;
 
 			// Reuse SemValue and make it VTYPE_ID
 			token_free(sem_an->value->token);
