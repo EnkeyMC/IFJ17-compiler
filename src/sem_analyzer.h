@@ -17,9 +17,10 @@ typedef enum {
 	SEM_STATE_DECLARED_RETURN_TYPE,
 	SEM_STATE_FUNC_END,
     SEM_STATE_EOL,
+    SEM_STATE_SCOPE_END,
+	SEM_STATE_DO_LOOP,
     SEM_STATE_OPERATOR,
     SEM_STATE_OPERAND,
-    SEM_STATE_SCOPE_END
 } sem_state_e;
 
 // Forward declarations
@@ -150,5 +151,6 @@ int sem_func_def(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_param_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_scope(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_print(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_do_loop(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 #endif //IFJ17_COMPILER_SEM_ANALYZER_H

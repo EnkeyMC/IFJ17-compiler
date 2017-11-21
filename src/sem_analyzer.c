@@ -1435,3 +1435,40 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	return EXIT_SUCCESS;
 }
+
+int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				create_scope(parser);
+				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DO_LOOP) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_LOOP)
+			{
+				delete_scope(parser);
+				SEM_NEXT_STATE(SEM_STATE_EOL);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_EOL) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
