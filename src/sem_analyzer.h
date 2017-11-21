@@ -33,7 +33,8 @@ struct htab_item_t;
 typedef enum {
     VTYPE_TOKEN,
     VTYPE_ID,
-    VTYPE_LIST
+    VTYPE_LIST,
+	VTYPE_EXPR
 } value_type_e;
 
 typedef struct sem_value_t {
@@ -42,6 +43,7 @@ typedef struct sem_value_t {
         struct token_t* token;
         struct htab_item_t* id;
         DLList* list;
+		int expr_type;  /// Should be token_e but can't include token.h
     };
 } SemValue;
 

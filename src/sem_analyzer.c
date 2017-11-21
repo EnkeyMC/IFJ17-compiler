@@ -13,6 +13,10 @@
 #define END_STATE break
 #define SEM_ERROR_STATE default: return EXIT_INTERN_ERROR
 #define SEM_NEXT_STATE(s) sem_an->state = s
+#define SEM_SET_EXPR_TYPE(type) sem_an->value = sem_value_init(); \
+		if (sem_an->value == NULL) return EXIT_INTERN_ERROR; \
+		sem_an->value->value_type = VTYPE_EXPR; \
+		sem_an->value->expr_type = type
 
 SemAnalyzer* sem_an_init(semantic_action_f sem_action) {
 	SemAnalyzer* sem_an = (SemAnalyzer*) malloc(sizeof(SemAnalyzer));
@@ -69,6 +73,9 @@ SemValue* sem_value_copy(const SemValue* value) {
 			dllist_activate_first(value->list);
 			while (dllist_active(value->list)) dllist_delete_and_succ(value->list);
 			break;
+		case VTYPE_EXPR:
+			new_val->expr_type = value->expr_type;
+			break;
 	}
 
 	return new_val;
@@ -85,6 +92,8 @@ void sem_value_free(void* value) {
 			break;
 		case VTYPE_LIST:
 			dllist_free(to_free->list);
+			break;
+		default:
 			break;
 	}
 
@@ -205,11 +214,30 @@ int sem_expr_end(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
-			if (value.value_type == VTYPE_ID) {
-				sem_an->value = sem_value_copy(&value);
+			if (value.value_type == VTYPE_EXPR) {
+				sem_an->value = sem_value_init();
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
 
-				IL_ADD(OP_DEFVAR, addr_symbol(F_LOCAL, sem_an->value->id->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-				IL_ADD(OP_POPS, addr_symbol(F_LOCAL, sem_an->value->id->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				char* tmp_var = generate_uid();
+				if (tmp_var == NULL)
+					return EXIT_INTERN_ERROR;
+
+				const char* prefix = get_current_scope_prefix(parser);
+
+				htab_item* item = htab_lookup(get_current_sym_tab(parser), tmp_var);
+				if (item == NULL) {
+					free(tmp_var);
+					return EXIT_INTERN_ERROR;
+				}
+
+				item->id_data->type = (token_e) value.expr_type;
+
+				sem_an->value->value_type = VTYPE_ID;
+				sem_an->value->id = item;
+
+				IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -235,13 +263,7 @@ int sem_expr_id(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				return EXIT_SEMANTIC_PROG_ERROR;
 			}
 
-			// Set it as value
-			sem_an->value = sem_value_init();
-			if (sem_an->value == NULL)
-				return EXIT_INTERN_ERROR;
-
-			sem_an->value->value_type = VTYPE_ID;
-			sem_an->value->id = item;
+			SEM_SET_EXPR_TYPE(item->id_data->type);
 
 			// Push variable on stack
 			IL_ADD(OP_PUSHS, addr_symbol(get_var_scope_prefix(parser, item->key), item->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
@@ -263,32 +285,20 @@ int sem_expr_const(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_START) {
 			assert(value.value_type == VTYPE_TOKEN);
 
-			// Create new uid
-			char* id = generate_uid();
-			if (id == NULL)
-				return EXIT_INTERN_ERROR;
-
-			htab_item* item = htab_lookup(get_current_sym_tab(parser), id);
-			if (item == NULL) {
-				free(id);
-				return EXIT_INTERN_ERROR;
-			}
-
-			free(id);
-
+			token_e type = END_OF_TERMINALS;
 			switch (value.token->id) {
 				case TOKEN_STRING:
-					item->id_data->type = TOKEN_KW_STRING;
+					type = TOKEN_KW_STRING;
 					break;
 				case TOKEN_INT:
-					item->id_data->type = TOKEN_KW_INTEGER;
+					type = TOKEN_KW_INTEGER;
 					break;
 				case TOKEN_REAL:
-					item->id_data->type = TOKEN_KW_DOUBLE;
+					type = TOKEN_KW_DOUBLE;
 					break;
 				case TOKEN_KW_TRUE:
 				case TOKEN_KW_FALSE:
-					item->id_data->type = TOKEN_KW_BOOLEAN;
+					type = TOKEN_KW_BOOLEAN;
 					break;
 				default:
 					assert(!"I shouldn't be here");
@@ -296,13 +306,7 @@ int sem_expr_const(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 			IL_ADD(OP_PUSHS, addr_constant(*value.token), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
-			sem_an->value = sem_value_init();
-			if (sem_an->value == NULL)
-				return EXIT_INTERN_ERROR;
-
-			sem_an->value->value_type = VTYPE_ID;
-			sem_an->value->id = item;
-
+			SEM_SET_EXPR_TYPE(type);
 			sem_an->finished = true;
 		} END_STATE;
 
@@ -318,9 +322,9 @@ int sem_expr_and_or_not(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
-			if (value.id->id_data->type != TOKEN_KW_BOOLEAN) {
+			if (value.expr_type != TOKEN_KW_BOOLEAN) {
 				return EXIT_SEMANTIC_COMP_ERROR;
 			}
 
@@ -344,9 +348,9 @@ int sem_expr_and_or_not(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_OPERAND) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
-			if (value.id->id_data->type != TOKEN_KW_BOOLEAN) {
+			if (value.expr_type != TOKEN_KW_BOOLEAN) {
 				return EXIT_SEMANTIC_COMP_ERROR;
 			}
 
@@ -362,26 +366,7 @@ int sem_expr_and_or_not(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 					break;
 			}
 
-			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
-			HashTable* symtab = get_current_sym_tab(parser);
-			char* id = generate_uid();
-			if (id == NULL)
-				return EXIT_INTERN_ERROR;
-
-			htab_item* item = htab_lookup(symtab, id);
-			if (item == NULL) {
-				free(id);
-				return EXIT_INTERN_ERROR;
-			}
-
-			free(id);
-
-			item->id_data->type = TOKEN_KW_BOOLEAN;
-
-			// Reuse SemValue and make it VTYPE_ID
-			token_free(sem_an->value->token);
-			sem_an->value->value_type = VTYPE_ID;
-			sem_an->value->id = item;
+			SEM_SET_EXPR_TYPE(TOKEN_KW_BOOLEAN);
 
 			sem_an->finished = true;
 
@@ -401,10 +386,10 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
 			// Remeber operand type
-			op_type = value.id->id_data->type;
+			op_type = (token_e) value.expr_type;
 
 			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING) {
 				return EXIT_SEMANTIC_PROG_ERROR;
@@ -416,23 +401,17 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_OPERATOR) {
 			assert(value.value_type == VTYPE_TOKEN);
 
-			sem_an->value = sem_value_init();
+			sem_an->value = sem_value_copy(&value);
 			if (sem_an->value == NULL)
-				return EXIT_INTERN_ERROR;
-
-			// Save operator
-			sem_an->value->value_type = VTYPE_TOKEN;
-			sem_an->value->token = token_copy(value.token);
-			if (sem_an->value->token == NULL)
 				return EXIT_INTERN_ERROR;
 
 			SEM_NEXT_STATE(SEM_STATE_OPERAND);
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_OPERAND) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
-			token_e type = value.id->id_data->type;
+			token_e type = (token_e) value.expr_type;
 
 			// Check operand types and implicitly cast if possible
 			switch (op_type) {
@@ -529,26 +508,7 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					break;
 			}
 
-			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
-			HashTable* symtab = get_current_sym_tab(parser);
-			char* id = generate_uid();
-			if (id == NULL)
-				return EXIT_INTERN_ERROR;
-
-			htab_item* item = htab_lookup(symtab, id);
-			if (item == NULL) {
-				free(id);
-				return EXIT_INTERN_ERROR;
-			}
-
-			free(id);
-
-			item->id_data->type = TOKEN_KW_BOOLEAN;
-
-			// Reuse SemValue and make it VTYPE_ID
-			token_free(sem_an->value->token);
-			sem_an->value->value_type = VTYPE_ID;
-			sem_an->value->id = item;
+			SEM_SET_EXPR_TYPE(TOKEN_KW_BOOLEAN);
 
 			sem_an->finished = true;
 		} END_STATE;
@@ -567,10 +527,10 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
 			// Remeber operand type
-			op_type = value.id->id_data->type;
+			op_type = (token_e) value.expr_type;
 
 			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING && op_type != TOKEN_KW_BOOLEAN) {
 				return EXIT_SEMANTIC_PROG_ERROR;
@@ -582,23 +542,17 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_OPERATOR) {
 			assert(value.value_type == VTYPE_TOKEN);
 
-			sem_an->value = sem_value_init();
+			sem_an->value = sem_value_copy(&value);
 			if (sem_an->value == NULL)
-				return EXIT_INTERN_ERROR;
-
-			// Save operator
-			sem_an->value->value_type = VTYPE_TOKEN;
-			sem_an->value->token = token_copy(value.token);
-			if (sem_an->value->token == NULL)
 				return EXIT_INTERN_ERROR;
 
 			SEM_NEXT_STATE(SEM_STATE_OPERAND);
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_OPERAND) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
-			token_e type = value.id->id_data->type;
+			token_e type = (token_e) value.expr_type;
 
 			// Check operand types and implicitly cast if possible
 			switch (op_type) {
@@ -647,26 +601,7 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					break;
 			}
 
-			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
-			HashTable* symtab = get_current_sym_tab(parser);
-			char* id = generate_uid();
-			if (id == NULL)
-				return EXIT_INTERN_ERROR;
-
-			htab_item* item = htab_lookup(symtab, id);
-			if (item == NULL) {
-				free(id);
-				return EXIT_INTERN_ERROR;
-			}
-
-			free(id);
-
-			item->id_data->type = TOKEN_KW_BOOLEAN;
-
-			// Reuse SemValue and make it VTYPE_ID
-			token_free(sem_an->value->token);
-			sem_an->value->value_type = VTYPE_ID;
-			sem_an->value->id = item;
+			SEM_SET_EXPR_TYPE(TOKEN_KW_BOOLEAN);
 
 			sem_an->finished = true;
 		} END_STATE;
@@ -685,10 +620,10 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
 			// Remeber operand type
-			op_type = value.id->id_data->type;
+			op_type = (token_e) value.expr_type;
 
 			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING) {
 				return EXIT_SEMANTIC_PROG_ERROR;
@@ -700,23 +635,17 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 		SEM_STATE(SEM_STATE_OPERATOR) {
 			assert(value.value_type == VTYPE_TOKEN);
 
-			sem_an->value = sem_value_init();
+			sem_an->value = sem_value_copy(&value);
 			if (sem_an->value == NULL)
-				return EXIT_INTERN_ERROR;
-
-			// Save operator
-			sem_an->value->value_type = VTYPE_TOKEN;
-			sem_an->value->token = token_copy(value.token);
-			if (sem_an->value->token == NULL)
 				return EXIT_INTERN_ERROR;
 
 			SEM_NEXT_STATE(SEM_STATE_OPERAND);
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_OPERAND) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
-			token_e type = value.id->id_data->type;
+			token_e type = (token_e) value.expr_type;
 
 			// Check operand types and implicitly cast if possible
 			switch (op_type) {
@@ -791,26 +720,7 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 					break;
 			}
 
-			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
-			HashTable* symtab = get_current_sym_tab(parser);
-			char* id = generate_uid();
-			if (id == NULL)
-				return EXIT_INTERN_ERROR;
-
-			htab_item* item = htab_lookup(symtab, id);
-			if (item == NULL) {
-				free(id);
-				return EXIT_INTERN_ERROR;
-			}
-
-			free(id);
-
-			item->id_data->type = type;
-
-			// Reuse SemValue and make it VTYPE_ID
-			token_free(sem_an->value->token);
-			sem_an->value->value_type = VTYPE_ID;
-			sem_an->value->id = item;
+			SEM_SET_EXPR_TYPE(type);
 
 			sem_an->finished = true;
 		} END_STATE;
@@ -829,10 +739,10 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
 			// Remeber operand type
-			op_type = value.id->id_data->type;
+			op_type = (token_e) value.expr_type;
 
 			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE) {
 				return EXIT_SEMANTIC_PROG_ERROR;
@@ -844,23 +754,17 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_OPERATOR) {
 			assert(value.value_type == VTYPE_TOKEN);
 
-			sem_an->value = sem_value_init();
+			sem_an->value = sem_value_copy(&value);
 			if (sem_an->value == NULL)
-				return EXIT_INTERN_ERROR;
-
-			// Save operator
-			sem_an->value->value_type = VTYPE_TOKEN;
-			sem_an->value->token = token_copy(value.token);
-			if (sem_an->value->token == NULL)
 				return EXIT_INTERN_ERROR;
 
 			SEM_NEXT_STATE(SEM_STATE_OPERAND);
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_OPERAND) {
-			assert(value.value_type == VTYPE_ID);
+			assert(value.value_type == VTYPE_EXPR);
 
-			token_e type = value.id->id_data->type;
+			token_e type = (token_e) value.expr_type;
 
 			// Check operand types and implicitly cast if possible
 			switch (sem_an->value->token->id) {
@@ -929,26 +833,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				type = TOKEN_KW_INTEGER;
 			}
 
-			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
-			HashTable* symtab = get_current_sym_tab(parser);
-			char* id = generate_uid();
-			if (id == NULL)
-				return EXIT_INTERN_ERROR;
-
-			htab_item* item = htab_lookup(symtab, id);
-			if (item == NULL) {
-				free(id);
-				return EXIT_INTERN_ERROR;
-			}
-
-			free(id);
-
-			item->id_data->type = type;
-
-			// Reuse SemValue and make it VTYPE_ID
-			token_free(sem_an->value->token);
-			sem_an->value->value_type = VTYPE_ID;
-			sem_an->value->id = item;
+			SEM_SET_EXPR_TYPE(type);
 
 			sem_an->finished = true;
 		} END_STATE;
@@ -965,7 +850,7 @@ int sem_expr_brackets(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
-			if (value.value_type == VTYPE_ID) {
+			if (value.value_type == VTYPE_EXPR) {
 				// Only copy the value for parent expression
 				sem_an->value = sem_value_copy(&value);
 				if (sem_an->value == NULL)
