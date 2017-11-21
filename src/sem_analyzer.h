@@ -21,7 +21,9 @@ typedef enum {
 	SEM_STATE_SCOPE_END,
 	SEM_STATE_DO_LOOP,
 	SEM_STATE_OPERATOR,
-	SEM_STATE_OPERAND
+	SEM_STATE_OPERAND,
+	SEM_STATE_LIST,
+	SEM_STATE_FUNC_ID
 } sem_state_e;
 
 // Forward declarations
@@ -147,6 +149,9 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, struct parser_t* parser, SemVa
 int sem_expr_div(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_brackets(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_unary(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_list(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_list_expr(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_func(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 
 int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);

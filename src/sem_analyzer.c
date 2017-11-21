@@ -204,6 +204,17 @@ static void delete_scope(Parser* parser) {
 	}
 }
 
+static bool are_types_compatible(token_e type1, token_e type2) {
+	if (type1 == type2) {
+		return true;
+	} else if (type1 == TOKEN_KW_INTEGER && type2 == TOKEN_KW_DOUBLE) {
+		return true;
+	} else if (type1 == TOKEN_KW_DOUBLE && type2 == TOKEN_KW_INTEGER) {
+		return true;
+	}
+	return false;
+}
+
 /**
  * Casts second operand with 'inst' instruction
  * @param parser Parser
@@ -912,6 +923,151 @@ int sem_expr_unary(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	return EXIT_SUCCESS;
 }
 
+int sem_expr_list(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_EXPR) {
+				sem_an->value = sem_value_init();
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+
+				sem_an->value->value_type = VTYPE_LIST;
+				sem_an->value->list = dllist_init(sem_value_free);
+				if (sem_an->value->list == NULL)
+					return EXIT_INTERN_ERROR;
+
+				SemValue* copy = sem_value_copy(&value);
+				if (copy == NULL)
+					return EXIT_INTERN_ERROR;
+
+				dllist_insert_last(sem_an->value->list, copy);
+
+				SEM_NEXT_STATE(SEM_STATE_LIST);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_LIST) {
+			if (value.value_type == VTYPE_EXPR) {
+				SemValue* copy = sem_value_copy(&value);
+				if (copy == NULL)
+					return EXIT_INTERN_ERROR;
+
+				dllist_insert_last(sem_an->value->list, copy);
+
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_expr_list_expr(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	static SemValue* expr;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_EXPR) {
+				expr = sem_value_copy(&value);
+				if (expr == NULL)
+					return EXIT_INTERN_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_LIST);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_LIST) {
+			if (value.value_type == VTYPE_LIST) {
+				sem_an->value = sem_value_copy(&value);
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+
+				dllist_insert_first(sem_an->value->list, expr);
+
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_expr_func(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_EXPR || value.value_type == VTYPE_LIST) {
+				sem_an->value = sem_value_copy(&value);
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+			} else if (value.value_type == VTYPE_TOKEN && value.token->id == TOKEN_LPAR) {
+				sem_an->value = NULL;  // No parameters
+			} else {
+				break;
+			}
+			SEM_NEXT_STATE(SEM_STATE_FUNC_ID);
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_FUNC_ID) {
+			if (value.value_type == VTYPE_TOKEN && value.token->id == TOKEN_IDENTIFIER) {
+				// Check if function exists
+				HashTable* symtab = get_current_sym_tab(parser);
+				htab_item* func_item = htab_find(symtab, value.token->data.str);
+				if (func_item == NULL)
+					return EXIT_SEMANTIC_PROG_ERROR;
+
+				// Check parameters
+				if (sem_an->value == NULL) {
+					// No parameters
+					if (func_get_param(func_item, 1) != END_OF_TERMINALS)  // If function has at least 1 param
+						return EXIT_SEMANTIC_COMP_ERROR;
+				} else if (sem_an->value->value_type == VTYPE_EXPR) {
+					// 1 Parameter
+					if (!are_types_compatible((token_e) sem_an->value->expr_type, func_get_param(func_item, 1)))
+						return EXIT_SEMANTIC_COMP_ERROR;
+
+					// If function has more params
+					if (func_get_param(func_item, 2) != END_OF_TERMINALS)
+						return EXIT_SEMANTIC_COMP_ERROR;
+				} else {
+					// 2 and more params
+					dllist_activate_last(sem_an->value->list);
+					unsigned i;
+					SemValue* expr;
+					for (i = 1; dllist_active(sem_an->value->list); i++) {
+						expr = (SemValue*) dllist_get_active(sem_an->value->list);
+						if (!are_types_compatible((token_e) expr->expr_type, func_get_param(func_item, i)))
+							return EXIT_SEMANTIC_COMP_ERROR;
+					}
+
+					// If function has more params
+					if (func_get_param(func_item, i) != END_OF_TERMINALS)
+						return EXIT_SEMANTIC_COMP_ERROR;
+				}
+
+				IL_ADD(OP_CALL, addr_symbol("", func_item->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				sem_value_free(sem_an->value);
+				SEM_SET_EXPR_TYPE(func_item->func_data->rt);
+
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
 
 int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
