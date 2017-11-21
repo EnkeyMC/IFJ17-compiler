@@ -110,19 +110,22 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 
 		if (rule->sem_action != NULL) {
 			sem_an = sem_an_init(rule->sem_action);
+			if (sem_an == NULL)
+				return EXIT_INTERN_ERROR;
 		}
 
+		int ret_val = EXIT_SUCCESS;
 		stack_item* item = (stack_item*) dllist_delete_first(s);
-		while (item->type_id != EXPR_HANDLE_MARKER) {
+		while (item->type_id != EXPR_HANDLE_MARKER && ret_val == EXIT_SUCCESS) {
 			if (sem_an != NULL) {  // Handle semantics
 				if (IS_TOKEN(item->type_id)) {
-					sem_an->sem_action(sem_an, parser, SEM_VALUE_TOKEN(item->token));
+					ret_val = sem_an->sem_action(sem_an, parser, SEM_VALUE_TOKEN(item->token));
 				} else if (IS_NONTERMINAL(item->type_id)){
 					sem_an_top = (SemAnalyzer*) sem_stack_pop(parser->sem_an_stack);
 					assert(sem_an_top != NULL);
 
 					// Pass value to current semantic action
-					sem_an->sem_action(sem_an, parser, *sem_an_top->value);
+					ret_val = sem_an->sem_action(sem_an, parser, *sem_an_top->value);
 					sem_an_free(sem_an_top);
 				}
 			}
@@ -131,6 +134,9 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 		}
 		// Free also item containing handle marker
 		ext_stack_item_free(item);
+
+		if (ret_val != EXIT_SUCCESS)
+			return ret_val;
 
 		// Push current semantic analyzer on stack
 		if (sem_an != NULL) {

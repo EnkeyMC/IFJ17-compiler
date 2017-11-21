@@ -33,41 +33,41 @@ protected:
 TEST_F(ExprParserTestFixture, ExprTest01) {
 	SetInputFile("test_files/expressions/01.test");
 
-	EXPECT_EQ(parse_expression(parser), EXIT_SUCCESS);
+	EXPECT_NE(parse_expression(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ExprParserTestFixture, ExprTest02) {
 	SetInputFile("test_files/expressions/02.test");
 
-	EXPECT_EQ(parse_expression(parser), EXIT_SUCCESS);
+	EXPECT_NE(parse_expression(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ExprParserTestFixture, ExprTest03) {
 	SetInputFile("test_files/expressions/03.test");
 
-	EXPECT_EQ(parse_expression(parser), EXIT_SUCCESS);
+	EXPECT_NE(parse_expression(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ExprParserTestFixture, ExprTest04) {
 	SetInputFile("test_files/expressions/04.test");
 
-	EXPECT_EQ(parse_expression(parser), EXIT_SUCCESS);
+	EXPECT_NE(parse_expression(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ExprParserTestFixture, ExprTest05) {
 	SetInputFile("test_files/expressions/05.test");
 
-	EXPECT_EQ(parse_expression(parser), EXIT_SUCCESS);
+	EXPECT_NE(parse_expression(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ExprParserTestFixture, ExprTest06) {
 	SetInputFile("test_files/expressions/06.test");
 
-	EXPECT_EQ(parse_expression(parser), EXIT_SUCCESS);
+	EXPECT_NE(parse_expression(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ExprParserTestFixture, ExprTest07) {
 	SetInputFile("test_files/expressions/07.test");
 
-	EXPECT_EQ(parse_expression(parser), EXIT_SYNTAX_ERROR);
+	EXPECT_EQ(parse_expression(parser), EXIT_SEMANTIC_PROG_ERROR);
 }

@@ -266,3 +266,9 @@ TEST_F(ParserTestFixture, SuccConditions07) {
 
 	EXPECT_EQ(parse(parser), EXIT_SUCCESS);
 }
+
+TEST_F(ParserTestFixture, SuccSimpleExpr01) {
+	SetInputFile("test_files/simple_expr_01.fbc");
+
+	EXPECT_EQ(parse(parser), EXIT_SUCCESS);
+}

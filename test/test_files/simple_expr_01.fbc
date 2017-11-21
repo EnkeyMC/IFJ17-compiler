@@ -1,0 +1,10 @@
+scope
+    dim a as integer
+    dim b as double
+    dim c as integer
+    a = 6
+    b = 2.5
+    c = a * 5
+    a = c - a
+    b = a / c
+end scope

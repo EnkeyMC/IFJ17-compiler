@@ -133,13 +133,15 @@ static HashTable* get_current_sym_tab(Parser* parser) {
 }
 
 static const char* get_var_scope_prefix(Parser* parser, const char* key) {
-	HashTable* symtab = (HashTable*) dllist_get_first(parser->sym_tab_stack);
+	dllist_activate_first(parser->sym_tab_stack);
 	htab_item* item;
 
-	while (symtab != NULL) {
-		item = htab_find(symtab, key);
+	while (dllist_active(parser->sym_tab_stack)) {
+		item = htab_find((HashTable*) dllist_get_active(parser->sym_tab_stack), key);
 		if (item != NULL)
 			return F_LOCAL;
+
+		dllist_succ(parser->sym_tab_stack);
 	}
 
 	return F_GLOBAL;
@@ -153,13 +155,15 @@ static const char* get_current_scope_prefix(Parser* parser) {
 }
 
 static htab_item* find_symbol(Parser* parser, const char* key) {
-	HashTable* symtab = (HashTable*) dllist_get_first(parser->sym_tab_stack);
+	dllist_activate_first(parser->sym_tab_stack);
 	htab_item* item;
 
-	while (symtab != NULL) {
-		item = htab_find(symtab, key);
+	while (dllist_active(parser->sym_tab_stack)) {
+		item = htab_find((HashTable*) dllist_get_active(parser->sym_tab_stack), key);
 		if (item != NULL)
 			return item;
+
+		dllist_succ(parser->sym_tab_stack);
 	}
 
 	return htab_find(parser->sym_tab_global, key);
@@ -274,19 +278,23 @@ int sem_expr_const(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 			switch (value.token->id) {
 				case TOKEN_STRING:
+					item->id_data->type = TOKEN_KW_STRING;
+					break;
 				case TOKEN_INT:
+					item->id_data->type = TOKEN_KW_INTEGER;
+					break;
 				case TOKEN_REAL:
-					IL_ADD(OP_PUSHS, addr_constant(*value.token), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-					item->id_data->type = value.token->id;
+					item->id_data->type = TOKEN_KW_DOUBLE;
 					break;
 				case TOKEN_KW_TRUE:
 				case TOKEN_KW_FALSE:
-					IL_ADD(OP_PUSHS, addr_constant(*value.token), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					item->id_data->type = TOKEN_KW_BOOLEAN;
 					break;
 				default:
 					assert(!"I shouldn't be here");
 			}
+
+			IL_ADD(OP_PUSHS, addr_constant(*value.token), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 			sem_an->value = sem_value_init();
 			if (sem_an->value == NULL)
@@ -398,7 +406,7 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			// Remeber operand type
 			op_type = value.id->id_data->type;
 
-			if (op_type != TOKEN_INT && op_type != TOKEN_REAL && op_type != TOKEN_STRING) {
+			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING) {
 				return EXIT_SEMANTIC_PROG_ERROR;
 			}
 
@@ -428,19 +436,19 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 			// Check operand types and implicitly cast if possible
 			switch (op_type) {
-				case TOKEN_STRING:
-					if (type != TOKEN_STRING)
+				case TOKEN_KW_STRING:
+					if (type != TOKEN_KW_STRING)
 						return EXIT_SEMANTIC_COMP_ERROR;
 					break;
-				case TOKEN_INT:
-					if (type == TOKEN_REAL) {
+				case TOKEN_KW_INTEGER:
+					if (type == TOKEN_KW_DOUBLE) {
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-					} else if (type != TOKEN_INT) {
+					} else if (type != TOKEN_KW_INTEGER) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
 					break;
-				case TOKEN_REAL:
-					if (type == TOKEN_INT) {
+				case TOKEN_KW_DOUBLE:
+					if (type == TOKEN_KW_INTEGER) {
 						// Cast second operand, we need to temporarly pop top operand to access the second one
 						char* tmp_var = generate_uid();
 						const char* prefix = get_current_scope_prefix(parser);
@@ -449,7 +457,7 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						free(tmp_var);  // Free generated string
-					} else if (type != TOKEN_REAL) {
+					} else if (type != TOKEN_KW_DOUBLE) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
 					break;
@@ -564,7 +572,7 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			// Remeber operand type
 			op_type = value.id->id_data->type;
 
-			if (op_type != TOKEN_INT && op_type != TOKEN_REAL && op_type != TOKEN_STRING && op_type != TOKEN_KW_BOOLEAN) {
+			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING && op_type != TOKEN_KW_BOOLEAN) {
 				return EXIT_SEMANTIC_PROG_ERROR;
 			}
 
@@ -594,19 +602,19 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 			// Check operand types and implicitly cast if possible
 			switch (op_type) {
-				case TOKEN_STRING:
-					if (type != TOKEN_STRING)
+				case TOKEN_KW_STRING:
+					if (type != TOKEN_KW_STRING)
 						return EXIT_SEMANTIC_COMP_ERROR;
 					break;
-				case TOKEN_INT:
-					if (type == TOKEN_REAL) {
+				case TOKEN_KW_INTEGER:
+					if (type == TOKEN_KW_DOUBLE) {
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-					} else if (type != TOKEN_INT) {
+					} else if (type != TOKEN_KW_INTEGER) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
 					break;
-				case TOKEN_REAL:
-					if (type == TOKEN_INT) {
+				case TOKEN_KW_DOUBLE:
+					if (type == TOKEN_KW_INTEGER) {
 						// Cast second operand, we need to temporarly pop top operand to access the second one
 						char* tmp_var = generate_uid();
 						const char* prefix = get_current_scope_prefix(parser);
@@ -615,7 +623,7 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						free(tmp_var);  // Free generated string
-					} else if (type != TOKEN_REAL) {
+					} else if (type != TOKEN_KW_DOUBLE) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
 					break;
@@ -682,7 +690,7 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 			// Remeber operand type
 			op_type = value.id->id_data->type;
 
-			if (op_type != TOKEN_INT && op_type != TOKEN_REAL && op_type != TOKEN_STRING) {
+			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING) {
 				return EXIT_SEMANTIC_PROG_ERROR;
 			}
 
@@ -712,20 +720,20 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 
 			// Check operand types and implicitly cast if possible
 			switch (op_type) {
-				case TOKEN_STRING:
-					if (type != TOKEN_STRING && sem_an->value->token->id != TOKEN_ADD)
+				case TOKEN_KW_STRING:
+					if (type != TOKEN_KW_STRING && sem_an->value->token->id != TOKEN_ADD)
 						return EXIT_SEMANTIC_COMP_ERROR;
 					break;
-				case TOKEN_INT:
-					if (type == TOKEN_REAL) {
+				case TOKEN_KW_INTEGER:
+					if (type == TOKEN_KW_DOUBLE) {
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						op_type = TOKEN_INT;
-					} else if (type != TOKEN_INT) {
+						op_type = TOKEN_KW_INTEGER;
+					} else if (type != TOKEN_KW_INTEGER) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
 					break;
-				case TOKEN_REAL:
-					if (type == TOKEN_INT) {
+				case TOKEN_KW_DOUBLE:
+					if (type == TOKEN_KW_INTEGER) {
 						// Cast second operand, we need to temporarly pop top operand to access the second one
 						char* tmp_var = generate_uid();
 						const char* prefix = get_current_scope_prefix(parser);
@@ -734,8 +742,8 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						free(tmp_var);  // Free generated string
-						type = TOKEN_REAL;
-					} else if (type != TOKEN_REAL) {
+						type = TOKEN_KW_DOUBLE;
+					} else if (type != TOKEN_KW_DOUBLE) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
 					break;
@@ -745,7 +753,7 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 
 			switch (sem_an->value->token->id) {
 				case TOKEN_ADD:
-					if (op_type == TOKEN_STRING) {
+					if (op_type == TOKEN_KW_STRING) {
 						// Cannot concatenate on stack, have to make temp vars
 						char* tmp1 = generate_uid();
 						if (tmp1 == NULL)
@@ -826,7 +834,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			// Remeber operand type
 			op_type = value.id->id_data->type;
 
-			if (op_type != TOKEN_INT && op_type != TOKEN_REAL) {
+			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE) {
 				return EXIT_SEMANTIC_PROG_ERROR;
 			}
 
@@ -857,7 +865,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			// Check operand types and implicitly cast if possible
 			switch (sem_an->value->token->id) {
 				case TOKEN_DIVI:  // Needs to be casted to flat and then back to int
-					if (type == TOKEN_INT) {
+					if (type == TOKEN_KW_INTEGER) {
 						// Cast second operand, we need to temporarly pop top operand to access the second one
 						char* tmp_var = generate_uid();
 						const char* prefix = get_current_scope_prefix(parser);
@@ -866,8 +874,8 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						free(tmp_var);  // Free generated string
-						type = TOKEN_REAL;
-					} else if (type == TOKEN_REAL) {
+						type = TOKEN_KW_DOUBLE;
+					} else if (type == TOKEN_KW_DOUBLE) {
 						// Cast second operand, we need to temporarly pop top operand to access the second one
 						char* tmp_var = generate_uid();
 						const char* prefix = get_current_scope_prefix(parser);
@@ -881,18 +889,18 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
 
-					if (op_type == TOKEN_REAL) {
+					if (op_type == TOKEN_KW_DOUBLE) {
 						// Round to even
 						IL_ADD(OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						op_type = TOKEN_INT;
-					} else {  // TOKEN_INT
+						op_type = TOKEN_KW_INTEGER;
+					} else {  // TOKEN_KW_INTEGER
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					}
 
 					break;
 				case TOKEN_DIVR:
-					if (type == TOKEN_INT) {
+					if (type == TOKEN_KW_INTEGER) {
 						// Cast second operand, we need to temporarly pop top operand to access the second one
 						char* tmp_var = generate_uid();
 						const char* prefix = get_current_scope_prefix(parser);
@@ -901,12 +909,12 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						free(tmp_var);  // Free generated string
-						type = TOKEN_REAL;
-					} else if (type != TOKEN_REAL) {
+						type = TOKEN_KW_DOUBLE;
+					} else if (type != TOKEN_KW_DOUBLE) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
 
-					if (op_type == TOKEN_INT) {
+					if (op_type == TOKEN_KW_INTEGER) {
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					}
 					break;
@@ -918,7 +926,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 			if (sem_an->value->token->id == TOKEN_DIVI) {
 				IL_ADD(OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-				type = TOKEN_INT;
+				type = TOKEN_KW_INTEGER;
 			}
 
 			// Create identifier for intermediate result, but don't actually define the variable, it's all on stack
