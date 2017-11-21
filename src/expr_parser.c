@@ -17,6 +17,7 @@ int parse_expression(Parser *parser) {
 
 	int ret_code = EXIT_SUCCESS;
 	Token* token = NULL;
+	token_e last_token = END_OF_TERMINALS;
 
 	do {
 		token_free(token);
@@ -31,6 +32,28 @@ int parse_expression(Parser *parser) {
 			break;
 		}
 
+		// Handle unary minus
+		if (token->id == TOKEN_SUB) {
+			switch (last_token) {
+				case END_OF_TERMINALS:
+				case TOKEN_ADD:
+				case TOKEN_SUB:
+				case TOKEN_DIVI:
+				case TOKEN_DIVR:
+				case TOKEN_MUL:
+				case TOKEN_UNARY_MINUS:
+				case TOKEN_LT:
+				case TOKEN_GT:
+				case TOKEN_LE:
+				case TOKEN_GE:
+				case TOKEN_NE:
+				case TOKEN_LPAR:
+				case TOKEN_COMMA:
+					token->id = TOKEN_UNARY_MINUS;
+				default: break;
+			}
+		}
+
 		// look for next action in the precedence table
 		unsigned action = GET_ACTION(s, token->id);
 		while (action == EXPR_REDUCE_MARKER) {
@@ -40,6 +63,8 @@ int parse_expression(Parser *parser) {
 			else
 				break;
 		}
+
+		last_token = token->id;	// update last token
 
 		if (action == EXPR_PUSH_MARKER) {
 			if (! ext_stack_push(s, token->id, token)) {

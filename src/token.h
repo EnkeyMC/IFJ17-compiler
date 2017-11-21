@@ -13,6 +13,7 @@ typedef enum {
     TOKEN_MUL,
     TOKEN_ADD,
     TOKEN_SUB,
+	TOKEN_UNARY_MINUS,
 
 // BOOLEAN OPERATORS
     TOKEN_LT,

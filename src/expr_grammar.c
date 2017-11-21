@@ -150,7 +150,7 @@ unsigned pt_map_token(unsigned token) {
 		case TOKEN_MUL: return PT_INDEX_MUL;
 		case TOKEN_ADD: return PT_INDEX_ADD;
 		case TOKEN_SUB: return PT_INDEX_SUB;
-			// UNARY_MINUS NOT HANDLED YET
+		case TOKEN_UNARY_MINUS: return PT_INDEX_UNARY_MINUS;
 
 		// Boolean operators
 		case TOKEN_EQUAL: return PT_INDEX_EQUAL;
