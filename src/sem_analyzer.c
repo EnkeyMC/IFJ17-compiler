@@ -304,7 +304,7 @@ int sem_expr_const(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	return EXIT_SUCCESS;
 }
 
-int sem_expr_and_or(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+int sem_expr_and_or_not(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 	assert(sem_an != NULL);
 	assert(parser != NULL);
 
@@ -322,17 +322,17 @@ int sem_expr_and_or(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_OPERATOR) {
 			assert(value.value_type == VTYPE_TOKEN);
 
-			sem_an->value = sem_value_init();
+			// Save operator
+			sem_an->value = sem_value_copy(&value);
 			if (sem_an->value == NULL)
 				return EXIT_INTERN_ERROR;
 
-			// Save operator
-			sem_an->value->value_type = VTYPE_TOKEN;
-			sem_an->value->token = token_copy(value.token);
-			if (sem_an->value->token == NULL)
-				return EXIT_INTERN_ERROR;
-
-			SEM_NEXT_STATE(SEM_STATE_OPERAND);
+			if (value.token->id == TOKEN_KW_NOT) {
+				IL_ADD(OP_NOTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				sem_an->finished = true;
+			} else {
+				SEM_NEXT_STATE(SEM_STATE_OPERAND);
+			}
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_OPERAND) {
@@ -950,6 +950,29 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	return EXIT_SUCCESS;
 }
+
+int sem_expr_brackets(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	assert(sem_an != NULL);
+	assert(parser != NULL);
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_ID) {
+				// Only copy the value for parent expression
+				sem_an->value = sem_value_copy(&value);
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
 
 int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	assert(sem_an != NULL);
