@@ -649,7 +649,7 @@ Token* scanner_get_token(Scanner* scanner) {
 					token->id = LEX_ERROR;
 					return token;
 				}
-				scanner->buffer->len -= 2;
+				scanner->buffer->len -= 3;
 				scanner->buffer->str[scanner->buffer->len] = '\0';
 				APPEND_TO_BUFFER((char) esc_ch);
 
@@ -794,7 +794,7 @@ Token* scanner_get_token(Scanner* scanner) {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
 
-				token->data.i = (unsigned int) strtoul(scanner->buffer->str, NULL, 16);;
+				token->data.i = (unsigned int) strtoul(scanner->buffer->str, NULL, 16);
 				return token;
 			}
 		}
