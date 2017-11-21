@@ -18,6 +18,10 @@
 		sem_an->value->value_type = VTYPE_EXPR; \
 		sem_an->value->expr_type = type
 
+#define SEM_ACTION_CHECK assert(sem_an != NULL); \
+		assert(parser != NULL); \
+		if (sem_an->finished) return EXIT_SUCCESS
+
 SemAnalyzer* sem_an_init(semantic_action_f sem_action) {
 	SemAnalyzer* sem_an = (SemAnalyzer*) malloc(sizeof(SemAnalyzer));
 	if (sem_an == NULL)
@@ -236,8 +240,7 @@ static bool cast_second_operand(Parser* parser, opcode_e inst) {
  * @return exit code
  */
 int sem_expr_end(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -276,8 +279,7 @@ int sem_expr_end(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_expr_id(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -305,8 +307,7 @@ int sem_expr_id(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_expr_const(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -344,8 +345,7 @@ int sem_expr_const(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_expr_and_or_not(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -406,8 +406,7 @@ int sem_expr_and_or_not(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 }
 
 int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	static token_e op_type;  // First operand type
 
@@ -548,8 +547,7 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	static token_e op_type;  // First operand type
 
@@ -635,8 +633,7 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	static token_e op_type;  // First operand type
 
@@ -749,8 +746,7 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 }
 
 int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	static token_e op_type;  // First operand type
 
@@ -850,8 +846,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_expr_brackets(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -873,8 +868,7 @@ int sem_expr_brackets(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 
 int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	HashTable* symtab = NULL;
 
@@ -965,8 +959,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_param_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	HashTable* symtab_func = NULL;
 	HashTable* symtab = NULL;
@@ -1029,8 +1022,7 @@ int sem_param_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	HashTable* symtab_func = NULL;
 	HashTable* symtab_global  = NULL;
@@ -1129,8 +1121,7 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -1160,8 +1151,7 @@ int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_print(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL); (void) value;
+	SEM_ACTION_CHECK; (void) value; // TODO
 /*
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -1181,8 +1171,7 @@ int sem_print(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	HashTable* symtab_func = NULL;
 	HashTable* symtab_global  = NULL;
@@ -1362,8 +1351,7 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	assert(sem_an != NULL);
-	assert(parser != NULL);
+	SEM_ACTION_CHECK;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
