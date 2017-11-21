@@ -239,7 +239,7 @@ static bool cast_second_operand(Parser* parser, opcode_e inst) {
  * @param value SemValue
  * @return exit code
  */
-int sem_expr_end(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+int sem_expr_result(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 	SEM_ACTION_CHECK;
 
 	SEM_FSM {
@@ -855,6 +855,52 @@ int sem_expr_brackets(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				sem_an->value = sem_value_copy(&value);
 				if (sem_an->value == NULL)
 					return EXIT_INTERN_ERROR;
+
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_expr_unary(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_EXPR) {
+				// Check types
+				if (value.expr_type != TOKEN_KW_INTEGER && value.expr_type != TOKEN_KW_DOUBLE)
+					return EXIT_SEMANTIC_COMP_ERROR;
+
+				// Do 0 - expr
+				// Store stack top and push 0 before it
+				char* tmp = generate_uid();
+				if (tmp == NULL)
+					return EXIT_INTERN_ERROR;
+
+				const char* prefix = get_current_scope_prefix(parser);
+				IL_ADD(OP_POPS, addr_symbol(prefix, tmp), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				// Push 0
+				if (value.expr_type == TOKEN_KW_INTEGER) {
+					IL_ADD(OP_PUSHS, addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				} else {
+					IL_ADD(OP_PUSHS, addr_constant(MAKE_TOKEN_REAL(0)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				}
+
+				// Push tmp back
+				IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				// Substract
+				IL_ADD(OP_SUBS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				sem_an->value = sem_value_copy(&value);
+				if (sem_an->value == NULL)
+					return NULL;
 
 				sem_an->finished = true;
 			}

@@ -136,7 +136,7 @@ bool sem_stack_push(DLList *s, void* item);
 // SEMANTIC FUNCTIONS
 // ------------------
 
-int sem_expr_end(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_result(SemAnalyzer *sem_an, struct parser_t *parser, SemValue value);
 
 int sem_expr_id(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_const(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
@@ -146,6 +146,7 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value)
 int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_div(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_brackets(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_unary(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 
 int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);

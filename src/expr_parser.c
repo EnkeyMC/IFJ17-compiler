@@ -88,8 +88,8 @@ int parse_expression(Parser *parser) {
 		SemAnalyzer* sem_an = (SemAnalyzer*) sem_stack_top(parser->sem_an_stack);
 
 		if (sem_an != NULL) {
-			// Reuse the SemAnalyzer and call sem_expr_end
-			sem_an->sem_action = sem_expr_end;
+			// Reuse the SemAnalyzer and call sem_expr_result
+			sem_an->sem_action = sem_expr_result;
 			sem_an->state = SEM_STATE_START;
 			sem_an->finished = false;
 			assert(sem_an->value != NULL);
