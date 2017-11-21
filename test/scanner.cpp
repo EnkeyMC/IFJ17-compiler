@@ -443,7 +443,7 @@ TEST_F(ScannerTestFixture, ParseString) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_STRING);
-	EXPECT_STREQ(token->data.str, "Test string \\001\\n");
+	EXPECT_STREQ(token->data.str, "Test\\032string\\032\\001\\010");
 	token_free(token);
 
 	// EOL
@@ -457,7 +457,7 @@ TEST_F(ScannerTestFixture, ParseString) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_STRING);
-	EXPECT_STREQ(token->data.str, "\\\\\\n Test\\ttwo");
+	EXPECT_STREQ(token->data.str, "\\092\\010\\032Test\\009two");
 	token_free(token);
 
 	// EOL

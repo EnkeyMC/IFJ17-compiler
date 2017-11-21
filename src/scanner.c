@@ -15,6 +15,7 @@
 
 #include "scanner.h"
 #include "fsm.h"
+#include "buffer.h"
 
 #define READ_CHAR() getc(scanner->stream);
 #define STR_IS(keyword) strcmp(str, keyword) == 0
@@ -137,7 +138,7 @@ char* convert_white_char(const char* str) {
  	for (unsigned int i = 0; i < strlen(str); i++) {
 		ch = str[i];
 		if ((ch >= 0 && ch <= 32) || ch == 35 || ch == 92) {
-			sprintf(esc_seq, "\\%3d", ch);
+			sprintf(esc_seq, "\\%03d", ch);
 		} else {
 			esc_seq[0] = str[i];
 			esc_seq[1] = '\0';
@@ -586,7 +587,6 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(string) {
 			ch = READ_CHAR();
 			if (ch == '\\') {
-				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(escape_seq);
 			} else if (ch == '"') {
 				NEXT_STATE(string_end);
@@ -606,7 +606,16 @@ Token* scanner_get_token(Scanner* scanner) {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(esc_num_one);
 			}
-			else if (ch == '"' || ch == 'n' || ch == 't' || ch == '\\') {
+			else if (ch == '"') {
+				APPEND_TO_BUFFER('\"');
+				NEXT_STATE(string);
+			} else if (ch == 'n') {
+				APPEND_TO_BUFFER('\n');
+				NEXT_STATE(string);
+			} else if (ch == 't') {
+				APPEND_TO_BUFFER('\t');
+				NEXT_STATE(string);
+			} else if (ch == '\\') {
 				APPEND_TO_BUFFER(ch);
 				NEXT_STATE(string);
 			}
@@ -635,11 +644,14 @@ Token* scanner_get_token(Scanner* scanner) {
 			if ('0' <= ch && ch <= '9') {
 				APPEND_TO_BUFFER(ch);
 
-				unsigned long check = strtoul((scanner->buffer->str + scanner->buffer->len - 3), NULL, 10);
-				if (check == 0 || check > 255) {
+				int esc_ch = (int) strtol(&scanner->buffer->str[scanner->buffer->len - 3], NULL, 10);
+				if (esc_ch == 0 || esc_ch > 255) {
 					token->id = LEX_ERROR;
 					return token;
 				}
+				scanner->buffer->len -= 2;
+				scanner->buffer->str[scanner->buffer->len] = '\0';
+				APPEND_TO_BUFFER((char) esc_ch);
 
 				NEXT_STATE(string);
 			}
