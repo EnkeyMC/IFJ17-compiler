@@ -900,7 +900,7 @@ int sem_expr_unary(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 				sem_an->value = sem_value_copy(&value);
 				if (sem_an->value == NULL)
-					return NULL;
+					return EXIT_INTERN_ERROR;
 
 				sem_an->finished = true;
 			}
