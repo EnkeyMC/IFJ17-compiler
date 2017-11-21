@@ -2,6 +2,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include <stdlib.h>
+#include <string.h>
 #include "sem_analyzer.h"
 #include "error_code.h"
 #include "token.h"
@@ -92,7 +93,7 @@ void sem_value_free(void* value) {
 		case VTYPE_TOKEN:
 			token_free(to_free->token);
 			break;
-		case VTYPE_ID:  // Can't free reference to symbol table
+		case VTYPE_ID:	// Can't free reference to symbol table
 			break;
 		case VTYPE_LIST:
 			dllist_free(to_free->list);
@@ -158,6 +159,21 @@ static const char* get_var_scope_prefix(Parser* parser, const char* key) {
 	}
 
 	return F_GLOBAL;
+}
+
+static bool find_sem_action(Parser *parser, semantic_action_f sem_action) {
+	dllist_activate_first(parser->sem_an_stack);
+	SemAnalyzer *sem_an;
+
+	while (dllist_active(parser->sem_an_stack)) {
+		sem_an = (SemAnalyzer*) dllist_get_active(parser->sem_an_stack);
+		if (sem_an->sem_action == sem_action)
+			return true;
+
+		dllist_succ(parser->sem_an_stack);
+	}
+
+	return false;
 }
 
 static const char* get_current_scope_prefix(Parser* parser) {
@@ -237,7 +253,7 @@ static bool cast_second_operand(Parser* parser, opcode_e inst) {
 	IL_ADD(inst, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 	// Push tmp_var back on stack
 	IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-	free(tmp_var);  // Free generated uid
+	free(tmp_var);	// Free generated uid
 	return true;
 }
 
@@ -806,7 +822,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(tmp_var);  // Free generated string
+						free(tmp_var);	// Free generated string
 					} else {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
@@ -1128,7 +1144,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				IL_ADD(OP_MOVE, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
 			} else if (value.value_type == VTYPE_TOKEN) {
-				switch (value.token->id) {  // Default initialization
+				switch (value.token->id) {	// Default initialization
 					case TOKEN_EOL:
 						switch (sem_an->value->id->id_data->type) {
 							case TOKEN_KW_INTEGER:
@@ -1558,7 +1574,7 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_EOL)
+				value.token->id == TOKEN_KW_DO)
 			{
 				if (create_scope(parser) == NULL) {
 					return EXIT_INTERN_ERROR;
@@ -1572,7 +1588,203 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				value.token->id == TOKEN_KW_LOOP)
 			{
 				delete_scope(parser);
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	HashTable* symtab = NULL;
+	htab_item* item = NULL;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_TOKEN
+				&& value.token->id == TOKEN_IDENTIFIER)
+			{
+				sem_an->value = sem_value_copy(&value);
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+				SEM_NEXT_STATE(SEM_STATE_FOR_ITERATOR);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_FOR_ITERATOR) {
+			if (value.value_type == VTYPE_TOKEN
+					 && value.token->id == TOKEN_EQUAL) {
+
+				// variable must have been declared before
+				item = find_symbol(parser, sem_an->value->token->data.str);
+				if (item == NULL)
+					return EXIT_SEMANTIC_PROG_ERROR;
+				// variable must be integer or double
+				if (item->id_data->type == TOKEN_KW_STRING
+						|| item->id_data->type == TOKEN_KW_BOOLEAN)
+					return EXIT_SEMANTIC_COMP_ERROR;
+
+				if (create_scope(parser) == NULL)
+					return EXIT_INTERN_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_FOR_INIT);
+			}
+
+			else if (value.value_type == VTYPE_TOKEN) {
+				switch (value.token->id) {
+					case TOKEN_KW_STRING:
+					case TOKEN_KW_BOOLEAN:
+						return EXIT_SEMANTIC_COMP_ERROR; // bad iterator type
+					case TOKEN_KW_INTEGER:
+					case TOKEN_KW_DOUBLE: {
+
+						if (create_scope(parser) == NULL)
+							return EXIT_INTERN_ERROR;
+
+						// add iterator variable to new scope
+						symtab = get_current_sym_tab(parser);
+						item = htab_lookup(symtab, sem_an->value->token->data.str);
+						if (item == NULL) {
+							return EXIT_INTERN_ERROR;
+						}
+						item->id_data->type = value.token->id;
+
+						SEM_NEXT_STATE(SEM_STATE_FOR_INIT);
+					}
+					default:
+						break;
+				};
+			}
+		} END_STATE;
+
+		// Check iterator expression init type
+		SEM_STATE(SEM_STATE_FOR_INIT) {
+			if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type == TOKEN_KW_STRING)
+					return EXIT_SEMANTIC_COMP_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_FOR_ENDVAL);
+			}
+		} END_STATE;
+
+		// Check iterator expression end value type
+		SEM_STATE(SEM_STATE_FOR_ENDVAL) {
+			if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type == TOKEN_KW_STRING)
+					return EXIT_SEMANTIC_COMP_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_FOR_NEXT);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_FOR_NEXT) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_NEXT)
+			{
+				SEM_NEXT_STATE(SEM_STATE_FOR_END);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_FOR_END) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				delete_scope(parser);
+				sem_an->finished = true;
+			}
+			else if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_IDENTIFIER)
+			{
+				item = find_symbol(parser, sem_an->value->token->data.str);
+				if (strcmp(item->key, value.token->data.str) != 0)
+					return EXIT_SEMANTIC_PROG_ERROR;
 				SEM_NEXT_STATE(SEM_STATE_EOL);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_EOL) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				delete_scope(parser);
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_DO)
+			{
+				if (! find_sem_action(parser, sem_do_loop))
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_EOL);
+				break;
+			}
+			else if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_FOR)
+			{
+				if (! find_sem_action(parser, sem_for_loop))
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_EOL);
+				break;
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_EOL) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_DO)
+			{
+				if (! find_sem_action(parser, sem_do_loop))
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_EOL);
+				break;
+			}
+			else if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_FOR)
+			{
+				if (! find_sem_action(parser, sem_for_loop))
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_EOL);
+				break;
 			}
 		} END_STATE;
 

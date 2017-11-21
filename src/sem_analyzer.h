@@ -10,8 +10,8 @@
  * Enumeration of semantic states
  */
 typedef enum {
-    SEM_STATE_START,
-    SEM_STATE_VAR_TYPE,
+	SEM_STATE_START,
+	SEM_STATE_VAR_TYPE,
 	SEM_STATE_ASSIGN,
 	SEM_STATE_FUNC_RETURN_TYPE,
 	SEM_STATE_DECLARED_VAR_TYPE,
@@ -20,6 +20,11 @@ typedef enum {
 	SEM_STATE_EOL,
 	SEM_STATE_SCOPE_END,
 	SEM_STATE_DO_LOOP,
+	SEM_STATE_FOR_ITERATOR,
+	SEM_STATE_FOR_INIT,
+	SEM_STATE_FOR_ENDVAL,
+	SEM_STATE_FOR_NEXT,
+	SEM_STATE_FOR_END,
 	SEM_STATE_OPERATOR,
 	SEM_STATE_OPERAND,
 	SEM_STATE_LIST,
@@ -34,20 +39,20 @@ struct htab_item_t;
 
 
 typedef enum {
-    VTYPE_TOKEN,
-    VTYPE_ID,
-    VTYPE_LIST,
+	VTYPE_TOKEN,
+	VTYPE_ID,
+	VTYPE_LIST,
 	VTYPE_EXPR
 } value_type_e;
 
 typedef struct sem_value_t {
-    value_type_e value_type;
-    union {
-        struct token_t* token;
-        struct htab_item_t* id;
-        DLList* list;
-		int expr_type;  /// Should be token_e but can't include token.h
-    };
+	value_type_e value_type;
+	union {
+		struct token_t* token;
+		struct htab_item_t* id;
+		DLList* list;
+		int expr_type;	/// Should be token_e but can't include token.h
+	};
 } SemValue;
 
 /**
@@ -63,10 +68,10 @@ typedef int (*semantic_action_f) (struct sem_analyzer_t*, struct parser_t*, SemV
  * Semantic analyzer object, holds current state of semantic analysis
  */
 typedef struct sem_analyzer_t {
-    semantic_action_f sem_action;  /// Semantic action
-    bool finished;  /// Indicates whether semantic action is finished or not
-    sem_state_e state;  /// State of semantic action
-    SemValue* value;  /// Constant or temporary variable from nested SemAnalyzer or aggregated value for parent SymAnalyzer
+	semantic_action_f sem_action;  /// Semantic action
+	bool finished;	/// Indicates whether semantic action is finished or not
+	sem_state_e state;	/// State of semantic action
+	SemValue* value;  /// Constant or temporary variable from nested SemAnalyzer or aggregated value for parent SymAnalyzer
 } SemAnalyzer;
 
 /**
@@ -161,5 +166,8 @@ int sem_param_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value)
 int sem_scope(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_print(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_do_loop(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_for_loop(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_exit(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_continue(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 #endif //IFJ17_COMPILER_SEM_ANALYZER_H
