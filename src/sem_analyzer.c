@@ -1214,7 +1214,9 @@ int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_SCOPE)
 			{
-				create_scope(parser);
+				if (create_scope(parser) == NULL) {
+					return EXIT_INTERN_ERROR;
+				}
 				SEM_NEXT_STATE(SEM_STATE_SCOPE_END);
 			}
 		} END_STATE;
@@ -1445,7 +1447,9 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_EOL)
 			{
-				create_scope(parser);
+				if (create_scope(parser) == NULL) {
+					return EXIT_INTERN_ERROR;
+				}
 				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
 			}
 		} END_STATE;
