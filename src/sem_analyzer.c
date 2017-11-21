@@ -199,6 +199,33 @@ static void delete_scope(Parser* parser) {
 		htab_free(local_symtab);
 	}
 }
+
+/**
+ * Casts second operand with 'inst' instruction
+ * @param parser Parser
+ * @param inst Instruction to use on second operand (has to be stack instruction)
+ * @return true on success, false on internal error
+ */
+static bool cast_second_operand(Parser* parser, opcode_e inst) {
+	// Cast second operand, we need to temporarly pop top operand to access the second one
+	char* tmp_var = generate_uid();
+	if (tmp_var == NULL)
+		return false;
+
+	// Get tmp_var prefix
+	const char* prefix = get_current_scope_prefix(parser);
+	// Define tmp_var
+	IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+	// Pop top of stack to tmp_var
+	IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+	// Cast second operand
+	IL_ADD(inst, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+	// Push tmp_var back on stack
+	IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+	free(tmp_var);  // Free generated uid
+	return true;
+}
+
 // SEMANTIC FUNCTIONS
 
 /**
@@ -428,14 +455,9 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					break;
 				case TOKEN_KW_DOUBLE:
 					if (type == TOKEN_KW_INTEGER) {
-						// Cast second operand, we need to temporarly pop top operand to access the second one
-						char* tmp_var = generate_uid();
-						const char* prefix = get_current_scope_prefix(parser);
-						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(tmp_var);  // Free generated string
+						// Cast to float
+						if (!cast_second_operand(parser, OP_INT2FLOATS))
+							return EXIT_INTERN_ERROR;
 					} else if (type != TOKEN_KW_DOUBLE) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
@@ -475,6 +497,9 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp2), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						// Negate condition
 						IL_ADD(OP_GTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+						free(tmp1);
+						free(tmp2);
 					}
 					break;
 				case TOKEN_GE:
@@ -501,6 +526,9 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp2), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						// Negate condition
 						IL_ADD(OP_LTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+						free(tmp1);
+						free(tmp2);
 					}
 					break;
 				default:
@@ -569,14 +597,8 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					break;
 				case TOKEN_KW_DOUBLE:
 					if (type == TOKEN_KW_INTEGER) {
-						// Cast second operand, we need to temporarly pop top operand to access the second one
-						char* tmp_var = generate_uid();
-						const char* prefix = get_current_scope_prefix(parser);
-						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(tmp_var);  // Free generated string
+						if (!cast_second_operand(parser, OP_INT2FLOATS))
+							return EXIT_INTERN_ERROR;
 					} else if (type != TOKEN_KW_DOUBLE) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
@@ -663,14 +685,9 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 					break;
 				case TOKEN_KW_DOUBLE:
 					if (type == TOKEN_KW_INTEGER) {
-						// Cast second operand, we need to temporarly pop top operand to access the second one
-						char* tmp_var = generate_uid();
-						const char* prefix = get_current_scope_prefix(parser);
-						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(tmp_var);  // Free generated string
+						if (!cast_second_operand(parser, OP_INT2FLOATS))
+							return EXIT_INTERN_ERROR;
+
 						type = TOKEN_KW_DOUBLE;
 					} else if (type != TOKEN_KW_DOUBLE) {
 						return EXIT_SEMANTIC_COMP_ERROR;
@@ -770,14 +787,8 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			switch (sem_an->value->token->id) {
 				case TOKEN_DIVI:  // Needs to be casted to flat and then back to int
 					if (type == TOKEN_KW_INTEGER) {
-						// Cast second operand, we need to temporarly pop top operand to access the second one
-						char* tmp_var = generate_uid();
-						const char* prefix = get_current_scope_prefix(parser);
-						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(tmp_var);  // Free generated string
+						if (!cast_second_operand(parser, OP_INT2FLOATS))
+							return EXIT_INTERN_ERROR;
 						type = TOKEN_KW_DOUBLE;
 					} else if (type == TOKEN_KW_DOUBLE) {
 						// Cast second operand, we need to temporarly pop top operand to access the second one
@@ -805,14 +816,8 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					break;
 				case TOKEN_DIVR:
 					if (type == TOKEN_KW_INTEGER) {
-						// Cast second operand, we need to temporarly pop top operand to access the second one
-						char* tmp_var = generate_uid();
-						const char* prefix = get_current_scope_prefix(parser);
-						IL_ADD(OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(OP_PUSHS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(tmp_var);  // Free generated string
+						if (!cast_second_operand(parser, OP_INT2FLOATS))
+							return EXIT_INTERN_ERROR;
 						type = TOKEN_KW_DOUBLE;
 					} else if (type != TOKEN_KW_DOUBLE) {
 						return EXIT_SEMANTIC_COMP_ERROR;
