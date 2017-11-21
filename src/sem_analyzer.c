@@ -881,11 +881,8 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN
-				&& value.token->id == TOKEN_IDENTIFIER) {
-				sem_an->value = sem_value_copy(&value);
-				if (sem_an->value == NULL)
-					return EXIT_INTERN_ERROR;
-
+				&& value.token->id == TOKEN_IDENTIFIER)
+			{
 				symtab = get_current_sym_tab(parser);
 
 				// Check variable redefinition
@@ -894,9 +891,19 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				}
 
 				// Put variable in value table
-				if (htab_lookup(symtab, value.token->data.str) == NULL) {
+				htab_item* item = htab_lookup(symtab, value.token->data.str);
+				if (item == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
+
+				sem_an->value = sem_value_init();
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+
+				sem_an->value->value_type = VTYPE_ID;
+				sem_an->value->id = item;
+
+				IL_ADD(OP_DEFVAR, addr_symbol(get_current_scope_prefix(parser), item->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
 			}
@@ -909,11 +916,9 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_DOUBLE:
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN: {
-						symtab = get_current_sym_tab(parser);
-						htab_item *item = htab_find(symtab, sem_an->value->token->data.str);
-						item->id_data->type = value.token->id;
+						sem_an->value->id->id_data->type = value.token->id;
 
-						SEM_NEXT_STATE(SEM_STATE_EOL);
+						SEM_NEXT_STATE(SEM_STATE_ASSIGN);
 					}
 					default:
 						break;
@@ -921,10 +926,30 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			}
 		} END_STATE;
 
-		SEM_STATE(SEM_STATE_EOL) {
-			if (value.value_type == VTYPE_TOKEN) {
-				switch (value.token->id) {
+		SEM_STATE(SEM_STATE_ASSIGN) {
+			if (value.value_type == VTYPE_ID) {  // Variable initialization
+				const char* prefix = get_current_scope_prefix(parser);
+				IL_ADD(OP_MOVE, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+				sem_an->finished = true;
+			} else if (value.value_type == VTYPE_TOKEN) {
+				switch (value.token->id) {  // Default initialization
 					case TOKEN_EOL:
+						switch (sem_an->value->id->id_data->type) {
+							case TOKEN_KW_INTEGER:
+								IL_ADD(OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->id->key), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, EXIT_INTERN_ERROR);
+								break;
+							case TOKEN_KW_BOOLEAN:
+								IL_ADD(OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->id->key), addr_constant(MAKE_TOKEN_BOOL(false)), NO_ADDR, EXIT_INTERN_ERROR);
+								break;
+							case TOKEN_KW_DOUBLE:
+								IL_ADD(OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->id->key), addr_constant(MAKE_TOKEN_REAL(0)), NO_ADDR, EXIT_INTERN_ERROR);
+								break;
+							case TOKEN_KW_STRING:
+								IL_ADD(OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->id->key), addr_constant(MAKE_TOKEN_STRING("")), NO_ADDR, EXIT_INTERN_ERROR);
+								break;
+							default:
+								assert(!"I shouldn't be here");
+						}
 						sem_an->finished = true;
 						break;
 					default:
