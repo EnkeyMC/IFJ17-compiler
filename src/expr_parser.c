@@ -91,6 +91,7 @@ int parse_expression(Parser *parser) {
 			// Reuse the SemAnalyzer and call sem_expr_end
 			sem_an->sem_action = sem_expr_end;
 			sem_an->state = SEM_STATE_START;
+			sem_an->finished = false;
 			assert(sem_an->value != NULL);
 			sem_an->sem_action(sem_an, parser, *sem_an->value);
 		}

@@ -1151,8 +1151,8 @@ int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 }
 
 int sem_print(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
-	SEM_ACTION_CHECK; (void) value; // TODO
-/*
+	SEM_ACTION_CHECK;
+
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_ID) {
@@ -1165,7 +1165,7 @@ int sem_print(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		} END_STATE;
 
 		SEM_ERROR_STATE;
-	}*/
+	}
 
 	return EXIT_SUCCESS;
 }
