@@ -357,3 +357,17 @@ int dllist_length(DLList *l) {
 
 	return length;
 }
+
+void dllist_debug(void* l, debug_func func) {
+	DLList* list = (DLList*) l;
+
+	debug("DLList@%p: {\n", list);
+	dllist_activate_first(list);
+	while (dllist_active(list)) {
+		debug("\t");
+		func(dllist_get_active(list));
+		debug("\n");
+		dllist_succ(list);
+	}
+	debug("}\n\n");
+}

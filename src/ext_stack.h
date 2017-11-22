@@ -70,4 +70,16 @@ bool ext_stack_shift(ExtStack* s, Token* token);
  */
 int ext_stack_reduce(ExtStack* s, Parser* parser);
 
+/**
+ * Debug info about stack_item
+ * @param item stack_item
+ */
+void stack_item_debug(void* item);
+
+/**
+ * Debug info about ExtStack
+ * @param s ExtStack
+ */
+void ext_stack_debug(void* s);
+
 #endif //IFJ17_COMPILER_EXT_STACK_H

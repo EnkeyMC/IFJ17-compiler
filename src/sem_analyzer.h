@@ -113,6 +113,18 @@ SemValue* sem_value_copy(const SemValue* value);
  */
 void sem_value_free(void* value);
 
+/**
+ * Print debug info about Semantic Analyzer
+ * @param sa SemAnalyzer
+ */
+void sem_an_debug(void* sa);
+
+/**
+ * Print debug info about SemValue
+ * @param val SemValue
+ */
+void sem_value_debug(void* val);
+
 // ------------------------
 // SEMANTIC STACK FUNCTIONS
 // ------------------------

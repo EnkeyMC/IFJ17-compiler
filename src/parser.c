@@ -19,6 +19,7 @@
 #include "expr_parser.h"
 #include "3ac.h"
 #include "buffer.h"
+#include "debug.h"
 
 
 /**
@@ -299,6 +300,7 @@ int parse(Parser* parser) {
 
 	// Start processing tokens
 	do {  // Token loop
+		dllist_debug(parser->sem_an_stack, sem_an_debug);
 		token_free(token);  // Free last token, does nothing when token is NULL
 
 		// Get next token from scanner

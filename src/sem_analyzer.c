@@ -8,6 +8,7 @@
 #include "token.h"
 #include "parser.h"
 #include "3ac.h"
+#include "debug.h"
 
 #define SEM_FSM switch(sem_an->state)
 #define SEM_STATE(state) case state:
@@ -135,6 +136,46 @@ bool sem_stack_push(DLList *s, void* item) {
 
 	return dllist_insert_first(s, item);
 }
+
+void sem_an_debug(void* sa) {
+	SemAnalyzer* sem_an = (SemAnalyzer*) sa;
+
+	debug("SemAnalyzer@%p: {", sem_an);
+
+	if (sem_an != NULL) {
+		debug(".sem_action = %p, .finished = %s, .state = %d, .value = ", sem_an->sem_action, sem_an->finished ? "true" : "false", sem_an->state);
+		sem_value_debug(sem_an->value);
+	}
+
+	debug("}");
+}
+
+void sem_value_debug(void* val) {
+	SemValue* value = (SemValue*) val;
+
+	debug("SemValue@%p: {", value);
+
+	if (value != NULL) {
+		switch (value->value_type) {
+			case VTYPE_TOKEN:
+				debug(".type = TOKEN, .token = ");
+				token_debug(value->token);
+				break;
+			case VTYPE_ID:
+				debug(".type = ID, .id = %s", value->id->key);
+				break;
+			case VTYPE_EXPR:
+				debug(".type = EXPR, .expr_type = %d", value->expr_type);
+				break;
+			case VTYPE_LIST:
+				debug(".type = LIST, .list = ");
+				break;
+		}
+	}
+
+	debug("}");
+}
+
 // ----------------
 // SEMANTIC ACTIONS
 // ----------------

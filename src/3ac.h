@@ -185,4 +185,10 @@ bool il_add(DLList* il, Instruction* instruction);
  */
 void generate_code();
 
+/**
+ * Print instruction
+ * @param inst Instruction
+ */
+void instruction_debug(void *inst);
+
 #endif //IFJ17_COMPILER_3AC_H

@@ -142,4 +142,10 @@ Token token_make(token_e type, union token_data data);
  */
 Token token_make_str(const char* string);
 
+/**
+ * Print debug info about token
+ * @param t Token
+ */
+void token_debug(void* t);
+
 #endif //IFJ17_COMPILER_TOKEN_H

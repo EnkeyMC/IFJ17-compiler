@@ -4,6 +4,7 @@
 #include "ext_stack.h"
 #include "expr_grammar.h"
 #include "error_code.h"
+#include "debug.h"
 
 ExtStack* ext_stack_init() {
 	ExtStack* s = dllist_init(ext_stack_item_free);
@@ -176,4 +177,34 @@ void ext_stack_item_free(void* item) {
 
 void ext_stack_free(ExtStack* s) {
 	dllist_free(s);
+}
+
+void stack_item_debug(void* item) {
+	stack_item* sitem = (stack_item*) item;
+
+	debug("stack_item@%p: {", sitem);
+
+	if (sitem != NULL) {
+		debug(".type_id = %d, .token = ", sitem->type_id);
+		token_debug(sitem->token);
+	}
+
+	debug("}");
+}
+
+void ext_stack_debug(void* s) {
+	ExtStack* stack = (ExtStack*) s;
+
+	debug("ExtStack@%p: From top {\n", stack);
+
+	if (stack != NULL) {
+		dllist_activate_first(stack);
+		while (dllist_active(stack)) {
+			debug("\t");
+			stack_item_debug(dllist_get_active(stack));
+			debug("\n");
+		}
+	}
+
+	debug("}\n\n");
 }

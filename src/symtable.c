@@ -246,16 +246,28 @@ void htab_foreach(HashTable *htab_ptr, void (*function)(htab_item *item_ptr)) {
 			function(item);
 }
 
-void print_id_item(htab_item * item_ptr) {
-	printf("Key: '%s'\tType: %d\n", item_ptr->key, item_ptr->id_data->type);
+void id_item_debug(void * item_ptr) {
+	htab_item* item = (htab_item*) item_ptr;
+	debug("htab_item@%p: {", item);
+
+	if (item != NULL) {
+		debug(".key = %s, .type: %d", item->key, item->id_data->type);
+	}
+
+	debug("}");
 }
 
-void print_func_item(htab_item * item_ptr) {
-	printf("Key: '%s'\tReturn type: %d\n", item_ptr->key, item_ptr->func_data->rt);
-	printf("\tNumber of params: '%u'\tParam types: %s\n", item_ptr->func_data->par_num, item_ptr->func_data->par_types->str);
-	printf("\tDefinition provided?: '%s'\n", item_ptr->func_data->definition ? "true" : "false");
-	printf("\tParameter names: '%s'\n", item_ptr->func_data->par_names->str);
-	printf("---------------------------------------------------------------'\n");
+void func_item_debug(void * item_ptr) {
+	htab_item* item = (htab_item*) item_ptr;
+	debug("htab_item@%p: {", item);
+
+	if (item != NULL) {
+		debug(".key = %s, .rt = %d", item->key, item->func_data->rt);
+		printf(", .nparams = %u, .types = %s", item->func_data->par_num, item->func_data->par_types->str);
+		printf(", .defined = %s", item->func_data->definition ? "true" : "false");
+	}
+
+	debug("}");
 }
 
 // FUNCTIONS TO MODIFY FUNCTION DATA STORED IN HASH TABLE

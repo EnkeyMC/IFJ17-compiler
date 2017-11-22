@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include "debug.h"
 
 #ifndef IFJ17_COMPILER_LIST_H
 #define IFJ17_COMPILER_LIST_H
@@ -183,6 +184,12 @@ void dllist_pred(DLList *l);
  * @return length of the list
  */
 int dllist_length(DLList *l);
+
+/**
+ * Print debug info about DLList
+ * @param l DLList
+ */
+void dllist_debug(void* l, debug_func func);
 
 
 #endif //IFJ17_COMPILER_LIST_H

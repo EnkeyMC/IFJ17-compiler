@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include "token.h"
 #include "error_code.h"
+#include "debug.h"
 
 void token_free(Token* token) {
 	if (token == NULL)
@@ -69,4 +70,31 @@ Token token_make_str(const char* string) {
 
 	token.data.str = copy;
 	return token;
+}
+
+void token_debug(void* t) {
+	Token* token = (Token*) t;
+
+	debug("Token@%p: {", token);
+
+	if (token != NULL) {
+		debug(".id = %d", token->id);
+
+		switch (token->id) {
+			case TOKEN_STRING:
+			case TOKEN_IDENTIFIER:
+				debug(", .data = %s", token->data.str);
+				break;
+			case TOKEN_INT:
+				debug(", .data = %d", token->data.i);
+				break;
+			case TOKEN_REAL:
+				debug(", .data = %g", token->data.d);
+				break;
+			default:
+				break;
+		}
+	}
+
+	debug("}");
 }

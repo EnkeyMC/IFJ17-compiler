@@ -94,3 +94,17 @@ void stack_free(Stack* s, stack_free_callback free_item_f) {
 		free(s->stack);
 	free(s);
 }
+
+void stack_debug(Stack* s, debug_func func) {
+	debug("Stack@%p: From top {\n", s);
+
+	if (s != NULL) {
+		for (int i = s->top; i >= 0; --i) {
+			debug("\t");
+			func(s->stack[i]);
+			debug("\n");
+		}
+	}
+
+	debug("}\n\n");
+}

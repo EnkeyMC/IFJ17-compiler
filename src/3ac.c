@@ -3,6 +3,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "3ac.h"
+#include "debug.h"
 
 static const char* opcodes_str[] = {
 	FOREACH_OPCODE(GENERATE_STRING) ""
@@ -163,8 +164,6 @@ static void print_instruction(Instruction* instruction) {
 				break;
 		}
 	}
-
-	printf("\n");
 }
 
 void generate_code() {
@@ -177,6 +176,7 @@ void generate_code() {
 		instruction = (Instruction*) dllist_get_active(global_il);
 		assert(instruction != NULL);
 		print_instruction(instruction);
+		printf("\n");
 		dllist_succ(global_il);
 	}
 	printf("\n\n");
@@ -187,6 +187,7 @@ void generate_code() {
 		instruction = (Instruction*) dllist_get_active(main_il);
 		assert(instruction != NULL);
 		print_instruction(instruction);
+		printf("\n");
 		dllist_succ(main_il);
 	}	
 	printf("\n\n");
@@ -197,6 +198,15 @@ void generate_code() {
 		instruction = (Instruction*) dllist_get_active(func_il);
 		assert(instruction != NULL);
 		print_instruction(instruction);
+		printf("\n");
 		dllist_succ(func_il);
 	}
+}
+
+void instruction_debug(void *inst) {
+	Instruction* instruction = inst;
+	debug("Instruction@%p: {", instruction);
+	if (instruction != NULL)
+		print_instruction(instruction);
+	debug("}");
 }

@@ -67,4 +67,10 @@ bool buffer_clear(Buffer* b);
  */
 bool buffer_set_str(Buffer* b, const char* str);
 
+/**
+ * Debug print for buffer
+ * @param b Buffer
+ */
+void buffer_debug(void* b);
+
 #endif //IFJ17_COMPILER_BUFFER_H

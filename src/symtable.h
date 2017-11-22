@@ -120,8 +120,8 @@ void htab_foreach(HashTable *htab_ptr, void (*func)(htab_item *item_ptr));
  * Print contents of an identifier/function data to stdout. Use with htab_foreach in first place.
  * @param item_ptr Pointer to hash table item
  */
-void print_id_item(htab_item *item_ptr);
-void print_func_item(htab_item *item_ptr);
+void id_item_debug(void *item_ptr);
+void func_item_debug(void *item_ptr);
 
 // FUNCTIONS TO MODIFY FUNCTION DATA STORED IN HASH TABLE
 /**

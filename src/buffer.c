@@ -2,6 +2,8 @@
 #include <assert.h>
 #include <string.h>
 #include "buffer.h"
+#include "debug.h"
+
 
 static bool buffer_realloc(Buffer* b, size_t size) {
 	if (size == b->buffer_size)
@@ -105,4 +107,15 @@ bool buffer_set_str(Buffer* b, const char* str) {
 	strcpy(b->str, str);
 	b->len = str_len;
 	return true;
+}
+
+void buffer_debug(void* b) {
+	Buffer* buffer = b;
+	debug("Buffer@%p: {", buffer);
+
+	if (buffer != NULL) {
+		debug(".len = %lu, .buffer_size = %lu, .str = %s", buffer->len, buffer->buffer_size, buffer->str);
+	}
+
+	debug("}");
 }

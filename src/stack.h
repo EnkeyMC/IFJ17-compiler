@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "debug.h"
 
 #define STACK_CHUNK 10
 
@@ -62,5 +63,12 @@ bool stack_push(Stack* s, void* item);
  * @param free_item_f function that frees item, can be NULL
  */
 void stack_free(Stack* s, stack_free_callback free_item_f);
+
+/**
+ * Print debug info about Stack
+ * @param s Stack
+ * @param func debug function for stack items
+ */
+void stack_debug(Stack* s, debug_func func);
 
 #endif //IFJ17_COMPILER_STACK_H
