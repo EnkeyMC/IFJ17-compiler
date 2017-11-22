@@ -1596,6 +1596,11 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						// Create new local symtable
 						if (create_scope(parser) == NULL)
 							return EXIT_INTERN_ERROR;
+
+						IL_ADD(func_il, OP_LABEL, addr_symbol("", item->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
 						// Function was declared
 						SEM_NEXT_STATE(SEM_STATE_DECLARED_VAR_TYPE);
 						break;
@@ -1612,6 +1617,10 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (create_scope(parser) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
+
+				IL_ADD(func_il, OP_LABEL, addr_symbol("", value.token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
 			}
@@ -1725,15 +1734,8 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_FUNC_END) {
 			if (value.value_type == VTYPE_TOKEN) {
 				if (value.token->id == TOKEN_KW_FUNCTION) {
-					SEM_NEXT_STATE(SEM_STATE_EOL);
-				}
-			}
-		} END_STATE;
-
-		SEM_STATE(SEM_STATE_EOL) {
-			if (value.value_type == VTYPE_TOKEN) {
-				if (value.token->id == TOKEN_EOL) {
 					delete_scope(parser);
+					IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					sem_an->finished = true;
 				}
 			}
