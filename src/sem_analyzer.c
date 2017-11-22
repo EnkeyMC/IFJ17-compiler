@@ -87,6 +87,9 @@ SemValue* sem_value_copy(const SemValue* value) {
 }
 
 void sem_value_free(void* value) {
+	if (value == NULL)
+		return;
+
 	SemValue* to_free = (SemValue*) value;
 
 	switch (to_free->value_type) {
