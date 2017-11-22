@@ -84,9 +84,14 @@ static bool add_built_ins(HashTable* htab) {
 			default: break;
 		}
 	}
-/* TODO rewrite with new function calling convention
+// TODO rewrite with new function calling convention
 	// ASC function
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "asc"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "strlength"), NO_ADDR, NO_ADDR, false);
@@ -103,11 +108,19 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "wrongindex"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "retval"), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, false);
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "ascvalue"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
 
 	// SUBSTR function
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "n"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "n"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "substr"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "anotherchar"), NO_ADDR, NO_ADDR, false);
@@ -147,9 +160,34 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_JUMP, addr_symbol("", "itoendwhile"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "finalstring"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "substr"), NO_ADDR, false);
+	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
-*/
+
+	// LENGTH function
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "length"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "sl"), NO_ADDR, false);
+	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
+
+	// CHR function
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "chr"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_INT2CHAR, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "i"), NO_ADDR, false);
+	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
+
 	return true;
 }
 
