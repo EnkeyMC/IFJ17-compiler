@@ -20,6 +20,7 @@
 #include "3ac.h"
 #include "buffer.h"
 #include "debug.h"
+#include "scanner.h"
 
 
 /**
@@ -114,6 +115,8 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
 
 	// SUBSTR function
+	IL_ADD_SPACE(func_il, false);
+	IL_ADD_SPACE(func_il, false);
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "n"), NO_ADDR, NO_ADDR, false);
@@ -166,6 +169,8 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
 
 	// LENGTH function
+	IL_ADD_SPACE(func_il, false);
+	IL_ADD_SPACE(func_il, false);
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "length"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR, false);
@@ -178,6 +183,8 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
 
 	// CHR function
+	IL_ADD_SPACE(func_il, false);
+	IL_ADD_SPACE(func_il, false);
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "chr"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
@@ -300,7 +307,6 @@ int parse(Parser* parser) {
 
 	// Start processing tokens
 	do {  // Token loop
-		//dllist_debug(parser->sem_an_stack, sem_an_debug);
 		token_free(token);  // Free last token, does nothing when token is NULL
 
 		// Get next token from scanner
@@ -403,6 +409,10 @@ int parse(Parser* parser) {
 			break;
 		}
 	} while (token == NULL || token->id != TOKEN_EOF);  // End token loop
+
+	if (ret_code != EXIT_SUCCESS) {
+		debug("Error occured on line: %d\n", parser->scanner->line);
+	}
 
 	token_free(token);
 
