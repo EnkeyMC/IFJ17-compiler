@@ -1256,6 +1256,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 
 	HashTable* symtab = NULL;
+	HashTable* symtab_func = NULL;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -1263,9 +1264,13 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				&& value.token->id == TOKEN_IDENTIFIER)
 			{
 				symtab = get_current_sym_tab(parser);
+				symtab_func = parser->sym_tab_functions;
 
 				// Check variable redefinition
 				if (htab_find(symtab, value.token->data.str) != NULL) {
+					return EXIT_SEMANTIC_PROG_ERROR;
+				}
+				if (htab_find(symtab_func, value.token->data.str) != NULL) {
 					return EXIT_SEMANTIC_PROG_ERROR;
 				}
 
