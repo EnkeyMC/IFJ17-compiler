@@ -73,7 +73,8 @@
 #define F_TMP scope_prefix[2]
 
 // Helper macros for adding instructions
-#define IL_ADD(op, addr1, addr2, addr3, ret) if (!il_add(instruction_init(op, addr1, addr2, addr3))) return ret;
+#define IL_ADD(il, op, addr1, addr2, addr3, ret) if (!il_add(il, instruction_init(op, addr1, addr2, addr3))) return ret;
+#define IL_ADD_SPACE(il, ret) if (!il_add(instruction_init(il, OP_SPACE, NO_ADDR, NO_ADDR, NO_ADDR))) return ret;
 #define MAKE_TOKEN_INT(num) token_make(TOKEN_INT, (union token_data){.i = (num)})
 #define MAKE_TOKEN_REAL(real) token_make(TOKEN_REAL, (union token_data){.d = (real)})
 #define MAKE_TOKEN_STRING(string) token_make_str(string)
@@ -86,7 +87,7 @@
  * Enum of operation codes
  */
 typedef enum {
-    FOREACH_OPCODE(GENERATE_ENUM)
+    FOREACH_OPCODE(GENERATE_ENUM) OP_SPACE
 } opcode_e;
 
 /**
@@ -121,7 +122,9 @@ typedef struct instruction_t {
 
 extern const char* scope_prefix[3];  /// Array of scope prefixes, use macros F_LOCAL,...
 
-extern DLList* instruction_list;  /// Global instruction list
+extern DLList* main_il;  /// Global instruction list for main
+extern DLList* func_il;  /// Global instruction list for functions
+extern DLList* global_il;  /// Global instruction list for global variables
 
 /**
  * Initialize new intruction
@@ -175,7 +178,7 @@ void il_free();
  * @param instruction Instruction to add
  * @return true on success, false if instruction is NULL or allocation error
  */
-bool il_add(Instruction* instruction);
+bool il_add(DLList* il, Instruction* instruction);
 
 /**
  * Generate 3 address code

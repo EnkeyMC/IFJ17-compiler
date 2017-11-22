@@ -5,10 +5,12 @@
 #include "3ac.h"
 
 static const char* opcodes_str[] = {
-	FOREACH_OPCODE(GENERATE_STRING)
+	FOREACH_OPCODE(GENERATE_STRING) ""
 };
 
-DLList* instruction_list = NULL;
+DLList* main_il = NULL;
+DLList* global_il = NULL;
+DLList* func_il = NULL;
 
 const char* scope_prefix[3] = {"GF@", "LF@", "TF@"};
 
@@ -89,25 +91,40 @@ void address_free(Address addr) {
 }
 
 bool il_init() {
-	instruction_list = dllist_init(instruction_free);
-	if (instruction_list == NULL)
+	main_il = dllist_init(instruction_free);
+	if (main_il == NULL)
 		return false;
+
+	func_il = dllist_init(instruction_free);
+	if (func_il == NULL) {
+		dllist_free(main_il);
+		return false;
+	}
+
+	global_il = dllist_init(instruction_free);
+	if (global_il == NULL) {
+		dllist_free(main_il);
+		dllist_free(func_il);
+		return false;
+	}
 	return true;
 }
 
 void il_free() {
-	dllist_free(instruction_list);
+	dllist_free(main_il);
+	dllist_free(func_il);
+	dllist_free(global_il);
 }
 
-bool il_add(Instruction* instruction) {
+bool il_add(DLList* il, Instruction* instruction) {
 	if (instruction == NULL)
 		return false;
 
 	// Just for the sake of tests
-	if (instruction_list == NULL)
+	if (il == NULL)
 		return true;
 
-	return dllist_insert_last(instruction_list, instruction);
+	return dllist_insert_last(il, instruction);
 }
 
 static void print_instruction(Instruction* instruction) {
@@ -152,15 +169,34 @@ static void print_instruction(Instruction* instruction) {
 
 void generate_code() {
 	puts(".IFJcode17");
-	if (!dllist_empty(instruction_list)) {
-		dllist_activate_first(instruction_list);
 
-		Instruction* instruction;
-		while (dllist_active(instruction_list)) {
-			instruction = (Instruction*) dllist_get_active(instruction_list);
-			assert(instruction != NULL);
-			print_instruction(instruction);
-			dllist_succ(instruction_list);
-		}
+	dllist_activate_first(global_il);
+
+	Instruction* instruction;
+	while (dllist_active(global_il)) {
+		instruction = (Instruction*) dllist_get_active(global_il);
+		assert(instruction != NULL);
+		print_instruction(instruction);
+		dllist_succ(global_il);
+	}
+	printf("\n\n");
+	
+	dllist_activate_first(main_il);
+	
+	while (dllist_active(main_il)) {
+		instruction = (Instruction*) dllist_get_active(main_il);
+		assert(instruction != NULL);
+		print_instruction(instruction);
+		dllist_succ(main_il);
+	}	
+	printf("\n\n");
+
+	dllist_activate_first(func_il);
+
+	while (dllist_active(func_il)) {
+		instruction = (Instruction*) dllist_get_active(func_il);
+		assert(instruction != NULL);
+		print_instruction(instruction);
+		dllist_succ(func_il);
 	}
 }
