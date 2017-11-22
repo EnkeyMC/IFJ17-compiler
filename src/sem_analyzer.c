@@ -2072,3 +2072,30 @@ int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	return EXIT_SUCCESS;
 }
+
+int sem_return(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	SemAnalyzer* sem_action = NULL;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_ID)
+			{
+				sem_action = find_sem_action(parser, sem_func_def);
+				if (sem_action == NULL)
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				htab_item *func = htab_find(parser->sym_tab_functions, sem_action->value->token->data.str);
+				if (!are_types_compatible(func_get_rt(func), value.id->id_data->type))
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}

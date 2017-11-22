@@ -148,6 +148,13 @@ token_e func_get_param(htab_item* item, unsigned idx);
 void func_set_rt(htab_item* item, token_e type);
 
 /**
+ * Get function return type
+ * @param item Item containing function data
+ * @return function return type
+ */
+token_e func_get_rt(htab_item* item);
+
+/**
  * Function was already defined
  * @param item Item containing function data
  */

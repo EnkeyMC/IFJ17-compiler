@@ -346,6 +346,12 @@ void func_set_rt(htab_item* item, token_e type) {
 	item->func_data->rt = type;
 }
 
+token_e func_get_rt(htab_item* item) {
+	assert(item != NULL);
+
+	return item->func_data->rt;
+}
+
 void func_set_def(htab_item* item) {
 	assert(item != NULL);
 
