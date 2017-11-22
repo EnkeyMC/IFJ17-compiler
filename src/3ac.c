@@ -168,7 +168,7 @@ static void print_instruction(Instruction* instruction) {
 
 void generate_code() {
 	puts(".IFJcode17");
-
+	puts("# SECTION GLOBAL");
 	dllist_activate_first(global_il);
 
 	Instruction* instruction;
@@ -180,7 +180,8 @@ void generate_code() {
 		dllist_succ(global_il);
 	}
 	printf("\n\n");
-	
+
+	puts("# SECTION MAIN");
 	dllist_activate_first(main_il);
 	
 	while (dllist_active(main_il)) {
@@ -192,6 +193,7 @@ void generate_code() {
 	}	
 	printf("\n\n");
 
+	puts("# SECTION FUNCTIONS");
 	dllist_activate_first(func_il);
 
 	while (dllist_active(func_il)) {
@@ -206,7 +208,40 @@ void generate_code() {
 void instruction_debug(void *inst) {
 	Instruction* instruction = (Instruction*) inst;
 	debug("Instruction@%p: {", instruction);
-	if (instruction != NULL)
-		print_instruction(instruction);
+	if (instruction != NULL) {
+		debug("%s ", opcodes_str[instruction->operation]);
+
+		for (int i = 0; i < MAX_ADDRESSES; ++i) {
+			switch (instruction->addresses[i].type) {
+				case ADDR_TYPE_SYMBOL:
+					debug("%s ", instruction->addresses[i].symbol);
+					break;
+				case ADDR_TYPE_CONST:
+					switch (instruction->addresses[i].constant->id) {
+						case TOKEN_STRING:
+							debug("string@%s ", instruction->addresses[i].constant->data.str);
+							break;
+						case TOKEN_INT:
+							debug("int@%d ", instruction->addresses[i].constant->data.i);
+							break;
+						case TOKEN_REAL:
+							debug("float@%g ", instruction->addresses[i].constant->data.d);
+							break;
+						case TOKEN_KW_TRUE:
+							debug("bool@true");
+							break;
+						case TOKEN_KW_FALSE:
+							debug("bool@false");
+							break;
+						default:
+							assert(!"I shouldn't be here");
+							break;
+					}
+					break;
+				default:
+					break;
+			}
+		}
+	}
 	debug("}");
 }

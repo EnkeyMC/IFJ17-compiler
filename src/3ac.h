@@ -74,7 +74,7 @@
 
 // Helper macros for adding instructions
 #define IL_ADD(il, op, addr1, addr2, addr3, ret) if (!il_add(il, instruction_init(op, addr1, addr2, addr3))) return ret;
-#define IL_ADD_SPACE(il, ret) if (!il_add(instruction_init(il, OP_SPACE, NO_ADDR, NO_ADDR, NO_ADDR))) return ret;
+#define IL_ADD_SPACE(il, ret) if (!il_add(il, instruction_init(OP_SPACE, NO_ADDR, NO_ADDR, NO_ADDR))) return ret;
 #define MAKE_TOKEN_INT(num) token_make(TOKEN_INT, (union token_data){.i = (num)})
 #define MAKE_TOKEN_REAL(real) token_make(TOKEN_REAL, (union token_data){.d = (real)})
 #define MAKE_TOKEN_STRING(string) token_make_str(string)
