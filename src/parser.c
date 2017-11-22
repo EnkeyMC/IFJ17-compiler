@@ -300,7 +300,7 @@ int parse(Parser* parser) {
 
 	// Start processing tokens
 	do {  // Token loop
-		dllist_debug(parser->sem_an_stack, sem_an_debug);
+		//dllist_debug(parser->sem_an_stack, sem_an_debug);
 		token_free(token);  // Free last token, does nothing when token is NULL
 
 		// Get next token from scanner

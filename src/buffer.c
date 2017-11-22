@@ -110,7 +110,7 @@ bool buffer_set_str(Buffer* b, const char* str) {
 }
 
 void buffer_debug(void* b) {
-	Buffer* buffer = b;
+	Buffer* buffer = (Buffer*) b;
 	debug("Buffer@%p: {", buffer);
 
 	if (buffer != NULL) {

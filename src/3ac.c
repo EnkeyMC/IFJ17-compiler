@@ -204,7 +204,7 @@ void generate_code() {
 }
 
 void instruction_debug(void *inst) {
-	Instruction* instruction = inst;
+	Instruction* instruction = (Instruction*) inst;
 	debug("Instruction@%p: {", instruction);
 	if (instruction != NULL)
 		print_instruction(instruction);
