@@ -84,7 +84,7 @@ static bool add_built_ins(HashTable* htab) {
 			default: break;
 		}
 	}
-
+/* TODO rewrite with new function calling convention
 	// ASC function
 	IL_ADD(OP_LABEL, addr_symbol("", "asc"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
@@ -149,7 +149,7 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(OP_MOVE, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "substr"), NO_ADDR, false);
 	IL_ADD(OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
-
+*/
 	return true;
 }
 

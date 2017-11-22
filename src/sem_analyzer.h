@@ -157,6 +157,7 @@ int sem_expr_unary(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value)
 int sem_expr_list(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_list_expr(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_expr_func(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_expr_assign(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 
 int sem_var_decl(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);

@@ -857,7 +857,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			IL_ADD(OP_DIVS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 			if (sem_an->value->token->id == TOKEN_DIVI) {
-				IL_ADD(OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(OP_FLOAT2INTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				type = TOKEN_KW_INTEGER;
 			}
 
@@ -1076,6 +1076,151 @@ int sem_expr_func(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				SEM_SET_EXPR_TYPE(func_item->func_data->rt);
 
 				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int sem_expr_assign(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	static Token* op;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_TOKEN && value.token->id == TOKEN_IDENTIFIER) {
+				htab_item* id = find_symbol(parser, value.token->data.str);
+				if (id == NULL)
+					return EXIT_SEMANTIC_PROG_ERROR;
+
+				sem_an->value = sem_value_init();
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+
+				sem_an->value->value_type = VTYPE_ID;
+				sem_an->value->id = id;
+
+				SEM_NEXT_STATE(SEM_STATE_OPERATOR);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_OPERATOR) {
+			if (value.value_type == VTYPE_TOKEN) {
+				op = token_copy(value.token);
+				if (op == NULL)
+					return EXIT_INTERN_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_OPERAND);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_OPERAND) {
+			if (value.value_type == VTYPE_ID) {
+				token_e id_type = sem_an->value->id->id_data->type;
+				token_e value_type = (token_e) value.id->id_data->type;
+				const char* prefix = get_current_scope_prefix(parser);
+
+				switch (op->id) {
+					case TOKEN_DIVR_ASIGN:
+						if (id_type == TOKEN_KW_INTEGER) {
+							IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+							id_type = TOKEN_KW_DOUBLE;
+						}
+
+						if (value_type == TOKEN_KW_INTEGER) {
+							IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, value.id->key), addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+							value_type = TOKEN_KW_DOUBLE;
+						}
+					case TOKEN_ADD_ASIGN:
+						if (id_type == TOKEN_KW_STRING) {
+							if (value_type != TOKEN_KW_STRING)
+								return EXIT_SEMANTIC_COMP_ERROR;
+
+							IL_ADD(OP_CONCAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, value.id->key), EXIT_INTERN_ERROR);
+							break;
+						}
+					case TOKEN_SUB_ASIGN:
+					case TOKEN_MUL_ASIGN:
+						if (id_type == TOKEN_KW_BOOLEAN || id_type == TOKEN_KW_STRING)
+							return EXIT_SEMANTIC_COMP_ERROR;
+					case TOKEN_EQUAL: {
+							if (!are_types_compatible(id_type, value_type))
+								return EXIT_SEMANTIC_COMP_ERROR;
+
+							if (value_type == TOKEN_KW_INTEGER && id_type == TOKEN_KW_DOUBLE) {
+								IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, value.id->key), addr_symbol(prefix, value.id->key),
+									   NO_ADDR, EXIT_INTERN_ERROR);
+							} else if (value_type == TOKEN_KW_DOUBLE && id_type == TOKEN_KW_INTEGER) {
+								IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key),
+									   addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+							}
+
+							opcode_e assign_operation = OP_MOVE;
+							switch (op->id) {
+								case TOKEN_SUB_ASIGN:
+									assign_operation = OP_SUB;
+									break;
+								case TOKEN_MUL_ASIGN:
+									assign_operation = OP_MUL;
+									break;
+								case TOKEN_ADD_ASIGN:
+									assign_operation = OP_ADD;
+									break;
+								case TOKEN_DIVR_ASIGN:
+									assign_operation = OP_DIV;
+								default:
+									break;
+							}
+
+							if (assign_operation == OP_MOVE) {
+								IL_ADD(assign_operation, addr_symbol(prefix, sem_an->value->id->key),
+									   addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+							} else {
+								IL_ADD(assign_operation, addr_symbol(prefix, value.id->key),
+									   addr_symbol(prefix, value.id->key), addr_symbol(prefix, value.id->key),
+									   EXIT_INTERN_ERROR);
+							}
+							break;
+						}
+					case TOKEN_DIVI_ASIGN:
+						if (id_type == TOKEN_KW_BOOLEAN || id_type == TOKEN_KW_STRING)
+							return EXIT_SEMANTIC_COMP_ERROR;
+
+						if (id_type == TOKEN_KW_INTEGER) {
+							IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+							id_type = TOKEN_KW_DOUBLE;
+						} else if(id_type == TOKEN_KW_DOUBLE) {
+							// Round up
+							IL_ADD(OP_FLOAT2R2EINT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+							IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+						}
+
+						if (value_type == TOKEN_KW_INTEGER) {
+							IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, value.id->key), addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+							value_type = TOKEN_KW_DOUBLE;
+						} else if(value_type == TOKEN_KW_DOUBLE) {
+							// Round up
+							IL_ADD(OP_FLOAT2R2EINT, addr_symbol(prefix, value.id->key), addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+							IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, value.id->key), addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+						}
+
+						IL_ADD(OP_DIV, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, value.id->key), EXIT_INTERN_ERROR);
+						IL_ADD(OP_FLOAT2INT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+						id_type = TOKEN_KW_INTEGER;
+						break;
+					default:
+						assert(!"I shouldn't be here");
+				}
+
+				if (id_type == TOKEN_KW_DOUBLE && sem_an->value->id->id_data->type == TOKEN_KW_INTEGER) {
+					IL_ADD(OP_FLOAT2R2EINT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+				} else if (id_type == TOKEN_KW_INTEGER && sem_an->value->id->id_data->type == TOKEN_KW_DOUBLE) {
+					IL_ADD(OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+				}
 			}
 		} END_STATE;
 
