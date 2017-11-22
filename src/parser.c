@@ -84,7 +84,7 @@ static bool add_built_ins(HashTable* htab) {
 			default: break;
 		}
 	}
-// TODO rewrite with new function calling convention
+
 	// ASC function
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "asc"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
