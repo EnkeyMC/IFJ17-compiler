@@ -1876,7 +1876,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// variable must be integer or double
 				if (item->id_data->type == TOKEN_KW_STRING
 						|| item->id_data->type == TOKEN_KW_BOOLEAN)
-					return EXIT_SEMANTIC_COMP_ERROR;
+					return EXIT_SEMANTIC_OTHER_ERROR;
 
 				if (create_scope(parser) == NULL)
 					return EXIT_INTERN_ERROR;
@@ -1888,7 +1888,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				switch (value.token->id) {
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN:
-						return EXIT_SEMANTIC_COMP_ERROR; // bad iterator type
+						return EXIT_SEMANTIC_OTHER_ERROR; // bad iterator type
 					case TOKEN_KW_INTEGER:
 					case TOKEN_KW_DOUBLE: {
 
@@ -1916,7 +1916,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type == TOKEN_KW_STRING)
-					return EXIT_SEMANTIC_COMP_ERROR;
+					return EXIT_SEMANTIC_OTHER_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_FOR_ENDVAL);
 			}
@@ -1927,7 +1927,22 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type == TOKEN_KW_STRING)
-					return EXIT_SEMANTIC_COMP_ERROR;
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_FOR_STEP);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_FOR_STEP) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_NEXT)
+			{
+				SEM_NEXT_STATE(SEM_STATE_FOR_END);
+			}
+			else if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type == TOKEN_KW_STRING)
+					return EXIT_SEMANTIC_OTHER_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_FOR_NEXT);
 			}
