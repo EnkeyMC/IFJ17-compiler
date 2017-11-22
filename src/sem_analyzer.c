@@ -1494,6 +1494,9 @@ int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (create_scope(parser) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
+
+				IL_ADD(OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				SEM_NEXT_STATE(SEM_STATE_SCOPE_END);
 			}
 		} END_STATE;
@@ -1503,6 +1506,7 @@ int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				value.token->id == TOKEN_KW_SCOPE)
 			{
 				delete_scope(parser);
+				IL_ADD(OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
 			}
 		} END_STATE;
