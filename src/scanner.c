@@ -36,6 +36,7 @@ Scanner* scanner_init() {
 
 	scanner->stream = stdin;
 	scanner->backlog_token = NULL;
+	scanner->line = 1;
 	return scanner;
 }
 
@@ -274,6 +275,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		}
 
 		STATE(EOL) {
+			scanner->line++;
 			token->id = TOKEN_EOL;
 			return token;
 		}
@@ -675,6 +677,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(line_comment) {
 			ch = READ_CHAR();
 			if (ch == '\n') {
+				scanner->line++;
 				token->id = TOKEN_EOL;
 				return token;
 			}

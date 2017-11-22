@@ -1057,8 +1057,7 @@ int sem_expr_func(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_FUNC_ID) {
 			if (value.value_type == VTYPE_TOKEN && value.token->id == TOKEN_IDENTIFIER) {
 				// Check if function exists
-				HashTable* symtab = get_current_sym_tab(parser);
-				htab_item* func_item = htab_find(symtab, value.token->data.str);
+				htab_item* func_item = htab_find(parser->sym_tab_functions, value.token->data.str);
 				if (func_item == NULL)
 					return EXIT_SEMANTIC_PROG_ERROR;
 

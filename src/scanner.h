@@ -23,6 +23,7 @@ typedef struct {
 	FILE* stream;  /// Input stream
     Buffer* buffer;  /// Buffer for string and identifier strings
 	Token* backlog_token; /// Backlog token
+	unsigned line;  /// Current line number
 } Scanner;
 
 /**
