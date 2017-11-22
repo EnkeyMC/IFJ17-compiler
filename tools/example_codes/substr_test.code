@@ -4,6 +4,15 @@ jump main
 
 # Začátek funkce substr
 label substr
+createframe
+
+defvar TF@n
+defvar TF@i
+defvar TF@str
+
+pops TF@n
+pops TF@i
+pops TF@str
 
 pushframe
 
@@ -54,6 +63,7 @@ jump itoendwhile
 label finalstring
 
 move LF@retval LF@substr
+pushs LF@retval
 
 popframe
 
@@ -66,104 +76,78 @@ label main
 createframe
 pushframe
 
-defvar LF@str
+defvar LF@retstr
 
 # Začátek volání funkce substr
-createframe
-defvar TF@str
-defvar TF@i
-defvar TF@n
-move TF@str string@TestAhojString
-move TF@i int@5
-move TF@n int@4
+
+pushs string@TestAhojString
+pushs int@5
+pushs int@4
 
 call substr
 
-move LF@str TF@retval
+pops LF@retstr
 # Konec volání funkce
 
-write LF@str
+write LF@retstr
 write string@\010
 
 
-createframe
-defvar TF@str
-defvar TF@i
-defvar TF@n
-move TF@str string@Test2
-move TF@i int@5
-move TF@n int@4
+pushs string@Test2
+pushs int@5
+pushs int@4
 
 call substr
 
-move LF@str TF@retval
+pops LF@retstr
 
-write LF@str
+write LF@retstr
 write string@\010
 
 
-createframe
-defvar TF@str
-defvar TF@i
-defvar TF@n
-move TF@str string@Test3
-move TF@i int@7
-move TF@n int@3
+pushs string@Test3
+pushs int@7
+pushs int@3
 
 call substr
 
-move LF@str TF@retval
+pops LF@retstr
 
-write LF@str
+write LF@retstr
+write string@\010
+
+pushs string@Test4
+pushs int@0
+pushs int@3
+
+call substr
+
+pops LF@retstr
+
+write LF@retstr
+write string@\010
+
+pushs string@Test5
+pushs int@-8
+pushs int@3
+
+call substr
+
+pops LF@retstr
+
+write LF@retstr
 write string@\010
 
 
-createframe
-defvar TF@str
-defvar TF@i
-defvar TF@n
-move TF@str string@Test4
-move TF@i int@0
-move TF@n int@3
+pushs string@Test5
+pushs int@1
+pushs int@3
 
 call substr
 
-move LF@str TF@retval
+pops LF@retstr
 
-write LF@str
-write string@\010
-
-
-createframe
-defvar TF@str
-defvar TF@i
-defvar TF@n
-move TF@str string@Test5
-move TF@i int@-8
-move TF@n int@3
-
-call substr
-
-move LF@str TF@retval
-
-write LF@str
-write string@\010
-
-
-
-createframe
-defvar TF@str
-defvar TF@i
-defvar TF@n
-move TF@str string@Test5
-move TF@i int@1
-move TF@n int@3
-
-call substr
-
-move LF@str TF@retval
-
-write LF@str
+write LF@retstr
 write string@\010
 
 popframe

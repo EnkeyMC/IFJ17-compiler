@@ -4,6 +4,13 @@ jump main
 
 # Začátek funkce asc
 label asc
+createframe
+
+defvar TF@i
+defvar TF@str
+
+pops TF@i
+pops TF@str
 
 pushframe
 
@@ -28,6 +35,7 @@ label wrongindex
 move LF@retval int@0
 
 label ascvalue
+pushs LF@retval
 
 popframe
 
@@ -42,15 +50,13 @@ pushframe
 defvar LF@ascval
 
 # Začátek volání funkce asc
-createframe
-defvar TF@str
-defvar TF@i
-move TF@str string@TestAhoj
-move TF@i int@5
+
+pushs string@TestAhoj
+pushs int@5
 
 call asc
 
-move LF@ascval TF@retval
+pops LF@ascval
 # Konec volání funkce
 
 write LF@ascval
@@ -58,30 +64,25 @@ write string@\010
 
 #testing index bigger then strlen
 
-createframe
-defvar TF@str
-defvar TF@i
-move TF@str string@TestAhoj
-move TF@i int@42
+pushs string@TestAhoj
+pushs int@42
 
 call asc
 
-move LF@ascval TF@retval
+pops LF@ascval
 
 write LF@ascval
 write string@\010
 
 #testing index lower then 1
 
-createframe
-defvar TF@str
-defvar TF@i
-move TF@str string@TestAhoj
-move TF@i int@-8
+
+pushs string@TestAhoj
+pushs int@-8
 
 call asc
 
-move LF@ascval TF@retval
+pops LF@ascval
 
 write LF@ascval
 write string@\010
