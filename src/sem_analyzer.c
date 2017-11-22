@@ -349,6 +349,7 @@ int sem_expr_result(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 				DLList* il = get_current_il_list(parser);
 				IL_ADD(il, OP_DEFVAR, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				IL_ADD(il, OP_POPS, addr_symbol(prefix, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -938,7 +939,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 int sem_expr_brackets(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
-
+	(void) parser;  // We don't need it
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_EXPR) {
@@ -1006,6 +1007,7 @@ int sem_expr_unary(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 int sem_expr_list(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
+	(void) parser;  // We don't need it
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -1022,8 +1024,8 @@ int sem_expr_list(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				SemValue* copy = sem_value_copy(&value);
 				if (copy == NULL)
 					return EXIT_INTERN_ERROR;
-
-				dllist_insert_last(sem_an->value->list, copy);
+				// Insert backwards
+				dllist_insert_first(sem_an->value->list, copy);
 
 				SEM_NEXT_STATE(SEM_STATE_LIST);
 			}
@@ -1034,8 +1036,8 @@ int sem_expr_list(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				SemValue* copy = sem_value_copy(&value);
 				if (copy == NULL)
 					return EXIT_INTERN_ERROR;
-
-				dllist_insert_last(sem_an->value->list, copy);
+				// Insert backwards
+				dllist_insert_first(sem_an->value->list, copy);
 
 				sem_an->finished = true;
 			}
@@ -1049,6 +1051,7 @@ int sem_expr_list(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 int sem_expr_list_expr(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
+	(void) parser;  // We don't need it
 
 	static SemValue* expr;
 
@@ -1069,7 +1072,7 @@ int sem_expr_list_expr(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (sem_an->value == NULL)
 					return EXIT_INTERN_ERROR;
 
-				dllist_insert_first(sem_an->value->list, expr);
+				dllist_insert_last(sem_an->value->list, expr);
 
 				sem_an->finished = true;
 			}
@@ -1120,13 +1123,14 @@ int sem_expr_func(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						return EXIT_SEMANTIC_COMP_ERROR;
 				} else {
 					// 2 and more params
-					dllist_activate_last(sem_an->value->list);
+					dllist_activate_first(sem_an->value->list);
 					unsigned i;
 					SemValue* expr;
 					for (i = 1; dllist_active(sem_an->value->list); i++) {
 						expr = (SemValue*) dllist_get_active(sem_an->value->list);
 						if (!are_types_compatible((token_e) expr->expr_type, func_get_param(func_item, i)))
 							return EXIT_SEMANTIC_COMP_ERROR;
+						dllist_succ(sem_an->value->list);
 					}
 
 					// If function has more params
@@ -1287,6 +1291,9 @@ int sem_expr_assign(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				} else if (id_type == TOKEN_KW_INTEGER && sem_an->value->id->id_data->type == TOKEN_KW_DOUBLE) {
 					IL_ADD(il, OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
 				}
+
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+				sem_an->finished = true;
 			}
 		} END_STATE;
 
@@ -1360,6 +1367,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID) {  // Variable initialization
 				const char* prefix = get_current_scope_prefix(parser);
 				IL_ADD(il, OP_MOVE, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
 			} else if (value.value_type == VTYPE_TOKEN) {
 				switch (value.token->id) {	// Default initialization
@@ -1380,6 +1388,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 							default:
 								assert(!"I shouldn't be here");
 						}
+						IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 						sem_an->finished = true;
 						break;
 					default:
@@ -1579,9 +1588,10 @@ int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_SCOPE)
 			{
-				delete_scope(parser);
 				DLList* il = get_current_il_list(parser);
 				IL_ADD(il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+				delete_scope(parser);
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -1600,6 +1610,7 @@ int sem_print(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID) {
 				DLList* il = get_current_il_list(parser);
 				IL_ADD(il, OP_WRITE, addr_symbol(F_LOCAL, value.id->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 			} else if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_EOL)
 			{
@@ -1623,9 +1634,6 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN
 				&& value.token->id == TOKEN_IDENTIFIER) {
-				sem_an->value = sem_value_copy(&value);
-				if (sem_an->value == NULL)
-					return EXIT_INTERN_ERROR;
 
 				// Get symtable storing functions
 				symtab_func = parser->sym_tab_functions;
@@ -1641,10 +1649,19 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					if (item->func_data->definition == true) // Already defined
 						return EXIT_SEMANTIC_PROG_ERROR;
 					else {
+						sem_an->value = sem_value_init();
+						if (sem_an->value == NULL)
+							return EXIT_INTERN_ERROR;
+
+						sem_an->value->value_type = VTYPE_ID;
+						sem_an->value->id = item;
+
 						// Create new local symtable
 						if (create_scope(parser) == NULL)
 							return EXIT_INTERN_ERROR;
 
+						IL_ADD_SPACE(func_il, EXIT_INTERN_ERROR);
+						IL_ADD_SPACE(func_il, EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_LABEL, addr_symbol("", item->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
@@ -1657,15 +1674,25 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 				// Function was NOT declared
 				// add it to symtable
-				if (htab_func_lookup(symtab_func, value.token->data.str) == NULL) {
+				item = htab_func_lookup(symtab_func, value.token->data.str);
+				if (item == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
+
+				sem_an->value = sem_value_init();
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+
+				sem_an->value->value_type = VTYPE_ID;
+				sem_an->value->id = item;
 
 				// Create new local symtable
 				if (create_scope(parser) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
 
+				IL_ADD_SPACE(func_il, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(func_il, EXIT_INTERN_ERROR);
 				IL_ADD(func_il, OP_LABEL, addr_symbol("", value.token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
@@ -1683,13 +1710,11 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_DOUBLE:
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN: {
-						symtab_func = parser->sym_tab_functions;
-						htab_item *item = htab_find(symtab_func, sem_an->value->token->data.str);
 						// Type in declaration and definition does not match
-						if (value.id->id_data->type != func_get_param(item, idx))
+						if (value.id->id_data->type != func_get_param(sem_an->value->id, idx))
 							return EXIT_SEMANTIC_PROG_ERROR;
 						idx++;
-						if (!func_store_param_name(item, value.id->key))
+						if (!func_store_param_name(sem_an->value->id, value.id->key))
 							return EXIT_INTERN_ERROR;
 					}
 					default:
@@ -1699,10 +1724,8 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// End of parametr declarations
 			else if (value.value_type == VTYPE_TOKEN
 					 && value.token->id == TOKEN_RPAR) {
-				symtab_func = parser->sym_tab_functions;
-				htab_item *item = htab_find(symtab_func, sem_an->value->token->data.str);
 				// Function definition did not provide enough parameters
-				if (item->func_data->par_num != idx -1)
+				if (sem_an->value->id->func_data->par_num != idx -1)
 					return EXIT_SEMANTIC_PROG_ERROR;
 
 				idx = 1;
@@ -1718,11 +1741,9 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_DOUBLE:
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN: {
-						symtab_func = parser->sym_tab_functions;
-						htab_item *item = htab_find(symtab_func, sem_an->value->token->data.str);
-						if (!func_store_param_name(item, value.id->key))
+						if (!func_store_param_name(sem_an->value->id, value.id->key))
 							return EXIT_INTERN_ERROR;
-						if (!func_add_param(item, value.id->id_data->type))
+						if (!func_add_param(sem_an->value->id, value.id->id_data->type))
 							return EXIT_INTERN_ERROR;
 					}
 					default:
@@ -1744,11 +1765,9 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN:
 					{
-						symtab_func = parser->sym_tab_functions;
-						htab_item* item = htab_find(symtab_func, sem_an->value->token->data.str);
-						if (item->func_data->rt != value.token->id)
+						if (sem_an->value->id->func_data->rt != value.token->id)
 							return EXIT_SEMANTIC_PROG_ERROR;
-						func_set_def(item);
+						func_set_def(sem_an->value->id);
 
 						SEM_NEXT_STATE(SEM_STATE_FUNC_END);
 					}
@@ -1766,10 +1785,8 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN:
 					{
-						symtab_func = parser->sym_tab_functions;
-						htab_item* item = htab_find(symtab_func, sem_an->value->token->data.str);
-						func_set_rt(item, value.token->id);
-						func_set_def(item);
+						func_set_rt(sem_an->value->id, value.token->id);
+						func_set_def(sem_an->value->id);
 
 						SEM_NEXT_STATE(SEM_STATE_FUNC_END);
 					}
@@ -1783,7 +1800,26 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_TOKEN) {
 				if (value.token->id == TOKEN_KW_FUNCTION) {
 					delete_scope(parser);
+					// Push default return value on stack
+					switch (func_get_rt(sem_an->value->id)) {
+						case TOKEN_KW_INTEGER:
+							IL_ADD(func_il, OP_PUSHS, addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+							break;
+						case TOKEN_KW_DOUBLE:
+							IL_ADD(func_il, OP_PUSHS, addr_constant(MAKE_TOKEN_REAL(0)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+							break;
+						case TOKEN_KW_STRING:
+							IL_ADD(func_il, OP_PUSHS, addr_constant(MAKE_TOKEN_STRING("")), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+							break;
+						case TOKEN_KW_BOOLEAN:
+							IL_ADD(func_il, OP_PUSHS, addr_constant(MAKE_TOKEN_BOOL(false)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+							break;
+						default:
+							break;
+					}
 					IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					// Return in case function doesn't end with return
+					IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					sem_an->finished = true;
 				}
 			}
@@ -2135,8 +2171,7 @@ int sem_return(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (sem_action == NULL)
 					return EXIT_SEMANTIC_OTHER_ERROR;
 
-				htab_item *func = htab_find(parser->sym_tab_functions, sem_action->value->token->data.str);
-				if (!are_types_compatible(func_get_rt(func), value.id->id_data->type))
+				if (!are_types_compatible(func_get_rt(sem_action->value->id), value.id->id_data->type))
 					return EXIT_SEMANTIC_OTHER_ERROR;
 
 				sem_an->finished = true;
