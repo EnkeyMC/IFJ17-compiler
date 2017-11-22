@@ -1758,15 +1758,85 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (create_scope(parser) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}
+				SEM_NEXT_STATE(SEM_STATE_DO_TEST_TYPE);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DO_TEST_TYPE) {
+			if (value.value_type == VTYPE_TOKEN
+				&& value.token->id == TOKEN_KW_WHILE)
+			{
+				SEM_NEXT_STATE(SEM_STATE_DO_WHILE);
+			}
+			else if (value.value_type == VTYPE_TOKEN
+					&& value.token->id == TOKEN_KW_UNTIL)
+			{
+				SEM_NEXT_STATE(SEM_STATE_DO_UNTIL);
+			}
+			else
+			{
+				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DO_WHILE) {
+			if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
+					return EXIT_SEMANTIC_OTHER_ERROR;
+				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DO_UNTIL) {
+			if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
+					return EXIT_SEMANTIC_OTHER_ERROR;
 				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
 			}
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_DO_LOOP) {
-			if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_KW_LOOP)
+			if (value.value_type == VTYPE_TOKEN
+				&& value.token->id == TOKEN_KW_LOOP)
 			{
 				delete_scope(parser);
+				SEM_NEXT_STATE(SEM_STATE_DO_TEST_TYPE_END);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DO_TEST_TYPE_END) {
+			if (value.value_type == VTYPE_TOKEN
+				&& value.token->id == TOKEN_KW_WHILE)
+			{
+				SEM_NEXT_STATE(SEM_STATE_DO_WHILE_END);
+			}
+			else if (value.value_type == VTYPE_TOKEN
+					&& value.token->id == TOKEN_KW_UNTIL)
+			{
+				SEM_NEXT_STATE(SEM_STATE_DO_UNTIL_END);
+			}
+			else
+			{
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DO_UNTIL_END) {
+			if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
+					return EXIT_SEMANTIC_OTHER_ERROR;
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DO_WHILE_END) {
+			if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
+					return EXIT_SEMANTIC_OTHER_ERROR;
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -1906,12 +1976,15 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 
+	SemAnalyzer* sem_action = NULL;
+
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_DO)
 			{
-				if (! find_sem_action(parser, sem_do_loop))
+				sem_action = find_sem_action(parser, sem_do_loop);
+				if (sem_action == NULL)
 					return EXIT_SEMANTIC_OTHER_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_EOL);
@@ -1920,7 +1993,8 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			else if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_FOR)
 			{
-				if (! find_sem_action(parser, sem_for_loop))
+				sem_action = find_sem_action(parser, sem_for_loop);
+				if (sem_action == NULL)
 					return EXIT_SEMANTIC_OTHER_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_EOL);
@@ -1945,12 +2019,15 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 
+	SemAnalyzer* sem_action = NULL;
+
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_DO)
 			{
-				if (! find_sem_action(parser, sem_do_loop))
+				sem_action = find_sem_action(parser, sem_do_loop);
+				if (sem_action == NULL)
 					return EXIT_SEMANTIC_OTHER_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_EOL);
@@ -1959,7 +2036,8 @@ int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			else if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_FOR)
 			{
-				if (! find_sem_action(parser, sem_for_loop))
+				sem_action = find_sem_action(parser, sem_for_loop);
+				if (sem_action == NULL)
 					return EXIT_SEMANTIC_OTHER_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_EOL);
