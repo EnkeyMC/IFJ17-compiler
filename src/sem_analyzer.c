@@ -1805,6 +1805,13 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// End of parametr declarations
 			else if (value.value_type == VTYPE_TOKEN
 					 && value.token->id == TOKEN_RPAR) {
+
+				// Define parameters in local scope
+				for (int i = func_params_num(sem_an->value->id); i > 0; --i) {
+					IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(func_il, OP_POPS, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				}
+
 				SEM_NEXT_STATE(SEM_STATE_FUNC_RETURN_TYPE);
 			}
 		} END_STATE;

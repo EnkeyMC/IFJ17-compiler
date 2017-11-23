@@ -176,4 +176,11 @@ char* func_get_param_name(htab_item* item, unsigned idx);
  */
 bool func_store_param_name(htab_item* item, const char* name);
 
+/**
+ * Get number of function parameters
+ * @param item Item with function data
+ * @return number of parameters
+ */
+int func_params_num(htab_item* item);
+
 #endif //IFJ17_COMPILER_SYMTABLE_H

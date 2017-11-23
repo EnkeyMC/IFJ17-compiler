@@ -369,3 +369,9 @@ void func_set_def(htab_item* item) {
 
 	item->func_data->definition = true;
 }
+
+int func_params_num(htab_item* item) {
+	assert(item != NULL);
+
+	return item->func_data->par_num;
+}
