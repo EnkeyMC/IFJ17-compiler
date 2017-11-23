@@ -2199,7 +2199,8 @@ int sem_return(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				} else if (ret_type == TOKEN_KW_DOUBLE && id_type == TOKEN_KW_INTEGER) {
 					IL_ADD(il, OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				}
-
+				// Pop local frame
+				IL_ADD(il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				// Return from function
 				IL_ADD(il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
