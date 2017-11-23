@@ -1,9 +1,9 @@
 ' two ifs
 scope
-	if x then
+	if (8 = 8) then
 		print 123;
 	end if
-	if x then
+	if 74 > (6 + 2) then
 		print 74;
 	else
 

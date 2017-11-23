@@ -1,6 +1,6 @@
 ' most simple if statement
 scope
-	if 8 then
+	if 8 > 3 then
 		print 42;
 	else
 		print 58;

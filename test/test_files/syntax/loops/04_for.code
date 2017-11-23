@@ -1,7 +1,0 @@
-' Empty for statement
-scope
-
-For i = 1 to 100 
-next
-
-end scope

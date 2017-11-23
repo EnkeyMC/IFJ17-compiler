@@ -1,13 +1,13 @@
 ' if recursion
 scope
-	if a  then
-		if b then
+	if 8 >= (0 - 1) then
+		if 75 > 8 then
 			print 42;
 		else
 
 		end if
 	else
-		if c then
+		if 8 > (5 - 12) then
 			print 58;
 		else
 
