@@ -1839,7 +1839,7 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					IL_ADD(func_il, OP_POPS, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					// Implicitly cast parameters
-					if (sem_an->value->id->id_data->type == TOKEN_KW_DOUBLE) {
+					if (func_get_param(sem_an->value->id, i) == TOKEN_KW_DOUBLE) {
 						char* label = generate_uid();
 						if (label == NULL)
 							return EXIT_INTERN_ERROR;
@@ -1849,7 +1849,7 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(func_il, OP_INT2FLOAT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						free(label);
-					} else if (sem_an->value->id->id_data->type == TOKEN_KW_INTEGER) {
+					} else if (func_get_param(sem_an->value->id, i) == TOKEN_KW_INTEGER) {
 						char* label = generate_uid();
 						if (label == NULL)
 							return EXIT_INTERN_ERROR;
