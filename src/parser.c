@@ -155,7 +155,7 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_LABEL, addr_symbol("", "itoend"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "str"), NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "itoendwhilecond"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "itoendwhilecond"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "itoendwhile"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "itoendwhilecond"), addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "total"), false);
 	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "finalstring"), addr_symbol(F_LOCAL, "itoendwhilecond"), addr_constant(MAKE_TOKEN_BOOL(false)), false);
 	IL_ADD(func_il, OP_GETCHAR, addr_symbol(F_LOCAL, "anotherchar"), addr_symbol(F_LOCAL, "str"), addr_symbol(F_LOCAL, "i"), false);
