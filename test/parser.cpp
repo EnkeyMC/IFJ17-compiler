@@ -286,7 +286,7 @@ TEST_F(ParserTestFixture, SuccFunctions23) {
 TEST_F(ParserTestFixture, SuccFunctions24) {
 	SetInputFile("test_files/syntax/functions/24.code");
 
-	EXPECT_EQ(parse(parser), EXIT_SEMANTIC_OTHER_ERROR);
+	EXPECT_EQ(parse(parser), EXIT_SEMANTIC_COMP_ERROR);
 }
 
 TEST_F(ParserTestFixture, SuccFunctions26) {
