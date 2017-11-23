@@ -1375,7 +1375,21 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID) {  // Variable initialization
 				const char* prefix = get_current_scope_prefix(parser);
 				const char* val_prefix = get_var_scope_prefix(parser, value.id->key);
-				IL_ADD(il, OP_MOVE, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+				token_e value_type = (token_e) value.id->id_data->type;
+				token_e id_type = sem_an->value->id->id_data->type;
+
+				if (value_type == TOKEN_KW_INTEGER && id_type == TOKEN_KW_DOUBLE) {
+					IL_ADD(il, OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(val_prefix, value.id->key),
+						   NO_ADDR, EXIT_INTERN_ERROR);
+				} else if (value_type == TOKEN_KW_DOUBLE && id_type == TOKEN_KW_INTEGER) {
+					IL_ADD(il, OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key),
+						   addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+				} else if (are_types_compatible(value_type, id_type)) {
+					IL_ADD(il, OP_MOVE, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+				} else {
+					return EXIT_SEMANTIC_COMP_ERROR;
+				}
+
 				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
 			} else if (value.value_type == VTYPE_TOKEN) {
