@@ -1678,7 +1678,6 @@ int sem_input(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
-	// TODO handle parameter defenitions
 	HashTable* symtab_func = NULL;
 	HashTable* symtab_global  = NULL;
 
