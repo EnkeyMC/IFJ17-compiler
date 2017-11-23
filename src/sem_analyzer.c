@@ -1778,6 +1778,12 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (sem_an->value->id->func_data->par_num != idx -1)
 					return EXIT_SEMANTIC_PROG_ERROR;
 
+				// Define parameters in local scope
+				for (int i = func_params_num(sem_an->value->id); i > 0; --i) {
+					IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(func_il, OP_POPS, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				}
+
 				SEM_NEXT_STATE(SEM_STATE_DECLARED_RETURN_TYPE);
 			}
 		} END_STATE;
