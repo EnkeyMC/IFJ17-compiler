@@ -54,6 +54,13 @@ bool ext_stack_push(ExtStack* s, unsigned type_id, Token* token);
 unsigned ext_stack_top(ExtStack* s);
 
 /**
+ * True if topmost item on stack is expression
+ * @param s stack to work with
+ * @return true if expression was correctly reduced, false otherwise
+ */
+bool ext_stack_expr_on_top(ExtStack* s);
+
+/**
  * Insert "EXPR_SHIFT" mark right after topmost TERMINAL on stack.
  * Push given token on top of the stack.
  * @param s stack to work with

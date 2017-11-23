@@ -18,6 +18,14 @@ ExtStack* ext_stack_init() {
 		return NULL;
 }
 
+bool ext_stack_expr_on_top(ExtStack *s) {
+	dllist_activate_first(s);
+	stack_item* item = (stack_item*) dllist_get_active(s);
+	if (item->type_id == NT_EXPRESSION)
+		return true;
+	return false;
+}
+
 unsigned ext_stack_top(ExtStack* s) {
 	dllist_activate_first(s);	
 	stack_item* item = (stack_item*) dllist_get_active(s);

@@ -79,8 +79,11 @@ int parse_expression(Parser *parser) {
 		else if (action == EXPR_ERROR) {
 			ret_code = EXIT_SYNTAX_ERROR;
 		}
-		else
+		else {
+			if (!ext_stack_expr_on_top(s))
+				ret_code = EXIT_SYNTAX_ERROR;
 			break;
+		}
 	} while (ret_code == EXIT_SUCCESS);
 
 	if (ret_code == EXIT_SUCCESS) {
