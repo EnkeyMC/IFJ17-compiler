@@ -1117,16 +1117,18 @@ int sem_expr_func(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// Check parameters
 				if (sem_an->value == NULL) {
 					// No parameters
-					if (func_get_param(func_item, 1) != END_OF_TERMINALS)  // If function has at least 1 param
+					if (func_params_num(func_item) != 0)
 						return EXIT_SEMANTIC_COMP_ERROR;
 				} else if (sem_an->value->value_type == VTYPE_EXPR) {
-					// 1 Parameter
-					if (!are_types_compatible((token_e) sem_an->value->expr_type, func_get_param(func_item, 1)))
+					if (func_params_num(func_item) != 1)
 						return EXIT_SEMANTIC_COMP_ERROR;
 
-					// If function has more params
-					if (func_get_param(func_item, 2) != END_OF_TERMINALS)
+					token_e value_type = (token_e) sem_an->value->expr_type;
+					token_e param_type = func_get_param(func_item, 1);
+					// 1 Parameter
+					if (!are_types_compatible(value_type, param_type))
 						return EXIT_SEMANTIC_COMP_ERROR;
+
 				} else {
 					// 2 and more params
 					dllist_activate_first(sem_an->value->list);
@@ -1783,6 +1785,28 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				for (int i = func_params_num(sem_an->value->id); i > 0; --i) {
 					IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					IL_ADD(func_il, OP_POPS, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					// Implicitly cast parameters
+					if (sem_an->value->id->id_data->type == TOKEN_KW_DOUBLE) {
+						char* label = generate_uid();
+						if (label == NULL)
+							return EXIT_INTERN_ERROR;
+
+						IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", label), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("int")), EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_INT2FLOAT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(label);
+					} else if (sem_an->value->id->id_data->type == TOKEN_KW_INTEGER) {
+						char* label = generate_uid();
+						if (label == NULL)
+							return EXIT_INTERN_ERROR;
+
+						IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", label), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(label);
+					}
 				}
 
 				SEM_NEXT_STATE(SEM_STATE_DECLARED_RETURN_TYPE);
@@ -1814,6 +1838,28 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				for (int i = func_params_num(sem_an->value->id); i > 0; --i) {
 					IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					IL_ADD(func_il, OP_POPS, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					// Implicitly cast parameters
+					if (sem_an->value->id->id_data->type == TOKEN_KW_DOUBLE) {
+						char* label = generate_uid();
+						if (label == NULL)
+							return EXIT_INTERN_ERROR;
+
+						IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", label), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("int")), EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_INT2FLOAT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(label);
+					} else if (sem_an->value->id->id_data->type == TOKEN_KW_INTEGER) {
+						char* label = generate_uid();
+						if (label == NULL)
+							return EXIT_INTERN_ERROR;
+
+						IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", label), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						free(label);
+					}
 				}
 
 				SEM_NEXT_STATE(SEM_STATE_FUNC_RETURN_TYPE);
