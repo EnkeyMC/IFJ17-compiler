@@ -246,7 +246,7 @@ void htab_foreach(HashTable *htab_ptr, void (*function)(htab_item *item_ptr)) {
 			function(item);
 }
 
-void id_item_debug(void * item_ptr) {
+void id_item_debug(htab_item * item_ptr) {
 	htab_item* item = (htab_item*) item_ptr;
 	debug("htab_item@%p: {", item);
 
@@ -254,10 +254,10 @@ void id_item_debug(void * item_ptr) {
 		debug(".key = %s, .type: %d", item->key, item->id_data->type);
 	}
 
-	debug("}");
+	debug("}\n");
 }
 
-void func_item_debug(void * item_ptr) {
+void func_item_debug(htab_item * item_ptr) {
 	htab_item* item = (htab_item*) item_ptr;
 	debug("htab_item@%p: {", item);
 
@@ -267,7 +267,7 @@ void func_item_debug(void * item_ptr) {
 		printf(", .defined = %s", item->func_data->definition ? "true" : "false");
 	}
 
-	debug("}");
+	debug("}\n");
 }
 
 // FUNCTIONS TO MODIFY FUNCTION DATA STORED IN HASH TABLE

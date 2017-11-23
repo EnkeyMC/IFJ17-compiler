@@ -32,6 +32,12 @@ typedef enum {
 	SEM_STATE_FOR_STEP,
 	SEM_STATE_FOR_NEXT,
 	SEM_STATE_FOR_END,
+	SEM_STATE_IF,
+	SEM_STATE_IF_EOL,
+	SEM_STATE_IF_CONT,
+	SEM_STATE_IF_ELSEIF_COND,
+	SEM_STATE_IF_ELSEIF_EOL,
+	SEM_STATE_IF_ELSE,
 	SEM_STATE_OPERATOR,
 	SEM_STATE_OPERAND,
 	SEM_STATE_LIST,
@@ -190,5 +196,6 @@ int sem_for_loop(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_exit(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_continue(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_return(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_condition(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 #endif //IFJ17_COMPILER_SEM_ANALYZER_H

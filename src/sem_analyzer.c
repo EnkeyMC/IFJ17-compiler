@@ -2183,3 +2183,87 @@ int sem_return(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 	return EXIT_SUCCESS;
 }
+
+int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_IF_EOL);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_IF_EOL) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				if (create_scope(parser) == NULL)
+					return EXIT_INTERN_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_IF_CONT);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_IF_CONT) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_END)
+			{
+				delete_scope(parser);
+				sem_an->finished = true;
+			}
+			else if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_ELSE)
+			{
+				delete_scope(parser);
+				if (create_scope(parser) == NULL)
+					return EXIT_INTERN_ERROR;
+				SEM_NEXT_STATE(SEM_STATE_IF_ELSE);
+			}
+			else if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_ELSEIF)
+			{
+				delete_scope(parser);
+				SEM_NEXT_STATE(SEM_STATE_IF_ELSEIF_COND);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_IF_ELSEIF_COND) {
+			if (value.value_type == VTYPE_ID)
+			{
+				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
+					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_IF_ELSEIF_EOL);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_IF_ELSEIF_EOL) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				if (create_scope(parser) == NULL)
+					return EXIT_INTERN_ERROR;
+
+				SEM_NEXT_STATE(SEM_STATE_IF_CONT);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_IF_ELSE) {
+			if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_KW_END)
+			{
+				delete_scope(parser);
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
