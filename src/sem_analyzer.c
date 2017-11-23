@@ -1957,7 +1957,7 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 
 				const char* prefix = get_var_scope_prefix(parser, value.id->key);
 				IL_ADD(il, OP_JUMPIFEQ,
@@ -1973,7 +1973,7 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
 			}
 		} END_STATE;
@@ -2012,7 +2012,7 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -2021,7 +2021,7 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -2061,7 +2061,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// variable must be integer or double
 				if (item->id_data->type == TOKEN_KW_STRING
 						|| item->id_data->type == TOKEN_KW_BOOLEAN)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 
 				if (create_scope(parser) == NULL)
 					return EXIT_INTERN_ERROR;
@@ -2073,7 +2073,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				switch (value.token->id) {
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN:
-						return EXIT_SEMANTIC_OTHER_ERROR; // bad iterator type
+						return EXIT_SEMANTIC_COMP_ERROR; // bad iterator type
 					case TOKEN_KW_INTEGER:
 					case TOKEN_KW_DOUBLE: {
 
@@ -2101,7 +2101,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type == TOKEN_KW_STRING)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_FOR_ENDVAL);
 			}
@@ -2112,7 +2112,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type == TOKEN_KW_STRING)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_FOR_STEP);
 			}
@@ -2127,7 +2127,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			else if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type == TOKEN_KW_STRING)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_FOR_NEXT);
 			}
@@ -2275,7 +2275,7 @@ int sem_return(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				token_e ret_type = func_get_rt(sem_action->value->id);
 				token_e id_type = value.id->id_data->type;
 				if (!are_types_compatible(ret_type, id_type))
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 
 				DLList* il = get_current_il_list(parser);
 				// Push return value on stack
@@ -2310,7 +2310,7 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 
 				sem_an->value = sem_value_init();
 				if (sem_an->value == NULL)
@@ -2393,7 +2393,7 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_ID)
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+					return EXIT_SEMANTIC_COMP_ERROR;
 
 				SEM_NEXT_STATE(SEM_STATE_IF_ELSEIF_EOL);
 			}
