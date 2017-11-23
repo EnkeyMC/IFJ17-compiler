@@ -190,7 +190,9 @@ void generate_code() {
 		print_instruction(instruction);
 		printf("\n");
 		dllist_succ(main_il);
-	}	
+	}
+	// Jump to end to skip functions
+	puts("JUMP PROGRAM_END");
 	printf("\n\n");
 
 	puts("# SECTION FUNCTIONS");
@@ -203,6 +205,7 @@ void generate_code() {
 		printf("\n");
 		dllist_succ(func_il);
 	}
+	puts("LABEL PROGRAM_END");
 }
 
 void instruction_debug(void *inst) {
