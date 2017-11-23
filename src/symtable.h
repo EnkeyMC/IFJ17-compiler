@@ -141,6 +141,13 @@ bool func_add_param(htab_item* item, token_e type);
 token_e func_get_param(htab_item* item, unsigned idx);
 
 /**
+ * Auxiliary function for comparing function definition and declaration
+ * @param item function data
+ * @return index of current param
+ */
+unsigned func_get_param_idx(htab_item* item);
+
+/**
  * Set function return type
  * @param item Item containing function data
  * @param type Function return type

@@ -312,6 +312,20 @@ token_e func_get_param(htab_item* item, unsigned idx) {
 	}
 }
 
+unsigned func_get_param_idx(htab_item* item) {
+	assert(item != NULL);
+
+	unsigned num = 1;
+	for (size_t i = 0; i <= item->func_data->par_names->len; i++) {
+		if (num > item->func_data->par_num)
+			break;
+		if (item->func_data->par_names->str[i] == '#')
+			num++;
+	}
+	return num;
+}
+
+
 char* func_get_param_name(htab_item* item, unsigned idx) {
 	assert(item != NULL);
 	assert(idx != 0);

@@ -1754,7 +1754,7 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 		// Check parameters with function declaration
 		SEM_STATE(SEM_STATE_DECLARED_VAR_TYPE) {
-			static unsigned idx = 1;
+			unsigned idx = func_get_param_idx(sem_an->value->id);
 			if (value.value_type == VTYPE_ID) {
 				switch (value.id->id_data->type) {
 					case TOKEN_KW_INTEGER:
@@ -1764,7 +1764,6 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						// Type in declaration and definition does not match
 						if (value.id->id_data->type != func_get_param(sem_an->value->id, idx))
 							return EXIT_SEMANTIC_PROG_ERROR;
-						idx++;
 						if (!func_store_param_name(sem_an->value->id, value.id->key))
 							return EXIT_INTERN_ERROR;
 					}
@@ -1779,7 +1778,6 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (sem_an->value->id->func_data->par_num != idx -1)
 					return EXIT_SEMANTIC_PROG_ERROR;
 
-				idx = 1;
 				SEM_NEXT_STATE(SEM_STATE_DECLARED_RETURN_TYPE);
 			}
 		} END_STATE;
