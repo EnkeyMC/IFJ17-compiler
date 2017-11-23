@@ -1638,6 +1638,52 @@ int sem_print(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	return EXIT_SUCCESS;
 }
 
+int sem_input(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
+	SEM_ACTION_CHECK;
+
+	htab_item* item = NULL;
+
+	SEM_FSM {
+		SEM_STATE(SEM_STATE_START) {
+			if (value.value_type == VTYPE_TOKEN
+					&& value.token->id == TOKEN_IDENTIFIER) {
+
+				item = find_symbol(parser, value.token->data.str);
+				if (item == NULL)
+					return EXIT_SEMANTIC_PROG_ERROR;
+				DLList* il = get_current_il_list(parser);
+
+				IL_ADD(il, OP_WRITE, addr_constant(MAKE_TOKEN_STRING("?\\032")), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				switch (item->id_data->type) {
+					case TOKEN_KW_INTEGER:
+				IL_ADD(il, OP_READ, addr_symbol(F_LOCAL, value.token->data.str), addr_symbol("int",""), NO_ADDR, EXIT_INTERN_ERROR);
+						break;
+					case TOKEN_KW_BOOLEAN:
+				IL_ADD(il, OP_READ, addr_symbol(F_LOCAL, value.token->data.str), addr_symbol("bool",""), NO_ADDR, EXIT_INTERN_ERROR);
+						break;
+					case TOKEN_KW_DOUBLE:
+				IL_ADD(il, OP_READ, addr_symbol(F_LOCAL, value.token->data.str), addr_symbol("float",""), NO_ADDR, EXIT_INTERN_ERROR);
+						break;
+					case TOKEN_KW_STRING:
+				IL_ADD(il, OP_READ, addr_symbol(F_LOCAL, value.token->data.str), addr_symbol("string",""), NO_ADDR, EXIT_INTERN_ERROR);
+						break;
+					default:
+						break;
+				}
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+			} else if (value.value_type == VTYPE_TOKEN &&
+				value.token->id == TOKEN_EOL)
+			{
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_ERROR_STATE;
+	}
+
+	return EXIT_SUCCESS;
+}
+
 int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 

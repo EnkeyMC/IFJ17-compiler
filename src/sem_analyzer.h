@@ -197,5 +197,6 @@ int sem_exit(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_continue(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_return(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 int sem_condition(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
+int sem_input(SemAnalyzer* sem_an, struct parser_t* parser, SemValue value);
 
 #endif //IFJ17_COMPILER_SEM_ANALYZER_H
