@@ -12,109 +12,107 @@
 \begin{document}
 %###############################################################################
 %###############################################################################
-\section{CHANGE LOG v1.6}
-Soubor s programem může být buď prázdný, a nebo pokud v něm něco je, tak musí obsahovat \textbf{scope} a \textbf{end scope}. Deklarace/definice funkcí (případně glob. proměnných) musí být právě před výše zmíněným \textbf{scope}.
-Odstranil jsem pravidlo $Expression$, protože již nikdy nebude použito.
-\section{LL Grammar IFJ17 (v1.6)}
+\section{CHANGE LOG v1.7}
+$IfStmt$ podporuje vícenásobné použití ELSEIF.
+\section{LL Grammar IFJ17 (v1.7)}
 \begin{eqnarray}
-Line        &   \rightarrow     & GlobalStmt\quad ScopeStmt\quad  LineEnd    \\
-            &       |           & \varepsilon         \\
+Line		&	\rightarrow		& GlobalStmt\quad ScopeStmt\quad  LineEnd	 \\
+			&		|			& \varepsilon		  \\
 %###############################################################################
-LineEnd     & \rightarrow       & \textbf{EOL}\quad LineEnd\\
-            &       |           & \varepsilon         \\
+LineEnd		& \rightarrow		& \textbf{EOL}\quad LineEnd\\
+			&		|			& \varepsilon		  \\
 %###############################################################################
-GlobalStmt  &   \rightarrow     &  FuncDecl\quad \textbf{EOL}\quad GlobalStmt    \\
-            &       |           & FuncDef\quad \textbf{EOL}\quad GlobalStmt    \\
-            &       |           & \textcolor{green1}{SharedVar\quad \textbf{EOL}\quad GlobalStmt}    \\
-            &       |           & \textbf{EOL}\quad GlobalStmt\\
-            &       |           & \varepsilon \\
+GlobalStmt	&	\rightarrow		&  FuncDecl\quad \textbf{EOL}\quad GlobalStmt	 \\
+			&		|			& FuncDef\quad \textbf{EOL}\quad GlobalStmt    \\
+			&		|			& \textcolor{green1}{SharedVar\quad \textbf{EOL}\quad GlobalStmt}	 \\
+			&		|			& \textbf{EOL}\quad GlobalStmt\\
+			&		|			& \varepsilon \\
 %###############################################################################
-InnerStmt   &   \rightarrow     & VarDecl  \\
-            &       |           & Assignment    \\
-            &       |           & IfStmt    \\
-            &       |           & ScopeStmt   \\
-            &       |           & DoStmt  \\
-            &       |           & \textcolor{green1}{ForStmt}\quad  \\
-            &       |           & PrintStmt \\
-            &       |           & InputStmt  \\
-            &       |           & ReturnStmt  \\
-            &       |           & \textcolor{green1}{ExitStmt}  \\
-            &       |           & \textcolor{green1}{ContinueStmt}  \\
-            &       |           & \varepsilon \\
+InnerStmt	&	\rightarrow		& VarDecl  \\
+			&		|			& Assignment	\\
+			&		|			& IfStmt	\\
+			&		|			& ScopeStmt   \\
+			&		|			& DoStmt  \\
+			&		|			& \textcolor{green1}{ForStmt}\quad	\\
+			&		|			& PrintStmt \\
+			&		|			& InputStmt  \\
+			&		|			& ReturnStmt  \\
+			&		|			& \textcolor{green1}{ExitStmt}	\\
+			&		|			& \textcolor{green1}{ContinueStmt}	\\
+			&		|			& \varepsilon \\
 %###############################################################################
-StmtSeq     &    \rightarrow    & InnerStmt\quad \textbf{EOL}\quad StmtSeq   \\
-            &       |           & \varepsilon \\
+StmtSeq		&	 \rightarrow	& InnerStmt\quad \textbf{EOL}\quad StmtSeq	 \\
+			&		|			& \varepsilon \\
 %###############################################################################
-VarDecl     & \rightarrow       & \textbf{DIM}\quad VarDef \\
-            &       |           & \textcolor{green1}{\textbf{STATIC}\quad VarDef} \\
+VarDecl		& \rightarrow		& \textbf{DIM}\quad VarDef \\
+			&		|			& \textcolor{green1}{\textbf{STATIC}\quad VarDef} \\
 %###############################################################################
-\textcolor{green1}{SharedVar}&       \rightarrow           & \textcolor{green1}{\textbf{DIM}\quad \textbf{SHARED}\quad VarDef} \\
+\textcolor{green1}{SharedVar}&		 \rightarrow		   & \textcolor{green1}{\textbf{DIM}\quad \textbf{SHARED}\quad VarDef} \\
 %###############################################################################
-VarDef      & \rightarrow       & \textbf{ID}\quad \textbf{AS}\quad Type \quad InitOpt\\
-InitOpt     &      \rightarrow  & `=`\quad Expression \\
-            &       |           & \varepsilon \\
+VarDef		& \rightarrow		& \textbf{ID}\quad \textbf{AS}\quad Type \quad InitOpt\\
+InitOpt		&	   \rightarrow	& `=`\quad Expression \\
+			&		|			& \varepsilon \\
 %###############################################################################
-FuncDecl    &  \rightarrow      & \textbf{DECLARE}\quad \textbf{FUNCTION}\quad \textbf{ID}\quad `(` \quad Params \quad`)`\quad \textbf{AS}\quad Type   \\
+FuncDecl	&  \rightarrow		& \textbf{DECLARE}\quad \textbf{FUNCTION}\quad \textbf{ID}\quad `(` \quad Params \quad`)`\quad \textbf{AS}\quad Type   \\
 %###############################################################################
-Type        &    \rightarrow    &    \textbf{INTEGER}    \\
-            &       |           & \textbf{DOUBLE}   \\
-            &       |           & \textbf{STRING}   \\
-            &       |           & \textcolor{green1}{\textbf{BOOLEAN}}  \\
+Type		&	 \rightarrow	&	 \textbf{INTEGER}	 \\
+			&		|			& \textbf{DOUBLE}	\\
+			&		|			& \textbf{STRING}	\\
+			&		|			& \textcolor{green1}{\textbf{BOOLEAN}}	\\
 %###############################################################################
-    FuncDef    &    \rightarrow    & \textbf{FUNCTION}\quad \textbf{ID}\quad `(`\quad Params\quad `)`\quad \textbf{AS}\quad Type\quad \textbf{EOL}\quad StmtSeq\quad \textbf{END}\quad \textbf{FUNCTION}\quad \\
+	FuncDef    &	\rightarrow    & \textbf{FUNCTION}\quad \textbf{ID}\quad `(`\quad Params\quad `)`\quad \textbf{AS}\quad Type\quad \textbf{EOL}\quad StmtSeq\quad \textbf{END}\quad \textbf{FUNCTION}\quad \\
 %###############################################################################
-ParamDecl   &   \rightarrow   & {\textbf{ID}\quad \textbf{AS}\quad Type}    \\
-Params      &    \rightarrow    & {ParamDecl}\quad ParamsNext  \\
-            &    |              & \varepsilon             \\
-ParamsNext  &    \rightarrow    & `,`\quad {ParamDecl}\quad  ParamsNext   \\
-            &    |              & \varepsilon             \\
+ParamDecl	&	\rightarrow   & {\textbf{ID}\quad \textbf{AS}\quad Type}	\\
+Params		&	 \rightarrow	& {ParamDecl}\quad ParamsNext  \\
+			&	 |				& \varepsilon			  \\
+ParamsNext	&	 \rightarrow	& `,`\quad {ParamDecl}\quad  ParamsNext   \\
+			&	 |				& \varepsilon			  \\
 %###############################################################################
-ReturnStmt  &   \rightarrow     & \textbf{RETURN}\quad Expression     \\
+ReturnStmt	&	\rightarrow		& \textbf{RETURN}\quad Expression	  \\
 %###############################################################################
-Assignment  & \rightarrow       & \textbf{ID}\quad AssignOperator \quad Expression \\
+Assignment	& \rightarrow		& \textbf{ID}\quad AssignOperator \quad Expression \\
 %###############################################################################
-InputStmt   &    \rightarrow    & \textbf{INPUT}\quad \textbf{ID}\quad   \\
+InputStmt	&	 \rightarrow	& \textbf{INPUT}\quad \textbf{ID}\quad	 \\
 %###############################################################################
-PrintStmt   &    \rightarrow    & \textbf{PRINT}\quad Expression\quad `;` \quad ExpressionList\\
-ExpressionList&  \rightarrow    &  Expression\quad `;`\quad ExpressionList\\
-            &    |              & \varepsilon   \\
+PrintStmt	&	 \rightarrow	& \textbf{PRINT}\quad Expression\quad `;` \quad ExpressionList\\
+ExpressionList&  \rightarrow	&  Expression\quad `;`\quad ExpressionList\\
+			&	 |				& \varepsilon	\\
 %###############################################################################
-ScopeStmt   &    \rightarrow    &    \textbf{SCOPE}\quad   \textbf{EOL} \quad StmtSeq\quad   \textbf{END}\quad \textbf{SCOPE}\quad    \\
+ScopeStmt	&	 \rightarrow	&	\textbf{SCOPE}\quad   \textbf{EOL} \quad StmtSeq\quad	 \textbf{END}\quad \textbf{SCOPE}\quad	  \\
 %###############################################################################
-IfStmt  &    \rightarrow        & \textbf{IF} \quad Expression \quad \textbf{THEN}\quad \textbf{EOL}\quad StmtSeq \quad IfStmtCont   \\
-IfStmtCont  &   \rightarrow     & \textcolor{green1}{\textbf{END}\quad \textbf{IF}}  \\
-&   |      &    \textbf{ELSE}\quad  \textbf{EOL}\quad StmtSeq\quad \textbf{END}\quad \textbf{IF}   \\
-&   |       &    \textcolor{green1}{\textbf{ELSEIF}\quad Expression\quad \textbf{THEN}\quad \textbf{EOL}\quad StmtSeq \quad IfStmtEnd}   \\
-IfStmtEnd  &   \rightarrow  &\textcolor{green1}{\textbf{END}\quad \textbf{IF}}  \\
-&   |      &    \textcolor{green1}{\textbf{ELSE}\quad  \textbf{EOL}\quad StmtSeq\quad \textbf{END}\quad \textbf{IF}}   \\
+IfStmt	&\rightarrow& \textbf{IF} \quad Expression \quad \textbf{THEN}\quad \textbf{EOL}\quad StmtSeq \quad \textcolor{green1}{IfStmtElseif}\quad IfStmtElse\quad \textbf{END}\quad \textbf{IF}	\\
+\textcolor{green1}{IfStmtElseif}&\rightarrow &\textcolor{green1}{\textbf{ELSEIF}\quad Expression\quad \textbf{THEN}\quad \textbf{EOL}\quad StmtSeq \quad IfStmtElseif}	 \\
+&	|	&\textcolor{green1}{\varepsilon}  \\
+IfStmtElse&   \rightarrow &\textbf{ELSE}\quad  \textbf{EOL}\quad StmtSeq\quad  \\
+&	|	&\textcolor{green1}{\varepsilon}  \\
 %###############################################################################
-DoStmt&    \rightarrow    & \textbf{DO} \quad DoStmtEnd   \\
-DoStmtEnd&   \rightarrow  &  TestType \quad  Expression \quad \textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}    \\
-&    | &\textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}\quad TestType \quad  Expression \quad   \\
-TestType & \rightarrow  &   \textbf{WHILE}\quad \\
-        &       |       & \textcolor{green1}{\textbf{UNTIL}} \\
+DoStmt&    \rightarrow	  & \textbf{DO} \quad DoStmtEnd   \\
+DoStmtEnd&	 \rightarrow  &  TestType \quad  Expression \quad \textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}	\\
+&	 | &\textcolor{green1}{\textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}\quad TestType \quad  Expression} \\
+TestType & \rightarrow	&	\textbf{WHILE}\quad \\
+		&		|		& \textcolor{green1}{\textbf{UNTIL}} \\
 %###############################################################################
-\textcolor{green1}{ExitStmt} & \rightarrow & \textcolor{green1}{\textbf{EXIT}\quad LoopType}    \\
+\textcolor{green1}{ExitStmt} & \rightarrow & \textcolor{green1}{\textbf{EXIT}\quad LoopType}	\\
 %###############################################################################
-\textcolor{green1}{ContinueStmt} & \rightarrow & \textcolor{green1}{\textbf{CONTINUE}\quad LoopType}    \\
+\textcolor{green1}{ContinueStmt} & \rightarrow & \textcolor{green1}{\textbf{CONTINUE}\quad LoopType}	\\
 %###############################################################################
 \textcolor{green1}{Looptype} & \rightarrow & \textcolor{green1}{\textbf{DO}}\\
-&   |       &   \textcolor{green1}{\textbf{FOR}}   \\
+&	|		&	\textcolor{green1}{\textbf{FOR}}   \\
 %###############################################################################
-\textcolor{green1}{ForStmt} &    \rightarrow    &  \textcolor{green1}{\textbf{FOR}\quad \textbf{ID}\quad TypeOpt\quad `=`\quad Expression\quad \textbf{TO}\quad Expression\quad StepOpt\quad \textbf{EOL}\quad StmtSeq\quad \textbf{NEXT}\quad IdOpt\quad} \\
+\textcolor{green1}{ForStmt} &	 \rightarrow	&  \textcolor{green1}{\textbf{FOR}\quad \textbf{ID}\quad TypeOpt\quad `=`\quad Expression\quad \textbf{TO}\quad Expression\quad StepOpt\quad \textbf{EOL}\quad StmtSeq\quad \textbf{NEXT}\quad IdOpt\quad} \\
 \textcolor{green1}{TypeOpt} & \rightarrow  & \textcolor{green1}{\textbf{AS}\quad Type} \\
-& | &   \textcolor{green1}{\varepsilon} \\
+& | &	\textcolor{green1}{\varepsilon} \\
 \textcolor{green1}{StepOpt} & \rightarrow  & \textcolor{green1}{\textbf{STEP}\quad Expression} \\
-& | &   \textcolor{green1}{\varepsilon} \\
-\textcolor{green1}{IdOpt}   & \rightarrow & \textcolor{green1}{\textbf{ID}} \\
-        & | &  \textcolor{green1}{\varepsilon} \\
+& | &	\textcolor{green1}{\varepsilon} \\
+\textcolor{green1}{IdOpt}	& \rightarrow & \textcolor{green1}{\textbf{ID}} \\
+		& | &  \textcolor{green1}{\varepsilon} \\
 %###############################################################################
-AssignOperator  &    \rightarrow    &    `=` \quad      \\
-        &   |       &   \textcolor{green1}{`-=`}    \\
-        &   |       &   \textcolor{green1}{`+=`}    \\
-        &   |       &   \textcolor{green1}{`*=`}    \\
-        &   |       &   \textcolor{green1}{`\backslash =`}\quad \textrm{\texttt{TOKEN\_DIVI\_ASIGN}}    \\
-        &   |       &   \textcolor{green1}{`/=`}\quad \textrm{\texttt{TOKEN\_DIVR\_ASIGN}}\\
+AssignOperator	&	 \rightarrow	&	 `=` \quad		\\
+		&	|		&	\textcolor{green1}{`-=`}	\\
+		&	|		&	\textcolor{green1}{`+=`}	\\
+		&	|		&	\textcolor{green1}{`*=`}	\\
+		&	|		&	\textcolor{green1}{`\backslash =`}\quad \textrm{\texttt{TOKEN\_DIVI\_ASIGN}}	\\
+		&	|		&	\textcolor{green1}{`/=`}\quad \textrm{\texttt{TOKEN\_DIVR\_ASIGN}}\\
 %###############################################################################
  = \textrm{\texttt{number of rules}} & & 
 %###############################################################################
