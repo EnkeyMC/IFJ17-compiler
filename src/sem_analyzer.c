@@ -1232,8 +1232,8 @@ int sem_expr_assign(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 								IL_ADD(il, OP_INT2FLOAT, addr_symbol(val_prefix, value.id->key), addr_symbol(val_prefix, value.id->key),
 									   NO_ADDR, EXIT_INTERN_ERROR);
 							} else if (value_type == TOKEN_KW_DOUBLE && id_type == TOKEN_KW_INTEGER) {
-								IL_ADD(il, OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key),
-									   addr_symbol(prefix, sem_an->value->id->key), NO_ADDR, EXIT_INTERN_ERROR);
+								IL_ADD(il, OP_FLOAT2R2EINT, addr_symbol(prefix, value.id->key),
+									   addr_symbol(prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
 							}
 
 							opcode_e assign_operation = OP_MOVE;
