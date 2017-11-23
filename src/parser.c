@@ -230,6 +230,7 @@ Parser* parser_init(Scanner* scanner) {
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
 		grammar_free();
+		expr_grammar_free();
 		return NULL;
 	}
 
@@ -239,6 +240,7 @@ Parser* parser_init(Scanner* scanner) {
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
 		grammar_free();
+		expr_grammar_free();
 		return NULL;
 	}
 
@@ -249,6 +251,7 @@ Parser* parser_init(Scanner* scanner) {
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
 		grammar_free();
+		expr_grammar_free();
 		return NULL;
 	}
 	else if (! add_built_ins(parser->sym_tab_functions)) {
@@ -257,6 +260,7 @@ Parser* parser_init(Scanner* scanner) {
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
 		grammar_free();
+		expr_grammar_free();
 		return NULL;
 	}
 
@@ -269,6 +273,7 @@ Parser* parser_init(Scanner* scanner) {
 		stack_free(parser->dtree_stack, NULL);
 		free(parser);
 		grammar_free();
+		expr_grammar_free();
 		return NULL;
 	}
 
