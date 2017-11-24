@@ -1,0 +1,67 @@
+.IFJcode17
+
+createframe
+pushframe
+
+defvar LF@a
+defvar LF@vysl
+
+write string@Zadejte\032cislo\032pro\032vypocet\032faktorialu
+write string@?\032
+read LF@a int
+
+defvar LF@mainIFvar
+lt LF@mainIFvar LF@a int@0
+
+jumpifeq mainELSElabel LF@mainIFvar bool@false
+write string@\010Faktorial\032nelze\032spocitat\010
+
+jump programEND
+
+label mainELSElabel
+
+createframe
+defvar TF@n
+move TF@n LF@a
+
+call factorial
+move LF@vysl TF@%retval
+
+write string@\010Vysledek\032je\032:
+write LF@vysl
+write string@\010
+
+jump programEND
+
+# factorial function
+label factorial
+
+pushframe
+defvar LF@%retval
+defvar LF@temp_result
+defvar LF@decremented_n
+
+defvar LF@funcIFvar
+lt LF@funcIFvar LF@n int@2
+jumpifeq funcELSElabel LF@funcIFvar bool@false
+move LF@%retval int@1
+jump funcEND
+
+label funcELSElabel
+sub LF@decremented_n LF@n int@1
+
+createframe
+defvar TF@n
+move TF@n LF@decremented_n
+
+call factorial
+move LF@temp_result TF@%retval
+
+mul LF@%retval LF@n LF@temp_result
+
+label funcEND
+popframe
+return
+
+label programEND
+popframe
