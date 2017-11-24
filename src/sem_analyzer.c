@@ -655,7 +655,8 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			op_type = (token_e) value.expr_type;
 
 			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING && op_type != TOKEN_KW_BOOLEAN) {
-				return EXIT_SEMANTIC_PROG_ERROR;
+				assert(!"I am expecting type...");
+				return EXIT_INTERN_ERROR;
 			}
 
 			SEM_NEXT_STATE(SEM_STATE_OPERATOR);
@@ -701,6 +702,7 @@ int sem_expr_eq_ne(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				case TOKEN_KW_BOOLEAN:
 					if (type != TOKEN_KW_BOOLEAN)
 						return EXIT_SEMANTIC_COMP_ERROR;
+					break;
 				default:
 					return EXIT_SEMANTIC_COMP_ERROR;
 			}
