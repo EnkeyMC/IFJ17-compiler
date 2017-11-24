@@ -42,6 +42,7 @@ int parse_expression(Parser *parser) {
 				case TOKEN_DIVR:
 				case TOKEN_MUL:
 				case TOKEN_UNARY_MINUS:
+				case TOKEN_EQUAL:
 				case TOKEN_LT:
 				case TOKEN_GT:
 				case TOKEN_LE:
