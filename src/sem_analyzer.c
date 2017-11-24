@@ -455,6 +455,7 @@ int sem_expr_and_or_not(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 			if (value.token->id == TOKEN_KW_NOT) {
 				DLList* il = get_current_il_list(parser);
 				IL_ADD(il, OP_NOTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				SEM_SET_EXPR_TYPE(TOKEN_KW_BOOLEAN);
 				sem_an->finished = true;
 			} else {
 				SEM_NEXT_STATE(SEM_STATE_OPERAND);
