@@ -60,7 +60,7 @@ TEST(UIDGeneratorTest, UIDS200) {
 TEST_F(ParserTestFixture, SuccEmpty) {
 	SetInputFile("test_files/empty.fbc");
 
-	EXPECT_EQ(parse(parser), EXIT_SUCCESS);
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ParserTestFixture, SuccFactorialIt) {

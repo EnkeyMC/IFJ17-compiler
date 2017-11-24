@@ -6,7 +6,7 @@
 #include "sem_analyzer.h"
 
 // Number of rules in grammar. Needs to be incremented by 1 because first rule is empty
-#define NUM_OF_RULES 75
+#define NUM_OF_RULES 74
 
 /// Get number of variable arguments
 #define NUM_ARGS(...)  (sizeof((unsigned[]){__VA_ARGS__})/sizeof(unsigned))
