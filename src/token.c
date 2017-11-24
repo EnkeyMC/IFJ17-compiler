@@ -105,5 +105,5 @@ void token_debug(void* t) {
 		}
 	}
 
-	debug("}");
+	debugs("}");
 }

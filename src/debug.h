@@ -14,8 +14,8 @@
 
 #ifndef NDEBUG
 
-#define debugs(s) fprintf(stderr, "%s:%d: %s", __FILE__, __LINE__, s);
-#define debug(format, ...) fprintf(stderr, format, ##__VA_ARGS__);
+#define debugs(s) fprintf(stderr, "%s", s);
+#define debug(format, ...) fprintf(stderr, format, __VA_ARGS__);
 
 #else
 

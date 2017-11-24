@@ -163,7 +163,7 @@ void sem_an_debug(void* sa) {
 		sem_value_debug(sem_an->value);
 	}
 
-	debug("}");
+	debugs("}");
 }
 
 void sem_value_debug(void* val) {
@@ -174,7 +174,7 @@ void sem_value_debug(void* val) {
 	if (value != NULL) {
 		switch (value->value_type) {
 			case VTYPE_TOKEN:
-				debug(".type = TOKEN, .token = ");
+				debugs(".type = TOKEN, .token = ");
 				token_debug(value->token);
 				break;
 			case VTYPE_ID:
@@ -184,12 +184,12 @@ void sem_value_debug(void* val) {
 				debug(".type = EXPR, .expr_type = %d", value->expr_type);
 				break;
 			case VTYPE_LIST:
-				debug(".type = LIST, .list = ");
+				debugs(".type = LIST, .list = ");
 				break;
 		}
 	}
 
-	debug("}");
+	debugs("}");
 }
 
 // ----------------

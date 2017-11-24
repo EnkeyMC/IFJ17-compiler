@@ -240,10 +240,10 @@ void instruction_debug(void *inst) {
 							debug("float@%g ", instruction->addresses[i].constant->data.d);
 							break;
 						case TOKEN_KW_TRUE:
-							debug("bool@true");
+							debugs("bool@true");
 							break;
 						case TOKEN_KW_FALSE:
-							debug("bool@false");
+							debugs("bool@false");
 							break;
 						default:
 							assert(!"I shouldn't be here");
@@ -255,5 +255,5 @@ void instruction_debug(void *inst) {
 			}
 		}
 	}
-	debug("}");
+	debugs("}");
 }

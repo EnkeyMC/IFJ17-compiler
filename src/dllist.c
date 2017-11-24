@@ -373,10 +373,10 @@ void dllist_debug(void* l, debug_func func) {
 	debug("DLList@%p: {\n", list);
 	dllist_activate_first(list);
 	while (dllist_active(list)) {
-		debug("\t");
+		debugs("\t");
 		func(dllist_get_active(list));
-		debug("\n");
+		debugs("\n");
 		dllist_succ(list);
 	}
-	debug("}\n\n");
+	debugs("}\n\n");
 }

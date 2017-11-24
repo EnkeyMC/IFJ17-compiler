@@ -109,11 +109,11 @@ void stack_debug(Stack* s, debug_func func) {
 
 	if (s != NULL) {
 		for (int i = s->top; i >= 0; --i) {
-			debug("\t");
+			debugs("\t");
 			func(s->stack[i]);
-			debug("\n");
+			debugs("\n");
 		}
 	}
 
-	debug("}\n\n");
+	debugs("}\n\n");
 }

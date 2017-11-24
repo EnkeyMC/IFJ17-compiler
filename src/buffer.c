@@ -126,5 +126,5 @@ void buffer_debug(void* b) {
 		debug(".len = %lu, .buffer_size = %lu, .str = %s", buffer->len, buffer->buffer_size, buffer->str);
 	}
 
-	debug("}");
+	debugs("}");
 }

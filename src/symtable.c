@@ -254,7 +254,7 @@ void id_item_debug(htab_item * item_ptr) {
 		debug(".key = %s, .type: %d", item->key, item->id_data->type);
 	}
 
-	debug("}\n");
+	debugs("}\n");
 }
 
 void func_item_debug(htab_item * item_ptr) {
@@ -267,7 +267,7 @@ void func_item_debug(htab_item * item_ptr) {
 		printf(", .defined = %s", item->func_data->definition ? "true" : "false");
 	}
 
-	debug("}\n");
+	debugs("}\n");
 }
 
 // FUNCTIONS TO MODIFY FUNCTION DATA STORED IN HASH TABLE

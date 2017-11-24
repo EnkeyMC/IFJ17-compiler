@@ -206,7 +206,7 @@ void stack_item_debug(void* item) {
 		token_debug(sitem->token);
 	}
 
-	debug("}");
+	debugs("}");
 }
 
 void ext_stack_debug(void* s) {
@@ -217,11 +217,11 @@ void ext_stack_debug(void* s) {
 	if (stack != NULL) {
 		dllist_activate_first(stack);
 		while (dllist_active(stack)) {
-			debug("\t");
+			debugs("\t");
 			stack_item_debug(dllist_get_active(stack));
-			debug("\n");
+			debugs("\n");
 		}
 	}
 
-	debug("}\n\n");
+	debugs("}\n\n");
 }
