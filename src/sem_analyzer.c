@@ -1264,7 +1264,7 @@ int sem_expr_assign(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 									   addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
 							} else {
 								IL_ADD(il, assign_operation, addr_symbol(prefix, sem_an->value->id->key),
-									   addr_symbol(val_prefix, value.id->key), addr_symbol(val_prefix, value.id->key),
+									   addr_symbol(prefix, sem_an->value->id->key), addr_symbol(val_prefix, value.id->key),
 									   EXIT_INTERN_ERROR);
 							}
 							break;
