@@ -770,7 +770,7 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 			// Check operand types and implicitly cast if possible
 			switch (op_type) {
 				case TOKEN_KW_STRING:
-					if (type != TOKEN_KW_STRING && sem_an->value->token->id != TOKEN_ADD)
+					if (type != TOKEN_KW_STRING || sem_an->value->token->id != TOKEN_ADD)
 						return EXIT_SEMANTIC_COMP_ERROR;
 					break;
 				case TOKEN_KW_INTEGER:
