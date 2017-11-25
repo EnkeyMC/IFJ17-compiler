@@ -1,0 +1,154 @@
+.IFJcode17
+
+jump main
+
+# Začátek funkce substr
+label substr
+createframe
+
+defvar TF@n
+defvar TF@i
+defvar TF@str
+
+pops TF@n
+pops TF@i
+pops TF@str
+
+pushframe
+
+defvar LF@substr
+defvar LF@anotherchar
+defvar LF@counter
+defvar LF@total
+defvar LF@retval
+
+strlen LF@total LF@str
+move LF@substr string@
+move LF@counter int@0
+
+defvar LF@if1cond
+lt LF@if1cond LF@i int@1
+sub LF@i LF@i int@1
+jumpifeq finalstring LF@if1cond bool@true
+
+defvar LF@if2cond
+lt LF@if2cond LF@n int@0
+jumpifeq itoend LF@if2cond bool@true
+
+defvar LF@if3cond
+sub LF@total LF@total LF@i
+gt LF@if3cond LF@n LF@total
+jumpifeq itoend LF@if3cond bool@true
+
+label charloop
+jumpifeq finalstring LF@counter LF@n
+getchar LF@anotherchar LF@str LF@i
+concat LF@substr LF@substr LF@anotherchar
+add LF@i LF@i int@1
+add LF@counter LF@counter int@1
+jump charloop
+
+label itoend
+strlen LF@total LF@str
+defvar LF@itoendwhilecond
+
+label itoendwhile
+lt LF@itoendwhilecond LF@i LF@total
+jumpifeq finalstring LF@itoendwhilecond bool@false
+getchar LF@anotherchar LF@str LF@i
+concat LF@substr LF@substr LF@anotherchar
+add LF@i LF@i int@1
+jump itoendwhile
+
+label finalstring
+
+move LF@retval LF@substr
+pushs LF@retval
+
+popframe
+
+return
+# Konec funkce substr
+
+
+label main
+
+createframe
+pushframe
+
+defvar LF@retstr
+
+# Začátek volání funkce substr
+
+pushs string@TestAhojString
+pushs int@5
+pushs int@4
+
+call substr
+
+pops LF@retstr
+# Konec volání funkce
+
+write LF@retstr
+write string@\010
+
+
+pushs string@Test2
+pushs int@5
+pushs int@4
+
+call substr
+
+pops LF@retstr
+
+write LF@retstr
+write string@\010
+
+
+pushs string@Test3
+pushs int@7
+pushs int@3
+
+call substr
+
+pops LF@retstr
+
+write LF@retstr
+write string@\010
+
+pushs string@Test4
+pushs int@0
+pushs int@3
+
+call substr
+
+pops LF@retstr
+
+write LF@retstr
+write string@\010
+
+pushs string@Test5
+pushs int@-8
+pushs int@3
+
+call substr
+
+pops LF@retstr
+
+write LF@retstr
+write string@\010
+
+
+pushs string@Test5
+pushs int@1
+pushs int@3
+
+call substr
+
+pops LF@retstr
+
+write LF@retstr
+write string@\010
+
+popframe
+

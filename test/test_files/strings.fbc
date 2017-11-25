@@ -8,7 +8,7 @@ Scope 'Hlavni telo programu
 	s1 = !"Toto je nejaky text"
 	s2 = s1 + !", ktery jeste trochu obohatime"
 	Print s1; !"\n"; s2; !"\n";
-	s1len = Length(sl)
+	s1len = Length(s1)
 	s1len = s1len - 4 + 1
 	s1 = SubStr(s2, s1len, 4)
 	Print !"4 znaky od "; s1len; !". znaku v \""; s2; !"\":"; s1; !"\n";

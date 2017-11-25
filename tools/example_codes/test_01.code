@@ -1,0 +1,14 @@
+.IFJcode17
+
+DEFVAR GF@var1
+MOVE GF@var1 int@5
+
+CREATEFRAME
+defvar TF@var1
+PUSHFRAME
+move LF@var1 int@6
+DEFVAR LF@SUM
+
+ADD LF@SUM GF@var1 LF@var1
+WRITE LF@SUM
+POPFRAME
