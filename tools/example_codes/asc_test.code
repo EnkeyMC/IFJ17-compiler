@@ -1,0 +1,90 @@
+.IFJcode17
+
+jump main
+
+# Začátek funkce asc
+label asc
+createframe
+
+defvar TF@i
+defvar TF@str
+
+pops TF@i
+pops TF@str
+
+pushframe
+
+defvar LF@retval
+defvar LF@strlenght
+sub LF@i LF@i int@1
+
+strlen LF@strlenght LF@str
+
+defvar LF@if1cond
+lt LF@if1cond LF@i int@0
+jumpifeq wrongindex LF@if1cond bool@true
+
+defvar LF@if2cond
+gt LF@if2cond LF@i LF@strlenght
+jumpifeq wrongindex LF@if2cond bool@true
+
+stri2int LF@retval LF@str LF@i
+jump ascvalue
+
+label wrongindex
+move LF@retval int@0
+
+label ascvalue
+pushs LF@retval
+
+popframe
+
+return
+#Konec funkce asc
+
+label main
+
+createframe
+pushframe
+
+defvar LF@ascval
+
+# Začátek volání funkce asc
+
+pushs string@TestAhoj
+pushs int@5
+
+call asc
+
+pops LF@ascval
+# Konec volání funkce
+
+write LF@ascval
+write string@\010
+
+#testing index bigger then strlen
+
+pushs string@TestAhoj
+pushs int@42
+
+call asc
+
+pops LF@ascval
+
+write LF@ascval
+write string@\010
+
+#testing index lower then 1
+
+
+pushs string@TestAhoj
+pushs int@-8
+
+call asc
+
+pops LF@ascval
+
+write LF@ascval
+write string@\010
+
+popframe

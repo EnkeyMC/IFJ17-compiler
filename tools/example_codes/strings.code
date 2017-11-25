@@ -1,0 +1,119 @@
+.IFJcode17
+
+createframe
+pushframe
+
+defvar LF@s1
+defvar LF@s2
+defvar LF@s1len
+
+move LF@s1 string@Toto\032je\032nejaky\032text
+concat LF@s2 LF@s1 string@,\032ktery\032jeste\032trochu\032obohatime
+
+write LF@s1
+write string@\010
+write LF@s2
+write string@\010
+
+strlen LF@s1len LF@s1
+sub LF@s1len LF@s1len int@4
+add LF@s1len LF@s1len int@1
+
+defvar LF@str
+
+createframe
+defvar TF@str
+defvar TF@i
+defvar TF@n
+move TF@str LF@s2
+move TF@i LF@s1len
+move TF@n int@4
+
+call substr
+
+move LF@str TF@retval
+
+write string@4\032znaky\032od\032
+write LF@s1len
+write string@.\032znaku\032v\032"
+write LF@s2
+write string@":
+write LF@str
+write string@\010
+
+write string@Zadejte\032serazenou\032posloupnost\032vsech\032malych\032pismen\032a-h,\032
+write string@pricemz\032se\032pismena\032nesmeji\032v\032posloupnosti\032opakovat
+
+read LF@s1 string
+
+defvar LF@constring
+move LF@constring string@abcdefgh
+
+label tryagain
+jumpifeq correct LF@s1 LF@constring
+write string@\010Spatne\032zadana\032posloupnost,\032zkuste\032znovu
+read LF@s1 string
+jump tryagain
+
+label correct
+popframe
+
+jump end
+
+label substr
+
+pushframe
+
+defvar LF@substr
+defvar LF@anotherchar
+defvar LF@counter
+defvar LF@total
+defvar LF@retval
+
+strlen LF@total LF@str
+move LF@substr string@
+move LF@counter int@0
+
+defvar LF@if1cond
+lt LF@if1cond LF@i int@1
+sub LF@i LF@i int@1
+jumpifeq finalstring LF@if1cond bool@true
+
+defvar LF@if2cond
+lt LF@if2cond LF@n int@0
+jumpifeq itoend LF@if2cond bool@true
+
+defvar LF@if3cond
+sub LF@total LF@total LF@i
+gt LF@if3cond LF@n LF@total
+jumpifeq itoend LF@if3cond bool@true
+
+label charloop
+jumpifeq finalstring LF@counter LF@n
+getchar LF@anotherchar LF@str LF@i
+concat LF@substr LF@substr LF@anotherchar
+add LF@i LF@i int@1
+add LF@counter LF@counter int@1
+jump charloop
+
+label itoend
+strlen LF@total LF@str
+defvar LF@itoendwhilecond
+
+label itoendwhile
+lt LF@itoendwhilecond LF@i LF@total
+jumpifeq finalstring LF@itoendwhilecond bool@false
+getchar LF@anotherchar LF@str LF@i
+concat LF@substr LF@substr LF@anotherchar
+add LF@i LF@i int@1
+jump itoendwhile
+
+label finalstring
+
+move LF@retval LF@substr
+
+popframe
+
+return
+
+label end

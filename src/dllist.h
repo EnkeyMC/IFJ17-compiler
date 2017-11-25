@@ -200,5 +200,4 @@ int dllist_length(DLList *l);
  */
 void dllist_debug(void* l, debug_func func);
 
-
 #endif //IFJ17_COMPILER_LIST_H
