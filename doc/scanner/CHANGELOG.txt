@@ -1,0 +1,6 @@
+v2.4	9/11/2017
+--------------------------------------------------------------------------------
+	-	Fixed number escape sequences in string literals
+	-	Synchronized with scanner implementation by adding LEX_ERROR final states
+--------------------------------------------------------------------------------
+OLDER VERSIONS UNTRACKED

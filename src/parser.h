@@ -11,6 +11,46 @@
 #ifndef IFJ17_COMPILER_PARSER_H
 #define IFJ17_COMPILER_PARSER_H
 
-int parse();
+#include "scanner.h"
+#include "stack.h"
+#include "symtable.h"
+
+/**
+ * Parser object structure
+ */
+typedef struct parser_t {
+    Scanner* scanner;  /// Input scanner
+    Stack* dtree_stack;  /// Stack for simulating syntax derivation tree
+    DLList* sem_an_stack;  /// Stack of semantic analyzers
+    DLList* sym_tab_stack;  /// Stack of local symbol tables
+    HashTable* sym_tab_global;  /// Global symbol table
+    HashTable* sym_tab_functions;  /// Functions symbol table3
+} Parser;
+
+/**
+ * Init parser
+ * @param scanner initialized Scanner object
+ * @return new parser object, NULL on allocation error
+ */
+Parser* parser_init(Scanner* scanner);
+
+/**
+ * Free parser
+ * @param parser
+ */
+void parser_free(Parser* parser);
+
+/**
+ * Syntax and semantic analysis of input stream given by scanner
+ * @param parser
+ * @return error (success) code
+ */
+int parse(Parser* parser);
+
+/**
+ * Generates unique identifier
+ * @return identifier, NULL on error
+ */
+char* generate_uid();
 
 #endif //IFJ17_COMPILER_PARSER_H

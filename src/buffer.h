@@ -1,3 +1,12 @@
+/**
+ * File is part of project IFJ2017.
+ *
+ * Brno University of Technology, Faculty of Information Technology
+ *
+ * @package IFJ2017
+ * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
+ */
+
 #ifndef IFJ17_COMPILER_BUFFER_H
 #define IFJ17_COMPILER_BUFFER_H
 
@@ -66,5 +75,11 @@ bool buffer_clear(Buffer* b);
  * @return true on success
  */
 bool buffer_set_str(Buffer* b, const char* str);
+
+/**
+ * Debug print for buffer
+ * @param b Buffer
+ */
+void buffer_debug(void* b);
 
 #endif //IFJ17_COMPILER_BUFFER_H

@@ -1,0 +1,41 @@
+.IFJcode17
+
+jump main
+
+# Začátek funkce length
+label length
+createframe
+
+defvar TF@sl
+pops TF@sl
+
+pushframe
+
+defvar LF@retval
+
+strlen LF@retval LF@sl
+
+pushs LF@retval
+
+popframe
+
+return
+
+# Konec funkce length
+
+label main
+
+createframe
+pushframe
+
+defvar LF@len
+
+#Začátek volání funkce
+
+pushs string@x\010z\005fjls
+
+call length
+
+pops LF@len
+
+write lf@len

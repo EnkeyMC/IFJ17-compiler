@@ -1,0 +1,41 @@
+.IFJcode17
+
+jump main
+
+# Začátek funkce chr
+label chr
+createframe
+
+defvar TF@i
+pops TF@i
+
+pushframe
+
+defvar LF@retval
+
+int2char LF@retval LF@i
+
+pushs LF@retval
+
+popframe
+
+return
+
+# Konec funkce chr
+
+label main
+
+createframe
+pushframe
+
+defvar LF@chrvar
+
+#Začátek volání funkce
+
+pushs int@97
+
+call chr
+
+pops LF@chrvar
+
+write LF@chrvar
