@@ -1,0 +1,59 @@
+\documentclass[a4paper,11pt,fleqn,leqno]{article}
+%###############################################################################
+\usepackage[utf8]{inputenc}
+\usepackage[left=2cm,right=2cm,top=1cm]{geometry}
+\usepackage[usenames, dvipsnames]{color}
+
+\definecolor{green1}{RGB}{0, 120, 0}
+\definecolor{blue1}{RGB}{0, 0, 226}
+\definecolor{red1}{RGB}{196, 0, 0}
+%###############################################################################
+%###############################################################################
+\begin{document}
+%###############################################################################
+%###############################################################################
+\section{Pravidla pro precedenční analýzu - IFJ17 (v1.0)}
+
+\begin{eqnarray}
+\setcounter{equation}{0}
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{blue1}{\textbf{ID}\textbf{(}\textbf{)}}              \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{blue1}{\textbf{ID}\textbf{(}}\textcolor{red1}{Expr}\textcolor{blue1}{\textbf{)}}             \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{blue1}{\textbf{ID}\textbf{(}}\textcolor{red1}{List}\textcolor{blue1}{\textbf{)}}             \\
+\textcolor{red1}{List}   &   \rightarrow     & \textcolor{red1}{List}\quad\textcolor{blue1}{\textbf{,}}\quad\textcolor{red1}{Expr}               \\
+\textcolor{red1}{List}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{\textbf{,}}\quad\textcolor{red1}{Expr}               \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{blue1}{\textbf{ID}}                \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{blue1}{\textbf{CONST}}\quad \textrm{\texttt{tj. souhrnné označení pro TOKENY uvedené níže}}\nonumber \\
+& | & \textrm{\texttt{TOKEN\_STRING}} \\
+& | & \textrm{\texttt{TOKEN\_INT}}    \\
+& | & \textrm{\texttt{TOKEN\_REAL}}   \\
+& | & \textrm{\texttt{TOKEN\_KW\_TRUE}}   \\
+& | & \textrm{\texttt{TOKEN\_KW\_FALSE}} \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{blue1}{\textbf{(}}\textcolor{red1}{Expr}\textcolor{blue1}{\textbf{)}}               \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{blue1}{\textbf{-}}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{\textbf{+}}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{\textbf{-}}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{\textbf{*}}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{\backslash}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{\textbf{/}}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{\textbf{=}}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{<>}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{>}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{>=}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{<}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad\textcolor{blue1}{<=}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{blue1}{\textbf{NOT}}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad \textcolor{blue1}{\textbf{AND}}\quad \textcolor{red1}{Expr}   \\
+\textcolor{red1}{Expr}   &   \rightarrow     & \textcolor{red1}{Expr}\quad \textcolor{blue1}{\textbf{OR}}\quad  \textcolor{red1}{Expr}
+\end{eqnarray}
+
+\section{Komentář}
+
+Abych zachoval konzistenci s předchozí gramatikou, tak jsem neměnil značení \textcolor{blue1}{\textbf{TERMINÁLŮ(TOKENŮ)}} a \textcolor{red1}{\emph{Neterminálů}} (což je přesně naopak, než je to v přednáškách), tak mě za to nelynčujte. Proto:
+\begin{itemize}
+\item{\emph{Neterminály}: $\textcolor{red1}{Expr\quad List}$}
+\item{\textbf{TERMINÁLY(TOKENY)}: \textcolor{blue1}{\textbf{(}\quad \textbf{NOT}\quad \textbf{,}} -- nepřehlédnout tu čárku, \dots}
+\end{itemize}
+
+Minus se stane \textbf{unárním mínusem}(které je značeno jako: "\textbf{u -}" v precedenční tabulce), jestliže poslední načtený token byl: operátor, levá závorka, čárka nebo operátor přířazení.
+% %###############################################################################
+\enddocument

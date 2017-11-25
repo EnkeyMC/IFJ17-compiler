@@ -22,6 +22,8 @@
 typedef struct {
 	FILE* stream;  /// Input stream
     Buffer* buffer;  /// Buffer for string and identifier strings
+	Token* backlog_token; /// Backlog token
+	unsigned line;  /// Current line number
 } Scanner;
 
 /**
@@ -41,5 +43,20 @@ void scanner_free(Scanner* scanner);
  * @return token, NULL on allocation error
  */
 Token* scanner_get_token(Scanner* scanner);
+
+/**
+ * Return backlog token, only one token can be in backlog
+ * @param scanner Scanner
+ * @param token Token to backlog
+ */
+void scanner_unget_token(Scanner* scanner, Token* token);
+
+/**
+ * Convert white chars to escape sequences
+ *  @param string to convert
+ *  @return string with escape sequences
+ */
+
+char* convert_white_char(const char* str);
 
 #endif //IFJ17_COMPILER_SCANNER_H

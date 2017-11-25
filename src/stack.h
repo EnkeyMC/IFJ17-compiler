@@ -1,8 +1,18 @@
+/**
+ * File is part of project IFJ2017.
+ *
+ * Brno University of Technology, Faculty of Information Technology
+ *
+ * @package IFJ2017
+ * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
+ */
+
 #ifndef IFJ17_COMPILER_STACK_H
 #define IFJ17_COMPILER_STACK_H
 
 #include <stddef.h>
 #include <stdbool.h>
+#include "debug.h"
 
 #define STACK_CHUNK 10
 
@@ -62,5 +72,12 @@ bool stack_push(Stack* s, void* item);
  * @param free_item_f function that frees item, can be NULL
  */
 void stack_free(Stack* s, stack_free_callback free_item_f);
+
+/**
+ * Print debug info about Stack
+ * @param s Stack
+ * @param func debug function for stack items
+ */
+void stack_debug(Stack* s, debug_func func);
 
 #endif //IFJ17_COMPILER_STACK_H

@@ -1,0 +1,137 @@
+\documentclass[11pt]{article}
+\usepackage{vaucanson-g}
+\begin{document}
+\begin{VCPicture}{(0,0)(30,30)}
+%52 states
+\FinalStateVar[mul]{(10,25)}{Q0}
+\ChgStateLineColor{red}
+\State[s]{(10,14)}{Q1}
+\RstStateLineColor
+\FinalStateVar[le]{(26,27)}{Q10} \FinalStateVar[ne]{(28,27)}{Q11} \FinalStateVar[gt]{(26,23)}{Q12}
+\FinalStateVar[ge]{(28,24)}{Q13}
+\ChgStateLineColor{red}
+\StateVar[block_comment_end]{(-1,22)}{Q14} \StateVar[string_start]{(8,11)}{Q15} \StateVar[string]{(1,11)}{Q16}
+\RstStateLineColor
+\FinalStateVar[string_end]{(-4,11)}{Q17}
+\ChgStateLineColor{red}
+\StateVar[escape_seq]{(1,8)}{Q18}
+\RstStateLineColor
+\FinalStateVar[left_par]{(20,25)}{Q19} \FinalStateVar[identifier]{(28,18)}{Q2} \FinalStateVar[right_par]{(23,25)}{Q20}
+\FinalStateVar[integer]{(24,14)}{Q21}
+\ChgStateLineColor{red}
+\StateVar[fraction]{(32,12)}{Q22} \StateVar[exponent]{(24,12)}{Q23}
+\RstStateLineColor
+\FinalStateVar[real]{(32,10)}{Q24}
+\ChgStateLineColor{red}
+\StateVar[sign]{(24,7)}{Q25}
+\RstStateLineColor
+\StateVar[line_comment]{(-2,17)}{Q26} \FinalStateVar[EOF]{(-2,19)}{Q27} \FinalStateVar[comma]{(28,22)}{Q28}
+\ChgStateLineColor{red}
+\StateVar[esc_num_one]{(1,6)}{Q29}
+\RstStateLineColor
+\FinalStateVar[add]{(12,25)}{Q3}
+\ChgStateLineColor{red}
+\StateVar[esc_num_two]{(5,8)}{Q30}
+\RstStateLineColor
+\FinalStateVar[semicolon]{(28,20)}{Q31}
+\ChgStateLineColor{green}
+\ChgStateLabelColor{red}
+\StateVar[base]{(16,13)}{Q32} \StateVar[binary]{(12,11)}{Q33} \StateVar[octal]{(16,11)}{Q34}
+\StateVar[hexa]{(20,11)}{Q35}
+\RstStateLabelColor
+\FinalStateVar[div_int_assign]{(8,28)}{Q36} \FinalStateVar[div_real_assign]{(5,27)}{Q37} \FinalStateVar[mul_assign]{(10,27)}{Q38}
+\FinalStateVar[sub_assign]{(14,27)}{Q39}
+\RstStateLineColor
+\FinalStateVar[sub]{(14,25)}{Q4}
+\ChgStateLineColor{green}
+\FinalStateVar[add_assign]{(12,28)}{Q40} \FinalStateVar[int_bin]{(12,9)}{Q41} \FinalStateVar[int_octal]{(16,9)}{Q42}
+\FinalStateVar[int_hexa]{(20,9)}{Q43}
+\RstStateLineColor
+\FinalStateVar[EOL]{(-2,14)}{Q44} \FinalStateVar[real_exp]{(28,7)}{Q45}
+\ChgStateLineColor{red}
+\ChgStateLabelColor{red}
+\FinalStateVar[LEX_ERROR]{(20,5)}{Q46} \FinalStateVar[LEX_ERROR]{(16,5)}{Q47} \FinalStateVar[LEX_ERROR]{(12,5)}{Q48}
+\FinalStateVar[LEX_ERROR]{(28,5)}{Q49}
+\RstStateLineColor
+\RstStateLabelColor
+\FinalStateVar[div_int]{(8,25)}{Q5}
+\ChgStateLineColor{red}
+\ChgStateLabelColor{red}
+\FinalStateVar[LEX_ERROR]{(32,5)}{Q50} \FinalStateVar[LEX_ERROR]{(32,14)}{Q51}
+\RstStateLineColor
+\RstStateLabelColor
+\FinalStateVar[div_real]{(5,25)}{Q6}
+\ChgStateLineColor{red}
+\StateVar[block_comment]{(-1,25)}{Q7}
+\RstStateLineColor
+\FinalStateVar[equal_sign]{(17,25)}{Q8} \FinalStateVar[lt]{(26,25)}{Q9}
+%1 initial-final
+\Initial[s]{Q1}
+%70 transitions
+\ChgEdgeLineWidth{2}
+\ChgEdgeLineColor{green}
+
+\EdgeL{Q0}{Q38}{=}
+\RstEdgeLineWidth
+\RstEdgeLineColor
+\EdgeL[0.8]{Q1}{Q2}{[_a-zA-Z]} \EdgeL{Q1}{Q3}{+}
+\EdgeL{Q1}{Q4}{-} \EdgeL{Q1}{Q5}{\\}
+\EdgeR{Q1}{Q6}{/} \EdgeL{Q1}{Q0}{*}
+\EdgeL{Q1}{Q8}{=} \EdgeL[0.55]{Q1}{Q9}{<}
+\EdgeL[0.7]{Q1}{Q12}{>} \EdgeL{Q1}{Q19}{(}
+\EdgeL{Q1}{Q20}{)} \EdgeL[0.9]{Q1}{Q28}{, (comma)}
+\EdgeR[0.5]{Q1}{Q21}{[0-9]} \ArcR[0.8]{Q1}{Q26}{' (quote)}
+\EdgeL[0.9]{Q1}{Q31}{;(semicolon)} \CLoopSW[0.6]{Q1}{whitespace-\{EOL\}}
+\ArcL[0.45]{Q1}{Q15}{!}
+\ChgEdgeLineWidth{2}
+\ChgEdgeLineColor{green}
+\EdgeR{Q1}{Q32}{\&}
+\RstEdgeLineWidth
+\RstEdgeLineColor
+\ArcR[0.8]{Q1}{Q27}{EOF} \EdgeR{Q1}{Q44}{EOL}
+\EdgeL{Q12}{Q13}{=} \LArcR[0.5]{Q14}{Q7}{E - \{ /,EOF \}}
+\ArcL[0.45]{Q14}{Q1}{/} \EdgeR{Q15}{Q16}{"}
+\EdgeR{Q16}{Q17}{"} \LArcL[0.45]{Q16}{Q18}{\\}
+\CLoopN[0.5]{Q16}{E- \{",\\,EOL,EOF  \}} \LArcL{Q18}{Q16}{E- \{0-2, EOL,EOF\}}
+\EdgeR{Q18}{Q29}{[0-2]} \CLoopE[0.8]{Q2}{[ _a-zA-Z0-9]}
+\EdgeL[0.65]{Q21}{Q22}{.(dot)} \EdgeL{Q21}{Q23}{[eE]}
+\CLoopN[0.5]{Q21}{[0-9]} \EdgeR[0.3]{Q22}{Q24}{[0-9]}
+\EdgeL{Q23}{Q25}{[+-]} \EdgeL{Q23}{Q45}{[0-9]}
+\CLoopE[0.8]{Q24}{[0-9]} \EdgeR{Q24}{Q23}{[eE]}
+\EdgeL{Q25}{Q45}{[0-9]} \EdgeR{Q26}{Q27}{EOF}
+\CLoopW[0.8]{Q26}{E- \{EOF, EOL\}} \EdgeL{Q26}{Q44}{EOL}
+\ChgEdgeLineWidth{2}
+\ChgEdgeLineColor{green}
+\EdgeL[0.2]{Q3}{Q40}{=} \EdgeR{Q32}{Q33}{[bB]}
+\EdgeL{Q32}{Q34}{[oO]} \EdgeL{Q32}{Q35}{[hH]}
+\EdgeL{Q33}{Q41}{[01]} \EdgeL{Q34}{Q42}{[0-7]}
+\EdgeL{Q35}{Q43}{[0-9a-fA-F]} \EdgeL{Q4}{Q39}{=}
+\CLoopSW[0.7]{Q41}{[01]} \CLoopSW[0.7]{Q42}{[0-7]}
+\RstEdgeLineWidth
+\RstEdgeLineColor
+\CLoopN[0.7]{Q45}{[0-9]}
+\ChgEdgeLineWidth{2}
+\ChgEdgeLineColor{green}
+\EdgeL[0.2]{Q5}{Q36}{=}
+\RstEdgeLineWidth
+\RstEdgeLineColor
+\EdgeR{Q6}{Q7}{'(quote)}
+\ChgEdgeLineWidth{2}
+\ChgEdgeLineColor{green}
+\EdgeR{Q6}{Q37}{=}
+\RstEdgeLineWidth
+\RstEdgeLineColor
+\LArcR[0.5]{Q7}{Q14}{'(quote)} \CLoopW[0.15]{Q7}{E - \{',EOF\}}
+\EdgeL[0.4]{Q9}{Q10}{=} \EdgeR{Q9}{Q11}{>}
+\ChgEdgeLineWidth{2}
+\ChgEdgeLineColor{green}
+\CLoopSW[0.38]{Q43}{[0-9a-fA-F]}
+\RstEdgeLineWidth
+\ChgEdgeLineColor{red}
+\EdgeR[0.8]{Q42}{Q47}{[89a-zA-Z]} \EdgeR[0.8]{Q41}{Q48}{[2-9a-ZA-Z]}
+\EdgeL[0.8]{Q43}{Q46}{[g-zG-Z]} \EdgeR[0.4]{Q45}{Q49}{[a-zA-Z]}
+\EdgeL[0.85]{Q24}{Q50}{[a-zA-Z]} \EdgeL{Q21}{Q51}{[a-zA-Z]}
+\RstEdgeLineColor
+\ArcR[0.6]{Q29}{Q30}{[0-9]} \ArcR[0.2]{Q30}{Q16}{[0-9]}
+\end{VCPicture}
+\end{document}

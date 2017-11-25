@@ -8,7 +8,6 @@
  */
 
 #include <cstdio>
-#include <scanner.h>
 #include "gtest/gtest.h"
 #include "scanner.c"
 #include "token.c"
@@ -53,7 +52,7 @@ TEST_F(ScannerTestFixture, EmptyFile) {
 }
 
 TEST_F(ScannerTestFixture, ErrBase01) {
-	SetInputFile("test_files/lex_err_base_01.fbc");
+	SetInputFile("test_files/scanner/lex_err_base_01.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -67,7 +66,7 @@ TEST_F(ScannerTestFixture, ErrBase01) {
 }
 
 TEST_F(ScannerTestFixture, ErrBase02) {
-	SetInputFile("test_files/lex_err_base_02.fbc");
+	SetInputFile("test_files/scanner/lex_err_base_02.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -81,7 +80,7 @@ TEST_F(ScannerTestFixture, ErrBase02) {
 }
 
 TEST_F(ScannerTestFixture, ErrBase03) {
-	SetInputFile("test_files/lex_err_base_03.fbc");
+	SetInputFile("test_files/scanner/lex_err_base_03.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -95,7 +94,7 @@ TEST_F(ScannerTestFixture, ErrBase03) {
 }
 
 TEST_F(ScannerTestFixture, ErrBase04) {
-	SetInputFile("test_files/lex_err_base_04.fbc");
+	SetInputFile("test_files/scanner/lex_err_base_04.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -109,7 +108,7 @@ TEST_F(ScannerTestFixture, ErrBase04) {
 }
 
 TEST_F(ScannerTestFixture, ErrBlockComm01) {
-	SetInputFile("test_files/lex_err_block_comment_01.fbc");
+	SetInputFile("test_files/scanner/lex_err_block_comment_01.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -123,7 +122,7 @@ TEST_F(ScannerTestFixture, ErrBlockComm01) {
 }
 
 TEST_F(ScannerTestFixture, ErrBlockComm02) {
-	SetInputFile("test_files/lex_err_block_comment_02.fbc");
+	SetInputFile("test_files/scanner/lex_err_block_comment_02.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -137,7 +136,7 @@ TEST_F(ScannerTestFixture, ErrBlockComm02) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal01) {
-	SetInputFile("test_files/lex_err_real_01.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_01.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -151,7 +150,7 @@ TEST_F(ScannerTestFixture, ErrReal01) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal02) {
-	SetInputFile("test_files/lex_err_real_02.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_02.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -165,7 +164,7 @@ TEST_F(ScannerTestFixture, ErrReal02) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal03) {
-	SetInputFile("test_files/lex_err_real_03.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_03.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -179,7 +178,7 @@ TEST_F(ScannerTestFixture, ErrReal03) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal04) {
-	SetInputFile("test_files/lex_err_real_04.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_04.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -193,7 +192,7 @@ TEST_F(ScannerTestFixture, ErrReal04) {
 }
 
 TEST_F(ScannerTestFixture, ErrReal05) {
-	SetInputFile("test_files/lex_err_real_05.fbc");
+	SetInputFile("test_files/scanner/lex_err_real_05.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -207,7 +206,7 @@ TEST_F(ScannerTestFixture, ErrReal05) {
 }
 
 TEST_F(ScannerTestFixture, ErrString01) {
-	SetInputFile("test_files/lex_err_string_01.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_01.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -221,7 +220,7 @@ TEST_F(ScannerTestFixture, ErrString01) {
 }
 
 TEST_F(ScannerTestFixture, ErrString02) {
-	SetInputFile("test_files/lex_err_string_02.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_02.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -235,7 +234,7 @@ TEST_F(ScannerTestFixture, ErrString02) {
 }
 
 TEST_F(ScannerTestFixture, ErrString03) {
-	SetInputFile("test_files/lex_err_string_03.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_03.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -249,7 +248,7 @@ TEST_F(ScannerTestFixture, ErrString03) {
 }
 
 TEST_F(ScannerTestFixture, ErrString04) {
-	SetInputFile("test_files/lex_err_string_04.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_04.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -263,7 +262,7 @@ TEST_F(ScannerTestFixture, ErrString04) {
 }
 
 TEST_F(ScannerTestFixture, ErrString05) {
-	SetInputFile("test_files/lex_err_string_05.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_05.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -277,7 +276,7 @@ TEST_F(ScannerTestFixture, ErrString05) {
 }
 
 TEST_F(ScannerTestFixture, ErrString06) {
-	SetInputFile("test_files/lex_err_string_06.fbc");
+	SetInputFile("test_files/scanner/lex_err_string_06.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -291,7 +290,7 @@ TEST_F(ScannerTestFixture, ErrString06) {
 }
 
 TEST_F(ScannerTestFixture, ErrUnknownChar) {
-	SetInputFile("test_files/lex_err_unknown_char.fbc");
+	SetInputFile("test_files/scanner/lex_err_unknown_char.fbc");
 
 	Token *token = scanner_get_token(scanner);
 
@@ -305,14 +304,14 @@ TEST_F(ScannerTestFixture, ErrUnknownChar) {
 }
 
 TEST_F(ScannerTestFixture, ParseInteger) {
-	SetInputFile("test_files/parse_int.fbc");
+	SetInputFile("test_files/scanner/parse_int.fbc");
 
 	// 0
 	Token *token = scanner_get_token(scanner);
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, (unsigned) 0);
+	EXPECT_EQ(token->data.i, 0);
 	token_free(token);
 
 	// EOL
@@ -326,7 +325,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, (unsigned) 5);
+	EXPECT_EQ(token->data.i, 5);
 	token_free(token);
 
 	// EOL
@@ -340,7 +339,7 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_INT);
-	EXPECT_EQ(token->i, (unsigned) 19549);
+	EXPECT_EQ(token->data.i, 19549);
 	token_free(token);
 
 	// EOL
@@ -357,14 +356,14 @@ TEST_F(ScannerTestFixture, ParseInteger) {
 }
 
 TEST_F(ScannerTestFixture, ParseReal) {
-	SetInputFile("test_files/parse_real.fbc");
+	SetInputFile("test_files/scanner/parse_real.fbc");
 
 	// 5e-5
 	Token *token = scanner_get_token(scanner);
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_DOUBLE_EQ(token->d, 5e-5);
+	EXPECT_DOUBLE_EQ(token->data.d, 5e-5);
 	token_free(token);
 
 	// EOL
@@ -378,7 +377,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_EQ(token->d, 3E+6);
+	EXPECT_EQ(token->data.d, 3E+6);
 	token_free(token);
 
 	// EOL
@@ -392,7 +391,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_EQ(token->d, 0.8125);
+	EXPECT_EQ(token->data.d, 0.8125);
 	token_free(token);
 
 	// EOL
@@ -406,7 +405,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_EQ(token->d, 0.5e-2);
+	EXPECT_EQ(token->data.d, 0.5e-2);
 	token_free(token);
 
 	// EOL
@@ -420,7 +419,7 @@ TEST_F(ScannerTestFixture, ParseReal) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_REAL);
-	EXPECT_EQ(token->d, 0.3e20);
+	EXPECT_EQ(token->data.d, 0.3e20);
 	token_free(token);
 
 	// EOL
@@ -437,14 +436,14 @@ TEST_F(ScannerTestFixture, ParseReal) {
 }
 
 TEST_F(ScannerTestFixture, ParseString) {
-	SetInputFile("test_files/parse_string.fbc");
+	SetInputFile("test_files/scanner/parse_string.fbc");
 
 	// "Test string \001\n"
 	Token *token = scanner_get_token(scanner);
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_STRING);
-	EXPECT_STREQ(token->str, "Test string \\001\\n");
+	EXPECT_STREQ(token->data.str, "Test\\032string\\032\\001\\010");
 	token_free(token);
 
 	// EOL
@@ -458,7 +457,7 @@ TEST_F(ScannerTestFixture, ParseString) {
 
 	ASSERT_NE(token, nullptr);
 	ASSERT_EQ(token->id, TOKEN_STRING);
-	EXPECT_STREQ(token->str, "\\\\\\n Test\\ttwo");
+	EXPECT_STREQ(token->data.str, "\\092\\010\\032Test\\009two");
 	token_free(token);
 
 	// EOL
@@ -474,8 +473,29 @@ TEST_F(ScannerTestFixture, ParseString) {
 	ASSERT_EQ(token->id, TOKEN_EOF);
 }
 
+TEST_F(ScannerTestFixture, Basic02) {
+	SetInputFile("test_files/syntax/basic/02.code");
+
+	token_e tokens[] = {
+		TOKEN_EOL,
+		TOKEN_KW_SCOPE, TOKEN_EOL,
+		TOKEN_KW_DIM, TOKEN_IDENTIFIER, TOKEN_KW_AS, TOKEN_KW_STRING, TOKEN_EOL,
+		TOKEN_KW_DIM, TOKEN_IDENTIFIER, TOKEN_KW_AS, TOKEN_KW_INTEGER, TOKEN_EOL,
+		TOKEN_KW_DIM, TOKEN_IDENTIFIER, TOKEN_KW_AS, TOKEN_KW_DOUBLE, TOKEN_EOL,
+		TOKEN_KW_END, TOKEN_KW_SCOPE, TOKEN_EOF
+	};
+
+	Token* token;
+	for (unsigned int i = 0; i < sizeof(tokens) / sizeof(token_e); i++) {
+		token = scanner_get_token(scanner);
+		ASSERT_NE(token, nullptr) << "Iter: " << i;
+		ASSERT_EQ(token->id, tokens[i]) << "Iter: " << i;
+		token_free(token);
+	}
+}
+
 TEST_F(ScannerTestFixture, Simple01) {
-	SetInputFile("test_files/simple01.fbc");
+	SetInputFile("test_files/scanner/simple01.fbc");
 
 	token_e tokens[] = {
 		TOKEN_EOL,
@@ -556,9 +576,9 @@ TEST_F(ScannerTestFixture, Strings) {
             TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_STRING, TOKEN_EOL,
             TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_IDENTIFIER, TOKEN_ADD, TOKEN_STRING, TOKEN_EOL,
             TOKEN_KW_PRINT, TOKEN_IDENTIFIER, TOKEN_SEMICOLON, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_IDENTIFIER, TOKEN_SEMICOLON, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_EOL,
-            TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_KW_LENGTH, TOKEN_LPAR, TOKEN_IDENTIFIER, TOKEN_RPAR, TOKEN_EOL,
+            TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_IDENTIFIER, TOKEN_LPAR, TOKEN_IDENTIFIER, TOKEN_RPAR, TOKEN_EOL,
             TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_IDENTIFIER, TOKEN_SUB, TOKEN_INT, TOKEN_ADD, TOKEN_INT, TOKEN_EOL,
-            TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_KW_SUBSTR, TOKEN_LPAR, TOKEN_IDENTIFIER, TOKEN_COMMA, TOKEN_IDENTIFIER, TOKEN_COMMA, TOKEN_INT, TOKEN_RPAR, TOKEN_EOL,
+            TOKEN_IDENTIFIER, TOKEN_EQUAL, TOKEN_IDENTIFIER, TOKEN_LPAR, TOKEN_IDENTIFIER, TOKEN_COMMA, TOKEN_IDENTIFIER, TOKEN_COMMA, TOKEN_INT, TOKEN_RPAR, TOKEN_EOL,
             TOKEN_KW_PRINT, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_IDENTIFIER, TOKEN_SEMICOLON, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_IDENTIFIER, TOKEN_SEMICOLON, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_IDENTIFIER, TOKEN_SEMICOLON, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_EOL,
             TOKEN_KW_PRINT, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_EOL,
             TOKEN_KW_PRINT, TOKEN_STRING, TOKEN_SEMICOLON, TOKEN_EOL,

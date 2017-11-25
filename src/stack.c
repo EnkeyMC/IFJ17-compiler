@@ -1,3 +1,12 @@
+/**
+ * File is part of project IFJ2017.
+ *
+ * Brno University of Technology, Faculty of Information Technology
+ *
+ * @package IFJ2017
+ * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
+ */
+
 #include <malloc.h>
 #include <assert.h>
 #include "stack.h"
@@ -93,4 +102,18 @@ void stack_free(Stack* s, stack_free_callback free_item_f) {
 	if (s->stack != NULL)
 		free(s->stack);
 	free(s);
+}
+
+void stack_debug(Stack* s, debug_func func) {
+	debug("Stack@%p: From top {\n", s);
+
+	if (s != NULL) {
+		for (int i = s->top; i >= 0; --i) {
+			debugs("\t");
+			func(s->stack[i]);
+			debugs("\n");
+		}
+	}
+
+	debugs("}\n\n");
 }

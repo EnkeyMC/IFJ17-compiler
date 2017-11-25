@@ -1,4 +1,14 @@
+/**
+ * File is part of project IFJ2017.
+ *
+ * Brno University of Technology, Faculty of Information Technology
+ *
+ * @package IFJ2017
+ * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
+ */
+
 #include <stdbool.h>
+#include "debug.h"
 
 #ifndef IFJ17_COMPILER_LIST_H
 #define IFJ17_COMPILER_LIST_H
@@ -42,6 +52,13 @@ DLList* dllist_init(free_data_f free_data);
  * @param free_data_f callback function to free list data, can be NULL
  */
 void dllist_free(DLList *l);
+
+/**
+ * Deep copy of a list
+ * @param l list to copy
+ * @return Pointer to newly created list or NULL if allocation fails
+ */
+DLList* dllist_copy(DLList *l);
 
 /**
  * Insert item on the first position in the list
@@ -177,5 +194,10 @@ void dllist_pred(DLList *l);
  */
 int dllist_length(DLList *l);
 
+/**
+ * Print debug info about DLList
+ * @param l DLList
+ */
+void dllist_debug(void* l, debug_func func);
 
 #endif //IFJ17_COMPILER_LIST_H

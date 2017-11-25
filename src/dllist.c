@@ -1,3 +1,12 @@
+/**
+ * File is part of project IFJ2017.
+ *
+ * Brno University of Technology, Faculty of Information Technology
+ *
+ * @package IFJ2017
+ * @authors xomach00 - Martin Omacht, xchova19 - Zdeněk Chovanec, xhendr03 - Petr Hendrych
+ */
+
 #include <malloc.h>
 #include <assert.h>
 #include "dllist.h"
@@ -29,6 +38,32 @@ void dllist_free(DLList *l) {
 	}
 
 	free(l);
+}
+
+DLList* dllist_copy(DLList *l) {
+	assert(l != NULL);
+
+	DLList *l_copy = dllist_init(l->free_data);
+	if (l_copy == NULL)
+		return NULL;
+
+	dllist_activate_first(l);
+	if (dllist_active(l)) {
+		if (! dllist_insert_first(l_copy, dllist_get_active(l))) {
+			free(l_copy);
+			return NULL;
+		}
+		dllist_succ(l);
+		while (dllist_active(l)) {
+			if (! dllist_insert_last(l_copy, dllist_get_active(l))) {
+				dllist_free(l_copy);
+				return NULL;
+			}
+
+			dllist_succ(l);
+		}
+	}
+	return l_copy;
 }
 
 bool dllist_insert_first(DLList *l, void *data) {
@@ -331,3 +366,18 @@ int dllist_length(DLList *l) {
 
 	return length;
 }
+
+void dllist_debug(void* l, debug_func func) {
+	DLList* list = (DLList*) l;
+
+	debug("DLList@%p: {\n", list);
+	dllist_activate_first(list);
+	while (dllist_active(list)) {
+		debugs("\t");
+		func(dllist_get_active(list));
+		debugs("\n");
+		dllist_succ(list);
+	}
+	debugs("}\n\n");
+}
+
