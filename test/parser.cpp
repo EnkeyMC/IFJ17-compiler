@@ -366,25 +366,25 @@ TEST_F(ParserTestFixture, SuccBase06) {
 TEST_F(ParserTestFixture, SuccBase07) {
 	SetInputFile("test_files/syntax/base/07.code");
 
-	EXPECT_EQ(parse(parser), EXIT_LEX_ERROR);
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ParserTestFixture, SuccBase08) {
 	SetInputFile("test_files/syntax/base/08.code");
 
-	EXPECT_EQ(parse(parser), EXIT_LEX_ERROR);
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ParserTestFixture, SuccBase09) {
 	SetInputFile("test_files/syntax/base/09.code");
 
-	EXPECT_EQ(parse(parser), EXIT_LEX_ERROR);
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ParserTestFixture, SuccBase10) {
 	SetInputFile("test_files/syntax/base/10.code");
 
-	EXPECT_EQ(parse(parser), EXIT_LEX_ERROR);
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
 }
 
 TEST_F(ParserTestFixture, SuccBase11) {
@@ -523,7 +523,7 @@ TEST_F(ParserTestFixture, SuccConditions13) {
 TEST_F(ParserTestFixture, SuccConditions14) {
 	SetInputFile("test_files/syntax/conditions/14.code");
 
-	EXPECT_EQ(parse(parser), EXIT_LEX_ERROR);
+	EXPECT_EQ(parse(parser), EXIT_SUCCESS);
 }
 
 // ----

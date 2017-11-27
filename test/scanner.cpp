@@ -73,7 +73,7 @@ TEST_F(ScannerTestFixture, ErrBase02) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_INT
 	);
 
 	token_free(token);
@@ -87,7 +87,7 @@ TEST_F(ScannerTestFixture, ErrBase03) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_INT
 	);
 
 	token_free(token);
@@ -101,7 +101,7 @@ TEST_F(ScannerTestFixture, ErrBase04) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_INT
 	);
 
 	token_free(token);
@@ -185,7 +185,7 @@ TEST_F(ScannerTestFixture, ErrReal04) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_REAL
 	);
 
 	token_free(token);
@@ -199,7 +199,7 @@ TEST_F(ScannerTestFixture, ErrReal05) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_REAL
 	);
 
 	token_free(token);
