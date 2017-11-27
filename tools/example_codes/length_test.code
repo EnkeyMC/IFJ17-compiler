@@ -11,11 +11,9 @@ pops TF@sl
 
 pushframe
 
-defvar LF@retval
+strlen LF@sl LF@sl
 
-strlen LF@retval LF@sl
-
-pushs LF@retval
+pushs LF@sl
 
 popframe
 
@@ -32,7 +30,7 @@ defvar LF@len
 
 #Začátek volání funkce
 
-pushs string@x\010z\005fjls
+pushs string@ah\032oj\010
 
 call length
 

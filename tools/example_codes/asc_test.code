@@ -14,28 +14,27 @@ pops TF@str
 
 pushframe
 
-defvar LF@retval
+defvar LF@condition
 defvar LF@strlenght
+
 sub LF@i LF@i int@1
 
 strlen LF@strlenght LF@str
 
-defvar LF@if1cond
-lt LF@if1cond LF@i int@0
-jumpifeq wrongindex LF@if1cond bool@true
+lt LF@condition LF@i int@0
+jumpifeq wrongindex LF@condition bool@true
 
-defvar LF@if2cond
-gt LF@if2cond LF@i LF@strlenght
-jumpifeq wrongindex LF@if2cond bool@true
+gt LF@condition LF@i LF@strlenght
+jumpifeq wrongindex LF@condition bool@true
 
-stri2int LF@retval LF@str LF@i
+stri2int LF@str LF@str LF@i
 jump ascvalue
 
 label wrongindex
-move LF@retval int@0
+move LF@str int@0
 
 label ascvalue
-pushs LF@retval
+pushs LF@str
 
 popframe
 

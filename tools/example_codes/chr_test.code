@@ -11,11 +11,9 @@ pops TF@i
 
 pushframe
 
-defvar LF@retval
+int2char LF@i LF@i
 
-int2char LF@retval LF@i
-
-pushs LF@retval
+pushs LF@i
 
 popframe
 
