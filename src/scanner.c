@@ -647,9 +647,13 @@ Token* scanner_get_token(Scanner* scanner) {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_bin);
 			}
+			else if ((ch >= '2' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+			}
 			else {
 				ungetc(ch, scanner->stream);
-				token->id = LEX_ERROR;
+				token->id = TOKEN_INT;
+				token->i = 0;
 				return token;
 			}
 		}
@@ -660,9 +664,14 @@ Token* scanner_get_token(Scanner* scanner) {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_octal);
 			}
+			else if ((ch >= '8' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+				return token;
+			}
 			else {
 				ungetc(ch, scanner->stream);
-				token->id = LEX_ERROR;
+				token->id = TOKEN_INT;
+				token-> i = 0;
 				return token;
 			}
 		}
@@ -673,9 +682,14 @@ Token* scanner_get_token(Scanner* scanner) {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
 			}
+			else if ((ch >= 'g' && ch <= 'z') || (ch >= 'G' && ch <= 'Z')) {
+				token->id = LEX_ERROR;
+				return token;
+			}
 			else {
 				ungetc(ch, scanner->stream);
-				token->id = LEX_ERROR;
+				token->id = TOKEN_INT;
+				token-> i = 0;
 				return token;
 			}
 		}
@@ -692,7 +706,7 @@ Token* scanner_get_token(Scanner* scanner) {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
 
-				token->i = (unsigned int) strtoul(scanner->buffer->str, NULL, 2);;
+				token->i = (unsigned int) strtoul(scanner->buffer->str, NULL, 2);
 				return token;
 			}
 		}
@@ -726,7 +740,7 @@ Token* scanner_get_token(Scanner* scanner) {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
 
-				token->i = (unsigned int) strtoul(scanner->buffer->str, NULL, 16);;
+				token->i = (unsigned int) strtoul(scanner->buffer->str, NULL, 16);
 				return token;
 			}
 		}
