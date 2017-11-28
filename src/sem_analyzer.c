@@ -1608,6 +1608,14 @@ int sem_scope(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_SCOPE)
 			{
+				// main scope statement encountered
+				if ((find_sem_action(parser, sem_func_def) == NULL)
+						&& (dllist_get_first(parser->sym_tab_stack) == NULL)) {
+					// check that every function have been defined
+					if (!htab_check_definition(parser->sym_tab_functions))
+						return EXIT_SEMANTIC_PROG_ERROR;
+				}
+
 				if (create_scope(parser) == NULL) {
 					return EXIT_INTERN_ERROR;
 				}

@@ -246,6 +246,17 @@ void htab_foreach(HashTable *htab_ptr, void (*function)(htab_item *item_ptr)) {
 			function(item);
 }
 
+bool htab_check_definition(HashTable *htab_ptr) {
+	assert(htab_ptr != NULL);
+
+	for (size_t i = 0; i < htab_ptr->bucket_count; i++)
+		for (htab_item *item = htab_ptr->ptr[i]; item != NULL; item = item->next) {
+			if (item->func_data->definition == false)
+				return false;
+		}
+	return true;
+}
+
 void id_item_debug(htab_item * item_ptr) {
 	htab_item* item = (htab_item*) item_ptr;
 	debug("htab_item@%p: {", item);

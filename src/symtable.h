@@ -117,6 +117,13 @@ size_t htab_size(HashTable *htab_ptr);
 void htab_foreach(HashTable *htab_ptr, void (*func)(htab_item *item_ptr));
 
 /**
+ * Check whether all declared functions have been defined
+ * @param htab_ptr hash table storing function records
+ * @return true if every function was correctly defined, false otherwise
+ */
+bool htab_check_definition(HashTable *htab_ptr);
+
+/**
  * Print contents of an identifier/function data to stdout. Use with htab_foreach in first place.
  * @param item_ptr Pointer to hash table item
  */
