@@ -37,6 +37,7 @@
 #define LABEL_PREFIX_ENDIF "ENDIF_"
 #define LABEL_PREFIX_LOOP_COND "LOOP_COND_"
 #define LABEL_PREFIX_LOOP_END "LOOP_END_"
+#define LABEL_PREFIX_DO_LOOP "DO_LOOP_"
 
 #define EXPR_VALUE_VAR "EXPR_VALUE"
 
@@ -901,7 +902,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						// Cast second operand, we need to temporarly pop top operand to access the second one
 						char* tmp_var = generate_uid();
 						IL_ADD(global_il, OP_DEFVAR, addr_symbol(F_GLOBAL, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						IL_ADD(il, OP_POPS, addr_symbol(F_GLOBAL, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+						IL_ADD(global_il, OP_POPS, addr_symbol(F_GLOBAL, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(il, OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(il, OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(il, OP_PUSHS, addr_symbol(F_GLOBAL, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
@@ -2010,6 +2011,9 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				}
 				sem_an->value->token->id = TOKEN_IDENTIFIER;
 
+				// Create label
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_DO_LOOP, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
 				SEM_NEXT_STATE(SEM_STATE_DO_TEST_TYPE);
 			}
 		} END_STATE;
@@ -2018,18 +2022,18 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_TOKEN
 				&& value.token->id == TOKEN_KW_WHILE)
 			{
-				// Create label
 				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_COND, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				SEM_NEXT_STATE(SEM_STATE_DO_WHILE);
 			}
 			else if (value.value_type == VTYPE_TOKEN
 					&& value.token->id == TOKEN_KW_UNTIL)
 			{
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_COND, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				SEM_NEXT_STATE(SEM_STATE_DO_UNTIL);
 			}
 			else
 			{
-				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
+				SEM_NEXT_STATE(SEM_STATE_DO_LOOP_TEST_END);
 			}
 		} END_STATE;
 
@@ -2045,7 +2049,7 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					   addr_symbol(prefix, value.id->key),
 					   addr_constant(MAKE_TOKEN_BOOL(false)),
 					   EXIT_INTERN_ERROR);
-				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
+				SEM_NEXT_STATE(SEM_STATE_DO_LOOP_TEST_START);
 			}
 		} END_STATE;
 
@@ -2054,11 +2058,17 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
 					return EXIT_SEMANTIC_COMP_ERROR;
-				SEM_NEXT_STATE(SEM_STATE_DO_LOOP);
+				const char* prefix = get_var_scope_prefix(parser, value.id->key);
+				IL_ADD(il, OP_JUMPIFEQ,
+					   addr_symbol(LABEL_PREFIX_LOOP_END, sem_an->value->token->data.str),
+					   addr_symbol(prefix, value.id->key),
+					   addr_constant(MAKE_TOKEN_BOOL(true)),
+					   EXIT_INTERN_ERROR);
+				SEM_NEXT_STATE(SEM_STATE_DO_LOOP_TEST_START);
 			}
 		} END_STATE;
 
-		SEM_STATE(SEM_STATE_DO_LOOP) {
+		SEM_STATE(SEM_STATE_DO_LOOP_TEST_START) {
 			if (value.value_type == VTYPE_TOKEN
 				&& value.token->id == TOKEN_KW_LOOP)
 			{
@@ -2066,6 +2076,15 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_LOOP_COND, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				// End of loop
 				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_END, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				delete_scope(parser);
+				sem_an->finished = true;
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_DO_LOOP_TEST_END) {
+			if (value.value_type == VTYPE_TOKEN
+				&& value.token->id == TOKEN_KW_LOOP)
+			{
 				delete_scope(parser);
 				SEM_NEXT_STATE(SEM_STATE_DO_TEST_TYPE_END);
 			}
@@ -2075,15 +2094,19 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_TOKEN
 				&& value.token->id == TOKEN_KW_WHILE)
 			{
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_COND, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				SEM_NEXT_STATE(SEM_STATE_DO_WHILE_END);
 			}
 			else if (value.value_type == VTYPE_TOKEN
 					&& value.token->id == TOKEN_KW_UNTIL)
 			{
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_COND, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				SEM_NEXT_STATE(SEM_STATE_DO_UNTIL_END);
 			}
 			else
 			{
+				// Infinite loop
+				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_DO_LOOP, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -2093,6 +2116,15 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
 					return EXIT_SEMANTIC_COMP_ERROR;
+				const char* prefix = get_var_scope_prefix(parser, value.id->key);
+				IL_ADD(il, OP_JUMPIFEQ,
+					   addr_symbol(LABEL_PREFIX_LOOP_END, sem_an->value->token->data.str),
+					   addr_symbol(prefix, value.id->key),
+					   addr_constant(MAKE_TOKEN_BOOL(true)),
+					   EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_DO_LOOP, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_END, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -2102,6 +2134,15 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
 					return EXIT_SEMANTIC_COMP_ERROR;
+				const char* prefix = get_var_scope_prefix(parser, value.id->key);
+				IL_ADD(il, OP_JUMPIFEQ,
+					   addr_symbol(LABEL_PREFIX_LOOP_END, sem_an->value->token->data.str),
+					   addr_symbol(prefix, value.id->key),
+					   addr_constant(MAKE_TOKEN_BOOL(false)),
+					   EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_DO_LOOP, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_END, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
 				sem_an->finished = true;
 			}
 		} END_STATE;
