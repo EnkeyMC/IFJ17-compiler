@@ -12,6 +12,7 @@
 #include "3ac.c"
 #include "parser.c"
 #include "sem_analyzer.c"
+#include "utils.c"
 
 class ParserTestFixture : public ::testing::Test {
 protected:

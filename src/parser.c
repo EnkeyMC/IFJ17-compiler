@@ -445,30 +445,3 @@ int parse(Parser* parser) {
 
 	return ret_code;
 }
-
-char* generate_uid() {
-	static unsigned int seed = 1;
-	Buffer* buffer = buffer_init(5);
-	if (buffer == NULL)
-		return NULL;
-
-	buffer_append_str(buffer, "ID");
-
-	unsigned int num = seed;
-	while (num) {
-		buffer_append_c(buffer, (char) (num % 10 + '0'));
-		num /= 10;
-	}
-
-	seed++;
-
-	char* out = (char*) malloc(sizeof(char) * (strlen(buffer->str) + 1));
-	if (out == NULL) {
-		buffer_free(buffer);
-		return NULL;
-	}
-
-	strcpy(out, buffer->str);
-	buffer_free(buffer);
-	return out;
-}

@@ -62,12 +62,17 @@ struct parser_t;
 struct token_t;
 struct htab_item_t;
 
+typedef struct if_val_t {
+    char* if_id;  // If ID
+    char* elseif_id;  // Current elseif ID
+} IfValue;
 
 typedef enum {
 	VTYPE_TOKEN,
 	VTYPE_ID,
 	VTYPE_LIST,
-	VTYPE_EXPR
+	VTYPE_EXPR,
+    VTYPE_IF
 } value_type_e;
 
 typedef struct sem_value_t {
@@ -77,6 +82,7 @@ typedef struct sem_value_t {
 		struct htab_item_t* id;
 		DLList* list;
 		int expr_type;	/// Should be token_e but can't include token.h
+        IfValue if_val;
 	};
 } SemValue;
 
