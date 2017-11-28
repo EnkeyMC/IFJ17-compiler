@@ -25,6 +25,7 @@ typedef struct parser_t {
     DLList* sym_tab_stack;  /// Stack of local symbol tables
     HashTable* sym_tab_global;  /// Global symbol table
     HashTable* sym_tab_functions;  /// Functions symbol table3
+	htab_item* init_id;	/// Stores variable during its initialization
 } Parser;
 
 /**

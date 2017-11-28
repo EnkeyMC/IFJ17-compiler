@@ -385,6 +385,9 @@ int sem_expr_id(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (item == NULL) {
 				return EXIT_SEMANTIC_PROG_ERROR;
 			}
+			if (parser->init_id == item) {
+				return EXIT_SEMANTIC_PROG_ERROR;
+			}
 
 			SEM_SET_EXPR_TYPE(item->id_data->type);
 
@@ -1358,6 +1361,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 				sem_an->value->value_type = VTYPE_ID;
 				sem_an->value->id = item;
+				parser->init_id = item;
 
 				DLList* il = get_current_il_list(parser);
 				IL_ADD(il, OP_DEFVAR, addr_symbol(get_current_scope_prefix(parser), item->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
@@ -1404,6 +1408,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				}
 
 				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+				parser->init_id = NULL;
 				sem_an->finished = true;
 			} else if (value.value_type == VTYPE_TOKEN) {
 				switch (value.token->id) {	// Default initialization
@@ -1425,6 +1430,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 								assert(!"I shouldn't be here");
 						}
 						IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+						parser->init_id = NULL;
 						sem_an->finished = true;
 						break;
 					default:

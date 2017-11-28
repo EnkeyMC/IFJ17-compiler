@@ -276,6 +276,7 @@ Parser* parser_init(Scanner* scanner) {
 		expr_grammar_free();
 		return NULL;
 	}
+	parser->init_id = NULL;
 
 	return parser;
 }
