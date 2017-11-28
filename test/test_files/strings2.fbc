@@ -1,0 +1,5 @@
+scope
+    dim s as string
+    s = !"" + s + !"woo"
+    print s;
+end scope

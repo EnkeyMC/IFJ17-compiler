@@ -473,6 +473,50 @@ TEST_F(ScannerTestFixture, ParseString) {
 	ASSERT_EQ(token->id, TOKEN_EOF);
 }
 
+TEST_F(ScannerTestFixture, EmptyStringConcat) {
+	SetInputFile("test_files/scanner/empty_string.fbc");
+
+	// length
+	Token *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_IDENTIFIER);
+	EXPECT_STREQ(token->data.str, "length");
+	token_free(token);
+
+	// (
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_LPAR);
+
+	// ""
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_STRING);
+	EXPECT_STREQ(token->data.str, "");
+	token_free(token);
+
+	// (
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_RPAR);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// EOF
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOF);
+}
+
 TEST_F(ScannerTestFixture, Basic02) {
 	SetInputFile("test_files/syntax/basic/02.code");
 

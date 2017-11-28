@@ -98,6 +98,7 @@ bool buffer_clear(Buffer* b) {
 	if (!buffer_realloc(b, BUFFER_CHUNK))
 		return false;
 
+	b->str[0] = '\0';
 	b->len = 0;
 	b->buffer_size = BUFFER_CHUNK;
 
