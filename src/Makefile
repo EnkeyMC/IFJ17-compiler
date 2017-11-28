@@ -16,6 +16,7 @@ $(EXEC): $(OBJS)
 clean:
 	rm -rf *.o
 	rm $(EXEC)
+	rm $(EXEC).zip
 
 pack: $(SRCS) $(HEADERS) Makefile rozdeleni rozsireni
 	zip $(EXEC).zip $^
