@@ -2298,6 +2298,7 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 
 	SemAnalyzer* sem_action = NULL;
+	DLList* il = get_current_il_list(parser);
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -2307,6 +2308,8 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				sem_action = find_sem_action(parser, sem_do_loop);
 				if (sem_action == NULL)
 					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_LOOP_END, sem_action->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 				SEM_NEXT_STATE(SEM_STATE_EOL);
 				break;
@@ -2341,6 +2344,7 @@ int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 	// TODO add instructions
 	SemAnalyzer* sem_action = NULL;
+	DLList* il = get_current_il_list(parser);
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -2350,6 +2354,8 @@ int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				sem_action = find_sem_action(parser, sem_do_loop);
 				if (sem_action == NULL)
 					return EXIT_SEMANTIC_OTHER_ERROR;
+
+				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_LOOP_COND, sem_action->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 				SEM_NEXT_STATE(SEM_STATE_EOL);
 				break;
