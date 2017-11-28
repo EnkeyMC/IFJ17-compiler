@@ -12,9 +12,9 @@
 \begin{document}
 %###############################################################################
 %###############################################################################
-\section{CHANGE LOG v1.8}
-Prazdný soubor = syntaktická chyba.
-\section{LL Grammar IFJ17 (v1.8)}
+\section{CHANGE LOG v1.9}
+Možnost nekonečného do-loop cyklu při vynechání podmínky.
+\section{LL Grammar IFJ17 (v1.9)}
 \begin{eqnarray}
 Line		&	\rightarrow		& GlobalStmt\quad ScopeStmt\quad  LineEnd	 \\
 %###############################################################################
@@ -86,10 +86,13 @@ IfStmtElse&   \rightarrow &\textbf{ELSE}\quad  \textbf{EOL}\quad StmtSeq\quad  \
 &	|	&\textcolor{green1}{\varepsilon}  \\
 %###############################################################################
 DoStmt&    \rightarrow	  & \textbf{DO} \quad DoStmtEnd   \\
-DoStmtEnd&	 \rightarrow  &  TestType \quad  Expression \quad \textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}	\\
-&	 | &\textcolor{green1}{\textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}\quad TestType \quad  Expression} \\
-TestType & \rightarrow	&	\textbf{WHILE}\quad \\
+DoStmtEnd&	 \rightarrow  &  TestTypeStart \quad  Expression \quad \textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}	\\
+&	 | &\textcolor{green1}{\textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}\quad TestTypeEnd} \\
+TestTypeStart & \rightarrow	&	\textbf{WHILE}\\
 		&		|		& \textcolor{green1}{\textbf{UNTIL}} \\
+\textcolor{green1}{TestTypeEnd} & \rightarrow	&	\textcolor{green1}{\textbf{WHILE}\quad Expression} \\
+&		|		& \textcolor{green1}{\textbf{UNTIL}\quad Expression} \\
+&	|	&\textcolor{green1}{\varepsilon}  \\
 %###############################################################################
 \textcolor{green1}{ExitStmt} & \rightarrow & \textcolor{green1}{\textbf{EXIT}\quad LoopType}	\\
 %###############################################################################
