@@ -39,7 +39,6 @@
 #define LABEL_PREFIX_LOOP_END "LOOP_END_"
 #define LABEL_PREFIX_DO_LOOP "DO_LOOP_"
 
-#define EXPR_VALUE_VAR "EXPR_VALUE"
 
 SemAnalyzer* sem_an_init(semantic_action_f sem_action) {
 	SemAnalyzer* sem_an = (SemAnalyzer*) malloc(sizeof(SemAnalyzer));

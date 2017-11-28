@@ -15,6 +15,8 @@
 
 #define SEM_VALUE_TOKEN(value) ((SemValue){.value_type = VTYPE_TOKEN, {.token = (value)}})
 
+#define EXPR_VALUE_VAR "EXPR_VALUE"
+
 /**
  * Enumeration of semantic states
  */

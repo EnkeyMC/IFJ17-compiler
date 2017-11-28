@@ -94,6 +94,10 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "asc_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "asc_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "strlength"), NO_ADDR, NO_ADDR, false);
@@ -125,6 +129,14 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "n"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "n"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "substr_n_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "n"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr_n_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "substr_i_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr_i_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "substr"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "anotherchar"), NO_ADDR, NO_ADDR, false);
@@ -175,6 +187,10 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "sl"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "length_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "sl"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "length_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "sl"), NO_ADDR, false);
@@ -189,6 +205,10 @@ static bool add_built_ins(HashTable* htab) {
 	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "chr_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "chr_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
 	IL_ADD(func_il, OP_INT2CHAR, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "i"), NO_ADDR, false);
