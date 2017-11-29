@@ -18,6 +18,7 @@
 #include "parser.h"
 #include "3ac.h"
 #include "debug.h"
+#include "utils.h"
 
 #define SEM_FSM switch(sem_an->state)
 #define SEM_STATE(state) case state:
@@ -98,6 +99,19 @@ SemValue* sem_value_copy(const SemValue* value) {
 		case VTYPE_EXPR:
 			new_val->expr_type = value->expr_type;
 			break;
+		case VTYPE_IF:
+			new_val->if_val.if_id = (char*) malloc(sizeof(char) * (strlen(value->if_val.if_id) + 1));
+			if (new_val->if_val.if_id == NULL) {
+				free(new_val);
+				return NULL;
+			}
+
+			new_val->if_val.elseif_id = (char*) malloc(sizeof(char) * (strlen(value->if_val.elseif_id) + 1));
+			if (new_val->if_val.elseif_id == NULL) {
+				free(new_val);
+				return NULL;
+			}
+			break;
 	}
 
 	return new_val;
@@ -118,6 +132,11 @@ void sem_value_free(void* value) {
 		case VTYPE_LIST:
 			dllist_free(to_free->list);
 			break;
+		case VTYPE_IF:
+			if (to_free->if_val.if_id != NULL)
+				free(to_free->if_val.if_id);
+			if (to_free->if_val.elseif_id != NULL)
+				free(to_free->if_val.elseif_id);
 		default:
 			break;
 	}
@@ -185,6 +204,10 @@ void sem_value_debug(void* val) {
 				break;
 			case VTYPE_LIST:
 				debugs(".type = LIST, .list = ");
+				dllist_debug(value->list, sem_value_debug);
+				break;
+			case VTYPE_IF:
+				debug(".type = IF, .if_id = %s, .elseif_id = %s", value->if_val.if_id, value->if_val.elseif_id);
 				break;
 		}
 	}
@@ -382,9 +405,6 @@ int sem_expr_id(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			// Check if variable exists
 			htab_item* item = find_symbol(parser, value.token->data.str);
 			if (item == NULL) {
-				return EXIT_SEMANTIC_PROG_ERROR;
-			}
-			if (parser->init_id == item) {
 				return EXIT_SEMANTIC_PROG_ERROR;
 			}
 
@@ -758,7 +778,7 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 			op_type = (token_e) value.expr_type;
 
 			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING) {
-				return EXIT_SEMANTIC_PROG_ERROR;
+				return EXIT_SEMANTIC_COMP_ERROR;
 			}
 
 			SEM_NEXT_STATE(SEM_STATE_OPERATOR);
@@ -1354,16 +1374,12 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 				}
 
-				sem_an->value = sem_value_init();
+				sem_an->value = sem_value_copy(&value);
 				if (sem_an->value == NULL)
 					return EXIT_INTERN_ERROR;
 
-				sem_an->value->value_type = VTYPE_ID;
-				sem_an->value->id = item;
-				parser->init_id = item;
-
 				DLList* il = get_current_il_list(parser);
-				IL_ADD(il, OP_DEFVAR, addr_symbol(get_current_scope_prefix(parser), item->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_DEFVAR, addr_symbol(get_current_scope_prefix(parser), value.token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
 			}
@@ -1376,7 +1392,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_DOUBLE:
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN: {
-						sem_an->value->id->id_data->type = value.token->id;
+						sem_an->value->token->id = value.token->id;
 
 						SEM_NEXT_STATE(SEM_STATE_ASSIGN);
 					}
@@ -1388,50 +1404,64 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 		SEM_STATE(SEM_STATE_ASSIGN) {
 			DLList* il = get_current_il_list(parser);
+
 			if (value.value_type == VTYPE_ID) {  // Variable initialization
 				const char* prefix = get_current_scope_prefix(parser);
 				const char* val_prefix = get_var_scope_prefix(parser, value.id->key);
 				token_e value_type = (token_e) value.id->id_data->type;
-				token_e id_type = sem_an->value->id->id_data->type;
+				token_e id_type = sem_an->value->token->id;
 
 				if (value_type == TOKEN_KW_INTEGER && id_type == TOKEN_KW_DOUBLE) {
-					IL_ADD(il, OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(val_prefix, value.id->key),
+					IL_ADD(il, OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->token->data.str), addr_symbol(val_prefix, value.id->key),
 						   NO_ADDR, EXIT_INTERN_ERROR);
 				} else if (value_type == TOKEN_KW_DOUBLE && id_type == TOKEN_KW_INTEGER) {
-					IL_ADD(il, OP_FLOAT2R2EINT, addr_symbol(prefix, sem_an->value->id->key),
+					IL_ADD(il, OP_FLOAT2R2EINT, addr_symbol(prefix, sem_an->value->token->data.str),
 						   addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
 				} else if (are_types_compatible(value_type, id_type)) {
-					IL_ADD(il, OP_MOVE, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_MOVE, addr_symbol(prefix, sem_an->value->token->data.str), addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
 				} else {
 					return EXIT_SEMANTIC_COMP_ERROR;
 				}
 
+				symtab = get_current_sym_tab(parser);
+				htab_item* item = htab_lookup(symtab, sem_an->value->token->data.str);
+				if (item == NULL)
+					return EXIT_INTERN_ERROR;
+				item->id_data->type = sem_an->value->token->id;
+				sem_an->value->token->id = TOKEN_IDENTIFIER;
+
 				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
-				parser->init_id = NULL;
 				sem_an->finished = true;
 			} else if (value.value_type == VTYPE_TOKEN) {
 				switch (value.token->id) {	// Default initialization
-					case TOKEN_EOL:
-						switch (sem_an->value->id->id_data->type) {
+					case TOKEN_EOL: {
+						switch (sem_an->value->token->id)
+						{
 							case TOKEN_KW_INTEGER:
-								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->id->key), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, EXIT_INTERN_ERROR);
+								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->token->data.str), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, EXIT_INTERN_ERROR);
 								break;
 							case TOKEN_KW_BOOLEAN:
-								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->id->key), addr_constant(MAKE_TOKEN_BOOL(false)), NO_ADDR, EXIT_INTERN_ERROR);
+								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->token->data.str), addr_constant(MAKE_TOKEN_BOOL(false)), NO_ADDR, EXIT_INTERN_ERROR);
 								break;
 							case TOKEN_KW_DOUBLE:
-								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->id->key), addr_constant(MAKE_TOKEN_REAL(0)), NO_ADDR, EXIT_INTERN_ERROR);
+								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->token->data.str), addr_constant(MAKE_TOKEN_REAL(0)), NO_ADDR, EXIT_INTERN_ERROR);
 								break;
 							case TOKEN_KW_STRING:
-								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->id->key), addr_constant(MAKE_TOKEN_STRING("")), NO_ADDR, EXIT_INTERN_ERROR);
+								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->token->data.str), addr_constant(MAKE_TOKEN_STRING("")), NO_ADDR, EXIT_INTERN_ERROR);
 								break;
 							default:
 								assert(!"I shouldn't be here");
 						}
+						symtab = get_current_sym_tab(parser);
+						htab_item* item = htab_lookup(symtab, sem_an->value->token->data.str);
+						if (item == NULL)
+							return EXIT_INTERN_ERROR;
+						item->id_data->type = sem_an->value->token->id;
+						sem_an->value->token->id = TOKEN_IDENTIFIER;
 						IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
-						parser->init_id = NULL;
 						sem_an->finished = true;
 						break;
+					}
 					default:
 						break;
 				}
@@ -2436,7 +2466,7 @@ int sem_return(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 	// Conditions have id saved in Token as string with type TOKEN_IDENTIFIER
-	// TODO elseif handling
+
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_ID)
@@ -2448,29 +2478,30 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (sem_an->value == NULL)
 					return EXIT_INTERN_ERROR;
 
-				// Generate id for condition
+				// Generate id for if
 				char* id = generate_uid();
 				if (id == NULL) {
 					free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
 
-				// Save id to SemValue
-				sem_an->value->value_type = VTYPE_TOKEN;
-				Token token = token_make_str(id);
-				free(id);
-				sem_an->value->token = token_copy(&token);
-				if (sem_an->value->token == NULL) {
+				// Generate id for elseif
+				char* elseif_id = generate_uid();
+				if (elseif_id == NULL) {
 					free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
-				sem_an->value->token->id = TOKEN_IDENTIFIER;
+
+				// Save id to SemValue
+				sem_an->value->value_type = VTYPE_IF;
+				sem_an->value->if_val.if_id = id;
+				sem_an->value->if_val.elseif_id = elseif_id;
 
 				DLList* il = get_current_il_list(parser);
 				const char* prefix = get_var_scope_prefix(parser, value.id->key);
 				// If condition is false, jump to else (might be else if)
 				IL_ADD(il, OP_JUMPIFEQ,
-					   addr_symbol(LABEL_PREFIX_ELSE, sem_an->value->token->data.str),
+					   addr_symbol(LABEL_PREFIX_ELSE, sem_an->value->if_val.elseif_id),
 					   addr_symbol(prefix, value.id->key),
 					   addr_constant(MAKE_TOKEN_BOOL(false)),
 					   EXIT_INTERN_ERROR);
@@ -2496,17 +2527,19 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_END)
 			{
-				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ENDIF, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ELSE, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ENDIF, sem_an->value->if_val.if_id), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ELSE, sem_an->value->if_val.elseif_id), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 				delete_scope(parser);
+				sem_value_free(sem_an->value);
+				sem_an->value = NULL;
 				sem_an->finished = true;
 			}
 			else if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_ELSE)
 			{
-				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_ENDIF, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ELSE, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_ENDIF, sem_an->value->if_val.if_id), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ELSE, sem_an->value->if_val.elseif_id), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 				delete_scope(parser);
 				if (create_scope(parser) == NULL)
@@ -2516,6 +2549,9 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			else if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_KW_ELSEIF)
 			{
+				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_ENDIF, sem_an->value->if_val.if_id), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ELSE, sem_an->value->if_val.elseif_id), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 				delete_scope(parser);
 				SEM_NEXT_STATE(SEM_STATE_IF_ELSEIF_COND);
 			}
@@ -2526,6 +2562,26 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			{
 				if (value.id->id_data->type != TOKEN_KW_BOOLEAN)
 					return EXIT_SEMANTIC_COMP_ERROR;
+
+				// Generate new id for elseif
+				char* id = generate_uid();
+				if (id == NULL) {
+					free(sem_an->value);
+					return EXIT_INTERN_ERROR;
+				}
+
+				free(sem_an->value->if_val.elseif_id);  // Free old ID
+				sem_an->value->if_val.elseif_id = id;  // Assign new one
+
+				DLList* il = get_current_il_list(parser);
+				const char* prefix = get_var_scope_prefix(parser, value.id->key);
+				// If condition is false, jump to else (might be else if)
+				IL_ADD(il, OP_JUMPIFEQ,
+					   addr_symbol(LABEL_PREFIX_ELSE, sem_an->value->if_val.elseif_id),
+					   addr_symbol(prefix, value.id->key),
+					   addr_constant(MAKE_TOKEN_BOOL(false)),
+					   EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 
 				SEM_NEXT_STATE(SEM_STATE_IF_ELSEIF_EOL);
 			}
@@ -2547,9 +2603,11 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				value.token->id == TOKEN_KW_END)
 			{
 				DLList* il = get_current_il_list(parser);
-				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ENDIF, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_ENDIF, sem_an->value->if_val.if_id), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 				delete_scope(parser);
+				sem_value_free(sem_an->value);
+				sem_an->value = NULL;
 				sem_an->finished = true;
 			}
 		} END_STATE;
