@@ -781,7 +781,7 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 			op_type = (token_e) value.expr_type;
 
 			if (op_type != TOKEN_KW_INTEGER && op_type != TOKEN_KW_DOUBLE && op_type != TOKEN_KW_STRING) {
-				return EXIT_SEMANTIC_PROG_ERROR;
+				return EXIT_SEMANTIC_COMP_ERROR;
 			}
 
 			SEM_NEXT_STATE(SEM_STATE_OPERATOR);
