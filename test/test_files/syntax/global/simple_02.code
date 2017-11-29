@@ -1,0 +1,11 @@
+function count() as integer
+    static cnt as integer
+    cnt = cnt + 1
+    return cnt
+end function
+
+scope
+    dim a as integer
+    a = count() + count()
+    print a;
+end scope

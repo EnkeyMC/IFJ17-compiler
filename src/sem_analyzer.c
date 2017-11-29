@@ -12,6 +12,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "sem_analyzer.h"
 #include "error_code.h"
 #include "token.h"
@@ -229,21 +230,6 @@ static HashTable* get_current_sym_tab(Parser* parser) {
 	return symtab;
 }
 
-static const char* get_var_scope_prefix(Parser* parser, const char* key) {
-	dllist_activate_first(parser->sym_tab_stack);
-	htab_item* item;
-
-	while (dllist_active(parser->sym_tab_stack)) {
-		item = htab_find((HashTable*) dllist_get_active(parser->sym_tab_stack), key);
-		if (item != NULL)
-			return F_LOCAL;
-
-		dllist_succ(parser->sym_tab_stack);
-	}
-
-	return F_GLOBAL;
-}
-
 static SemAnalyzer* find_sem_action(Parser *parser, semantic_action_f sem_action) {
 	dllist_activate_first(parser->sem_an_stack);
 	SemAnalyzer *sem_an;
@@ -266,9 +252,34 @@ static const char* get_current_scope_prefix(Parser* parser) {
 	return F_LOCAL;
 }
 
+static char* get_static_var_name(const char* func_name, const char* var_name) {
+	char* static_prefix = concat("S", func_name);
+	if (static_prefix == NULL)
+		return NULL;
+
+	char* static_id = concat(static_prefix, var_name);
+	free(static_prefix);
+	if (static_id == NULL) {
+		return NULL;
+	}
+
+	return static_id;
+}
+
 static htab_item* find_symbol(Parser* parser, const char* key) {
 	dllist_activate_first(parser->sym_tab_stack);
 	htab_item* item;
+
+	// Try to find static variable first
+	SemAnalyzer* sem_an = find_sem_action(parser, sem_func_def);
+	if (sem_an != NULL) {
+		char* static_id = get_static_var_name(sem_an->value->id->key, key);
+		item = htab_find(parser->sym_tab_global, static_id);
+		free(static_id);
+		if (item != NULL) {
+			return item;
+		}
+	}
 
 	while (dllist_active(parser->sym_tab_stack)) {
 		item = htab_find((HashTable*) dllist_get_active(parser->sym_tab_stack), key);
@@ -279,6 +290,32 @@ static htab_item* find_symbol(Parser* parser, const char* key) {
 	}
 
 	return htab_find(parser->sym_tab_global, key);
+}
+
+static const char* get_var_scope_prefix(Parser* parser, const char* key) {
+	dllist_activate_first(parser->sym_tab_stack);
+	htab_item* item;
+
+	// Try to find static variable first
+	SemAnalyzer* sem_an = find_sem_action(parser, sem_func_def);
+	if (sem_an != NULL) {
+		char* static_id = get_static_var_name(sem_an->value->id->key, key);
+		item = htab_find(parser->sym_tab_global, static_id);
+		free(static_id);
+		if (item != NULL) {
+			return F_GLOBAL;
+		}
+	}
+
+	while (dllist_active(parser->sym_tab_stack)) {
+		item = htab_find((HashTable*) dllist_get_active(parser->sym_tab_stack), key);
+		if (item != NULL)
+			return F_LOCAL;
+
+		dllist_succ(parser->sym_tab_stack);
+	}
+
+	return F_GLOBAL;
 }
 
 static HashTable* create_scope(Parser* parser) {
@@ -315,11 +352,41 @@ static bool are_types_compatible(token_e type1, token_e type2) {
 }
 
 static DLList* get_current_il_list(Parser* parser) {
+	if (parser->il_override != NULL)
+		return parser->il_override;
+
 	if (find_sem_action(parser, sem_func_def) != NULL)
 		return func_il;
 	if (dllist_get_first(parser->sym_tab_stack) != NULL)
 		return main_il;
 	return global_il;
+}
+
+static int def_var(Parser* parser, HashTable* symtab, const char* id, SemValue** value_out) {
+	HashTable* symtab_func = parser->sym_tab_functions;
+
+	// Check variable redefinition
+	if (htab_find(symtab, id) != NULL) {
+		return EXIT_SEMANTIC_PROG_ERROR;
+	}
+	if (htab_find(symtab_func, id) != NULL) {
+		return EXIT_SEMANTIC_PROG_ERROR;
+	}
+
+	// Put variable in value table
+	htab_item* item = htab_lookup(symtab, id);
+	if (item == NULL) {
+		return EXIT_INTERN_ERROR;
+	}
+
+	*value_out = sem_value_init();
+	if (*value_out == NULL)
+		return EXIT_INTERN_ERROR;
+
+	(*value_out)->value_type = VTYPE_ID;
+	(*value_out)->id = item;
+
+	return EXIT_SUCCESS;
 }
 
 /**
@@ -401,6 +468,11 @@ int sem_expr_id(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_START) {
 			assert(value.value_type == VTYPE_TOKEN);
 			assert(value.token->id == TOKEN_IDENTIFIER);
+
+			// Forbid for static variable initialization
+			if (parser->static_var_decl) {
+				return EXIT_SEMANTIC_OTHER_ERROR;
+			}
 
 			// Check if variable exists
 			htab_item* item = find_symbol(parser, value.token->data.str);
@@ -1235,7 +1307,7 @@ int sem_expr_assign(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				token_e id_type = sem_an->value->id->id_data->type;
 				token_e value_type = (token_e) value.id->id_data->type;
 				const char* val_prefix = get_var_scope_prefix(parser, value.id->key);
-				const char* prefix = get_current_scope_prefix(parser);
+				const char* prefix = get_var_scope_prefix(parser, sem_an->value->id->key);
 
 				DLList* il = get_current_il_list(parser);
 				switch (op->id) {
@@ -1349,34 +1421,86 @@ int sem_expr_assign(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 
-	HashTable* symtab = NULL;
-	HashTable* symtab_func = NULL;
-
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
-			if (value.value_type == VTYPE_TOKEN
-				&& value.token->id == TOKEN_IDENTIFIER)
-			{
-				symtab = get_current_sym_tab(parser);
-				symtab_func = parser->sym_tab_functions;
+			if (value.value_type == VTYPE_TOKEN) {
+				if (value.token->id == TOKEN_KW_STATIC) {
+					// If we are not in function definition, treat it like normal variable
+					if (find_sem_action(parser, sem_func_def) == NULL) {
+						SEM_NEXT_STATE(SEM_STATE_VAR_ID);
+					} else {
+						SEM_NEXT_STATE(SEM_STATE_VAR_ID_STATIC);
+					}
+				} else if (value.token->id == TOKEN_KW_SHARED) {
+					if (!dllist_empty(parser->sym_tab_stack)) {  // Shared variable is not in global scope
+						return EXIT_SYNTAX_ERROR;
+					}
 
-				// Check variable redefinition
-				if (htab_find(symtab, value.token->data.str) != NULL) {
+					SEM_NEXT_STATE(SEM_STATE_VAR_ID_SHARED);
+				} else if (value.token->id == TOKEN_IDENTIFIER) {
+					int ret_val = def_var(parser, get_current_sym_tab(parser), value.token->data.str, &sem_an->value);
+					if (ret_val != EXIT_SUCCESS)
+						return ret_val;
+
+					DLList* il = get_current_il_list(parser);
+					IL_ADD(il, OP_DEFVAR, addr_symbol(get_current_scope_prefix(parser), value.token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+					SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
+				}
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_VAR_ID_SHARED) {
+			if (value.value_type == VTYPE_TOKEN && value.token->id == TOKEN_IDENTIFIER) {
+				int ret_val = def_var(parser, parser->sym_tab_global, value.token->data.str, &sem_an->value);
+				if (ret_val != EXIT_SUCCESS)
+					return ret_val;
+
+				DLList* il = get_current_il_list(parser);
+				IL_ADD(il, OP_DEFVAR, addr_symbol(get_current_scope_prefix(parser), value.token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
+			}
+
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_VAR_ID_STATIC) {
+			if (value.value_type == VTYPE_TOKEN && value.token->id == TOKEN_IDENTIFIER) {
+				// Indicate that we are currently definning static variable
+				parser->static_var_decl = true;
+
+				// Check collision with local variables and functions
+				if (htab_find(get_current_sym_tab(parser), value.token->data.str) != NULL) {
 					return EXIT_SEMANTIC_PROG_ERROR;
 				}
-				if (htab_find(symtab_func, value.token->data.str) != NULL) {
+				if (htab_find(parser->sym_tab_functions, value.token->data.str) != NULL) {
 					return EXIT_SEMANTIC_PROG_ERROR;
 				}
 
-				// Put variable in value table
-				htab_item* item = htab_lookup(symtab, value.token->data.str);
-				if (item == NULL) {
+				// Static variables are global variables with function prefixes
+				char* static_id = get_static_var_name(find_sem_action(parser, sem_func_def)->value->id->key, value.token->data.str);
+				if (static_id == NULL)
 					return EXIT_INTERN_ERROR;
-				}
 
-				sem_an->value = sem_value_copy(&value);
-				if (sem_an->value == NULL)
-					return EXIT_INTERN_ERROR;
+				int ret_val = def_var(parser, parser->sym_tab_global, static_id, &sem_an->value);
+				free(static_id);
+				if (ret_val != EXIT_SUCCESS)
+					return ret_val;
+
+				IL_ADD(global_il, OP_DEFVAR, addr_symbol(F_GLOBAL, sem_an->value->id->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				// Override instruction list for next instructions (in case of inline initialization, the expr. needs to be in global list)
+				parser->il_override = global_il;
+
+				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
+			}
+		} END_STATE;
+
+		SEM_STATE(SEM_STATE_VAR_ID) {  // Only used for static variables outside of functions
+			if (value.value_type == VTYPE_TOKEN && value.token->id == TOKEN_IDENTIFIER) {
+				int ret_val = def_var(parser, get_current_sym_tab(parser), value.token->data.str, &sem_an->value);
+				if (ret_val != EXIT_SUCCESS)
+					return ret_val;
 
 				DLList* il = get_current_il_list(parser);
 				IL_ADD(il, OP_DEFVAR, addr_symbol(get_current_scope_prefix(parser), value.token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
@@ -1392,7 +1516,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					case TOKEN_KW_DOUBLE:
 					case TOKEN_KW_STRING:
 					case TOKEN_KW_BOOLEAN: {
-						sem_an->value->token->id = value.token->id;
+						sem_an->value->id->id_data->type = value.token->id;
 
 						SEM_NEXT_STATE(SEM_STATE_ASSIGN);
 					}
@@ -1406,65 +1530,65 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			DLList* il = get_current_il_list(parser);
 
 			if (value.value_type == VTYPE_ID) {  // Variable initialization
-				const char* prefix = get_current_scope_prefix(parser);
+				const char* prefix = get_var_scope_prefix(parser, sem_an->value->id->key);
 				const char* val_prefix = get_var_scope_prefix(parser, value.id->key);
 				token_e value_type = (token_e) value.id->id_data->type;
-				token_e id_type = sem_an->value->token->id;
+				token_e id_type = sem_an->value->id->id_data->type;
+
+				// Static variables start with 'S', we need to initialize it on global scope
+				if (sem_an->value->id->key[0] == 'S') {
+					il = global_il;
+				}
 
 				if (value_type == TOKEN_KW_INTEGER && id_type == TOKEN_KW_DOUBLE) {
-					IL_ADD(il, OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->token->data.str), addr_symbol(val_prefix, value.id->key),
+					IL_ADD(il, OP_INT2FLOAT, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(val_prefix, value.id->key),
 						   NO_ADDR, EXIT_INTERN_ERROR);
 				} else if (value_type == TOKEN_KW_DOUBLE && id_type == TOKEN_KW_INTEGER) {
-					IL_ADD(il, OP_FLOAT2R2EINT, addr_symbol(prefix, sem_an->value->token->data.str),
+					IL_ADD(il, OP_FLOAT2R2EINT, addr_symbol(prefix, sem_an->value->id->key),
 						   addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
 				} else if (are_types_compatible(value_type, id_type)) {
-					IL_ADD(il, OP_MOVE, addr_symbol(prefix, sem_an->value->token->data.str), addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_MOVE, addr_symbol(prefix, sem_an->value->id->key), addr_symbol(val_prefix, value.id->key), NO_ADDR, EXIT_INTERN_ERROR);
 				} else {
 					return EXIT_SEMANTIC_COMP_ERROR;
 				}
 
-				symtab = get_current_sym_tab(parser);
-				htab_item* item = htab_lookup(symtab, sem_an->value->token->data.str);
-				if (item == NULL)
-					return EXIT_INTERN_ERROR;
-				item->id_data->type = sem_an->value->token->id;
-				sem_an->value->token->id = TOKEN_IDENTIFIER;
+				// Cancel instruction list override
+				parser->il_override = NULL;
+				parser->static_var_decl = false;
 
 				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
-			} else if (value.value_type == VTYPE_TOKEN) {
-				switch (value.token->id) {	// Default initialization
-					case TOKEN_EOL: {
-						switch (sem_an->value->token->id)
-						{
-							case TOKEN_KW_INTEGER:
-								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->token->data.str), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, EXIT_INTERN_ERROR);
-								break;
-							case TOKEN_KW_BOOLEAN:
-								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->token->data.str), addr_constant(MAKE_TOKEN_BOOL(false)), NO_ADDR, EXIT_INTERN_ERROR);
-								break;
-							case TOKEN_KW_DOUBLE:
-								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->token->data.str), addr_constant(MAKE_TOKEN_REAL(0)), NO_ADDR, EXIT_INTERN_ERROR);
-								break;
-							case TOKEN_KW_STRING:
-								IL_ADD(il, OP_MOVE, addr_symbol(get_current_scope_prefix(parser), sem_an->value->token->data.str), addr_constant(MAKE_TOKEN_STRING("")), NO_ADDR, EXIT_INTERN_ERROR);
-								break;
-							default:
-								assert(!"I shouldn't be here");
-						}
-						symtab = get_current_sym_tab(parser);
-						htab_item* item = htab_lookup(symtab, sem_an->value->token->data.str);
-						if (item == NULL)
-							return EXIT_INTERN_ERROR;
-						item->id_data->type = sem_an->value->token->id;
-						sem_an->value->token->id = TOKEN_IDENTIFIER;
-						IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
-						sem_an->finished = true;
-						break;
-					}
-					default:
-						break;
+			} else if (value.value_type == VTYPE_TOKEN && value.token->id == TOKEN_EOL) {  // Default initialization
+
+				// Static variables start with 'S', we need to initialize it on global scope
+				if (sem_an->value->id->key[0] == 'S') {
+					il = global_il;
 				}
+
+				switch (sem_an->value->id->id_data->type)
+				{
+					case TOKEN_KW_INTEGER:
+						IL_ADD(il, OP_MOVE, addr_symbol(get_var_scope_prefix(parser, sem_an->value->id->key), sem_an->value->id->key), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, EXIT_INTERN_ERROR);
+						break;
+					case TOKEN_KW_BOOLEAN:
+						IL_ADD(il, OP_MOVE, addr_symbol(get_var_scope_prefix(parser, sem_an->value->id->key), sem_an->value->id->key), addr_constant(MAKE_TOKEN_BOOL(false)), NO_ADDR, EXIT_INTERN_ERROR);
+						break;
+					case TOKEN_KW_DOUBLE:
+						IL_ADD(il, OP_MOVE, addr_symbol(get_var_scope_prefix(parser, sem_an->value->id->key), sem_an->value->id->key), addr_constant(MAKE_TOKEN_REAL(0)), NO_ADDR, EXIT_INTERN_ERROR);
+						break;
+					case TOKEN_KW_STRING:
+						IL_ADD(il, OP_MOVE, addr_symbol(get_var_scope_prefix(parser, sem_an->value->id->key), sem_an->value->id->key), addr_constant(MAKE_TOKEN_STRING("")), NO_ADDR, EXIT_INTERN_ERROR);
+						break;
+					default:
+						assert(!"I shouldn't be here");
+				}
+
+				// Cancel instruction list override
+				parser->il_override = NULL;
+				parser->static_var_decl = false;
+
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+				sem_an->finished = true;
 			}
 		} END_STATE;
 
@@ -1716,21 +1840,23 @@ int sem_input(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				item = find_symbol(parser, value.token->data.str);
 				if (item == NULL)
 					return EXIT_SEMANTIC_PROG_ERROR;
+
+				const char* prefix = get_var_scope_prefix(parser, item->key);
 				DLList* il = get_current_il_list(parser);
 
 				IL_ADD(il, OP_WRITE, addr_constant(MAKE_TOKEN_STRING("?\\032")), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				switch (item->id_data->type) {
 					case TOKEN_KW_INTEGER:
-				IL_ADD(il, OP_READ, addr_symbol(F_LOCAL, value.token->data.str), addr_symbol("int",""), NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_READ, addr_symbol(prefix, item->key), addr_symbol("int",""), NO_ADDR, EXIT_INTERN_ERROR);
 						break;
 					case TOKEN_KW_BOOLEAN:
-				IL_ADD(il, OP_READ, addr_symbol(F_LOCAL, value.token->data.str), addr_symbol("bool",""), NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_READ, addr_symbol(prefix, item->key), addr_symbol("bool",""), NO_ADDR, EXIT_INTERN_ERROR);
 						break;
 					case TOKEN_KW_DOUBLE:
-				IL_ADD(il, OP_READ, addr_symbol(F_LOCAL, value.token->data.str), addr_symbol("float",""), NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_READ, addr_symbol(prefix, item->key), addr_symbol("float",""), NO_ADDR, EXIT_INTERN_ERROR);
 						break;
 					case TOKEN_KW_STRING:
-				IL_ADD(il, OP_READ, addr_symbol(F_LOCAL, value.token->data.str), addr_symbol("string",""), NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_READ, addr_symbol(prefix, item->key), addr_symbol("string",""), NO_ADDR, EXIT_INTERN_ERROR);
 						break;
 					default:
 						break;

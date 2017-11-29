@@ -297,6 +297,9 @@ Parser* parser_init(Scanner* scanner) {
 		return NULL;
 	}
 
+	parser->il_override = NULL;
+	parser->static_var_decl = false;
+
 	return parser;
 }
 

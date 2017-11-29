@@ -24,7 +24,9 @@ typedef struct parser_t {
     DLList* sem_an_stack;  /// Stack of semantic analyzers
     DLList* sym_tab_stack;  /// Stack of local symbol tables
     HashTable* sym_tab_global;  /// Global symbol table
-    HashTable* sym_tab_functions;  /// Functions symbol table3
+    HashTable* sym_tab_functions;  /// Functions symbol table
+    DLList* il_override;  /// If this variable is not NULL get_current_il_list will return it
+    bool static_var_decl;  /// Indicates if static variable is currently being defined
 } Parser;
 
 /**

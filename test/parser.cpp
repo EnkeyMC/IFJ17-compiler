@@ -308,6 +308,22 @@ TEST_F(ParserTestFixture, SuccFunctions28) {
 	EXPECT_EQ(parse(parser), EXIT_SUCCESS);
 }
 
+// ------
+// GLOBAL
+// ------
+
+TEST_F(ParserTestFixture, SuccGlobalSimple01) {
+	SetInputFile("test_files/syntax/global/simple_01.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SUCCESS);
+}
+
+TEST_F(ParserTestFixture, SuccGlobalSimple02) {
+	SetInputFile("test_files/syntax/global/simple_02.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SUCCESS);
+}
+
 // ----------
 // STATEMENTS
 // ----------

@@ -9,6 +9,7 @@
 
 #include <string.h>
 #include <malloc.h>
+#include <assert.h>
 #include "utils.h"
 #include "buffer.h"
 
@@ -37,4 +38,18 @@ char* generate_uid() {
 	strcpy(out, buffer->str);
 	buffer_free(buffer);
 	return out;
+}
+
+char* concat(const char* str1, const char* str2) {
+	assert(str1 != NULL);
+	assert(str2 != NULL);
+
+	char* result = (char*) malloc(sizeof(char) * (strlen(str1) + strlen(str2) + 1));
+	if (result == NULL)
+		return NULL;
+
+	strcpy(result, str1);
+	strcat(result, str2);
+
+	return result;
 }
