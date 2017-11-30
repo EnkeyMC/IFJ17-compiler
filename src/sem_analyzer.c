@@ -220,6 +220,11 @@ void sem_value_debug(void* val) {
 // SEMANTIC ACTIONS
 // ----------------
 
+/**
+ * Returns current top level symbol table
+ * @param parser Parser
+ * @return Top symbol table on local stack, else global symbol table
+ */
 static HashTable* get_current_sym_tab(Parser* parser) {
 	// Get local value table
 	HashTable* symtab = (HashTable*) dllist_get_first(parser->sym_tab_stack);
@@ -230,6 +235,12 @@ static HashTable* get_current_sym_tab(Parser* parser) {
 	return symtab;
 }
 
+/**
+ * Find first matching semantic action on stack of semantic actions
+ * @param parser Parser
+ * @param sem_action Semantic action to find
+ * @return SemAnalyzer with searched semantic action, NULL if not found
+ */
 static SemAnalyzer* find_sem_action(Parser *parser, semantic_action_f sem_action) {
 	dllist_activate_first(parser->sem_an_stack);
 	SemAnalyzer *sem_an;
@@ -245,6 +256,50 @@ static SemAnalyzer* find_sem_action(Parser *parser, semantic_action_f sem_action
 	return NULL;
 }
 
+/**
+ * Activates searching in semantic actions
+ * @param parser Parser
+ */
+static void sem_action_search_activate(Parser* parser) {
+	dllist_activate_first(parser->sem_an_stack);
+}
+
+/**
+ * Ends searching in semantic actions
+ * @param parser
+ */
+static void sem_action_search_end(Parser* parser) {
+	parser->sem_an_stack->active = NULL;
+}
+
+/**
+ * Search semantic action starting at the point of last found semantic action.
+ *
+ * @attention Needs to be activated by sem_action_search_activate before first search!
+ *
+ * @param parser Parser
+ * @param sem_action Semantic action to search
+ * @return SemAnalyzer with searched semantic action, NULL if not found or searching was not activated
+ */
+static SemAnalyzer* sem_action_search_next(Parser* parser, semantic_action_f sem_action) {
+	SemAnalyzer* sem_an;
+
+	while (dllist_active(parser->sem_an_stack)) {
+		sem_an = (SemAnalyzer*) dllist_get_active(parser->sem_an_stack);
+		dllist_succ(parser->sem_an_stack);
+		if (sem_an->sem_action == sem_action) {
+			return sem_an;
+		}
+	}
+
+	return NULL;
+}
+
+/**
+ * Get top level scope prefix for generating instructions ("LF@" or "GF@")
+ * @param parser Parser
+ * @return prefix from prefix array
+ */
 static const char* get_current_scope_prefix(Parser* parser) {
 	if (dllist_get_first(parser->sym_tab_stack) == NULL) {
 		return F_GLOBAL;
@@ -252,6 +307,12 @@ static const char* get_current_scope_prefix(Parser* parser) {
 	return F_LOCAL;
 }
 
+/**
+ * Get static variable name from program name and function context
+ * @param func_name Function name this variable is in
+ * @param var_name Variable name
+ * @return new string with static variable name, NULL on allocation error
+ */
 static char* get_static_var_name(const char* func_name, const char* var_name) {
 	char* static_prefix = concat("S", func_name);
 	if (static_prefix == NULL)
@@ -266,6 +327,13 @@ static char* get_static_var_name(const char* func_name, const char* var_name) {
 	return static_id;
 }
 
+/**
+ * Find symbol in symbol tables
+ * (key in returned item is not same as searched key for static variables)
+ * @param parser Parser
+ * @param key symbol id
+ * @return Found item in symbol table, NULL if not found
+ */
 static htab_item* find_symbol(Parser* parser, const char* key) {
 	dllist_activate_first(parser->sym_tab_stack);
 	htab_item* item;
@@ -292,6 +360,12 @@ static htab_item* find_symbol(Parser* parser, const char* key) {
 	return htab_find(parser->sym_tab_global, key);
 }
 
+/**
+ * Get scope prefix for given variable
+ * @param parser Parser
+ * @param key Variable name
+ * @return "GF@" or "LF@"
+ */
 static const char* get_var_scope_prefix(Parser* parser, const char* key) {
 	dllist_activate_first(parser->sym_tab_stack);
 	htab_item* item;
@@ -318,6 +392,11 @@ static const char* get_var_scope_prefix(Parser* parser, const char* key) {
 	return F_GLOBAL;
 }
 
+/**
+ * Create new scope and push it on stack of local symbol tables
+ * @param parser Parser
+ * @return new scope, NULL on error
+ */
 static HashTable* create_scope(Parser* parser) {
 	HashTable* local = htab_init(HTAB_INIT_SIZE);
 	if (local == NULL)
@@ -331,6 +410,10 @@ static HashTable* create_scope(Parser* parser) {
 	return local;
 }
 
+/**
+ * Remove top level scope from stack of local symbol tables
+ * @param parser Parser
+ */
 static void delete_scope(Parser* parser) {
 	if (dllist_empty(parser->sym_tab_stack))
 		return;
@@ -340,6 +423,12 @@ static void delete_scope(Parser* parser) {
 	}
 }
 
+/**
+ * Retrun whether given types are the same or can be implicitly casted to be compatible
+ * @param type1 Type 1
+ * @param type2 Type 2
+ * @return true if types are compatible, false otherwise
+ */
 static bool are_types_compatible(token_e type1, token_e type2) {
 	if (type1 == type2) {
 		return true;
@@ -351,6 +440,11 @@ static bool are_types_compatible(token_e type1, token_e type2) {
 	return false;
 }
 
+/**
+ * Get current instruction list, can be overridden by parser->il_override
+ * @param parser Parser
+ * @return instruction list
+ */
 static DLList* get_current_il_list(Parser* parser) {
 	if (parser->il_override != NULL)
 		return parser->il_override;
@@ -361,6 +455,7 @@ static DLList* get_current_il_list(Parser* parser) {
 		return main_il;
 	return global_il;
 }
+
 
 static int def_var(Parser* parser, HashTable* symtab, const char* id, SemValue** value_out) {
 	HashTable* symtab_func = parser->sym_tab_functions;
@@ -2459,39 +2554,63 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 
 	SemAnalyzer* sem_action = NULL;
-	DLList* il = get_current_il_list(parser);
+
+	static token_e last_loop_type = END_OF_TERMINALS;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_KW_DO)
+				value.token->id == TOKEN_KW_EXIT)
 			{
-				sem_action = find_sem_action(parser, sem_do_loop);
-				if (sem_action == NULL)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+				// Activate searching
+				sem_action_search_activate(parser);
 
-				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_LOOP_END, sem_action->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				// Prepare SemValue token to store last loop ID
+				sem_an->value = sem_value_init();
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
 
-				SEM_NEXT_STATE(SEM_STATE_EOL);
-				break;
-			}
-			else if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_KW_FOR)
-			{
-				sem_action = find_sem_action(parser, sem_for_loop);
-				if (sem_action == NULL)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+				sem_an->value->value_type = VTYPE_TOKEN;
+				sem_an->value->token = (Token*) malloc(sizeof(Token));
+				if (sem_an->value->token == NULL) {
+					free(sem_an->value);
+					return EXIT_INTERN_ERROR;
+				}
 
-				SEM_NEXT_STATE(SEM_STATE_EOL);
-				break;
+				sem_an->value->token->data.str = NULL;
+
+				SEM_NEXT_STATE(SEM_STATE_NEXT_LOOP_TYPE);
 			}
 		} END_STATE;
 
-		SEM_STATE(SEM_STATE_EOL) {
-			if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_EOL)
+		SEM_STATE(SEM_STATE_NEXT_LOOP_TYPE) {
+			if (value.value_type == VTYPE_TOKEN)
 			{
-				sem_an->finished = true;
+				if (value.token->id == TOKEN_KW_DO || value.token->id == TOKEN_KW_FOR) {
+					semantic_action_f sem_action_type = sem_for_loop;
+					if (value.token->id == TOKEN_KW_DO) {
+						sem_action_type = sem_do_loop;
+					}
+
+					if (last_loop_type != END_OF_TERMINALS && last_loop_type != value.token->id)
+						return EXIT_SYNTAX_ERROR;
+					last_loop_type = value.token->id;
+
+					sem_action = sem_action_search_next(parser, sem_action_type);
+					if (sem_action == NULL)
+						return EXIT_SEMANTIC_OTHER_ERROR;
+
+					// Store this loop ID as last
+					sem_an->value->token->data.str = sem_action->value->token->data.str;
+				} else if (value.token->id == TOKEN_EOL) {  // End of exit list
+					// Deactivate semantic action search
+					sem_action_search_end(parser);
+					// Jump to last found loop
+					DLList* il = get_current_il_list(parser);
+					IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_LOOP_END, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					last_loop_type = END_OF_TERMINALS;  // Reset static variable
+					sem_an->finished = true;
+				}
 			}
 		} END_STATE;
 
@@ -2503,41 +2622,65 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
-	// TODO add instructions
+
 	SemAnalyzer* sem_action = NULL;
-	DLList* il = get_current_il_list(parser);
+
+	static token_e last_loop_type = END_OF_TERMINALS;
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
 			if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_KW_DO)
+				value.token->id == TOKEN_KW_CONTINUE)
 			{
-				sem_action = find_sem_action(parser, sem_do_loop);
-				if (sem_action == NULL)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+				// Activate searching
+				sem_action_search_activate(parser);
 
-				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_LOOP_COND, sem_action->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				// Prepare SemValue token to store last loop ID
+				sem_an->value = sem_value_init();
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
 
-				SEM_NEXT_STATE(SEM_STATE_EOL);
-				break;
-			}
-			else if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_KW_FOR)
-			{
-				sem_action = find_sem_action(parser, sem_for_loop);
-				if (sem_action == NULL)
-					return EXIT_SEMANTIC_OTHER_ERROR;
+				sem_an->value->value_type = VTYPE_TOKEN;
+				sem_an->value->token = (Token*) malloc(sizeof(Token));
+				if (sem_an->value->token == NULL) {
+					free(sem_an->value);
+					return EXIT_INTERN_ERROR;
+				}
 
-				SEM_NEXT_STATE(SEM_STATE_EOL);
-				break;
+				sem_an->value->token->data.str = NULL;
+
+				SEM_NEXT_STATE(SEM_STATE_NEXT_LOOP_TYPE);
 			}
 		} END_STATE;
 
-		SEM_STATE(SEM_STATE_EOL) {
-			if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_EOL)
+		SEM_STATE(SEM_STATE_NEXT_LOOP_TYPE) {
+			if (value.value_type == VTYPE_TOKEN)
 			{
-				sem_an->finished = true;
+				if (value.token->id == TOKEN_KW_DO || value.token->id == TOKEN_KW_FOR) {
+					semantic_action_f sem_action_type = sem_for_loop;
+					if (value.token->id == TOKEN_KW_DO) {
+						sem_action_type = sem_do_loop;
+					}
+
+					if (last_loop_type != END_OF_TERMINALS && last_loop_type != value.token->id)
+						return EXIT_SYNTAX_ERROR;
+					last_loop_type = value.token->id;
+
+					sem_action = sem_action_search_next(parser, sem_action_type);
+					if (sem_action == NULL)
+						return EXIT_SEMANTIC_OTHER_ERROR;
+
+					// Store this loop ID as last
+					sem_an->value->token->data.str = sem_action->value->token->data.str;
+				} else if (value.token->id == TOKEN_EOL) {  // End of exit list
+					// Deactivate semantic action search
+					sem_action_search_end(parser);
+					// Jump to last found loop
+					DLList* il = get_current_il_list(parser);
+					IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_LOOP_COND, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					last_loop_type = END_OF_TERMINALS;  // Reset static variable
+					sem_an->finished = true;
+				}
 			}
 		} END_STATE;
 

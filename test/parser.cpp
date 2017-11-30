@@ -455,6 +455,12 @@ TEST_F(ParserTestFixture, SuccLoops18) {
 	EXPECT_EQ(parse(parser), EXIT_SUCCESS);
 }
 
+TEST_F(ParserTestFixture, SuccLoops19) {
+	SetInputFile("test_files/syntax/loops/19.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
+}
+
 // ----------
 // CONDITIONS
 // ----------

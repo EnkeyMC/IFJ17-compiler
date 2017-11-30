@@ -56,7 +56,8 @@ typedef enum {
 	SEM_STATE_OPERATOR,
 	SEM_STATE_OPERAND,
 	SEM_STATE_LIST,
-	SEM_STATE_FUNC_ID
+	SEM_STATE_FUNC_ID,
+	SEM_STATE_NEXT_LOOP_TYPE
 } sem_state_e;
 
 // Forward declarations
