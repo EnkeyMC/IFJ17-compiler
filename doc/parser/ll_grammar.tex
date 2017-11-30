@@ -12,9 +12,7 @@
 \begin{document}
 %###############################################################################
 %###############################################################################
-\section{CHANGE LOG v1.9}
-Možnost nekonečného do-loop cyklu při vynechání podmínky.
-\section{LL Grammar IFJ17 (v1.9)}
+\section{LL Grammar IFJ17 (v2.0)}
 \begin{eqnarray}
 Line		&	\rightarrow		& GlobalStmt\quad ScopeStmt\quad  LineEnd	 \\
 %###############################################################################
@@ -94,12 +92,14 @@ TestTypeStart & \rightarrow	&	\textbf{WHILE}\\
 &		|		& \textcolor{green1}{\textbf{UNTIL}\quad Expression} \\
 &	|	&\textcolor{green1}{\varepsilon}  \\
 %###############################################################################
-\textcolor{green1}{ExitStmt} & \rightarrow & \textcolor{green1}{\textbf{EXIT}\quad LoopType}	\\
+\textcolor{green1}{ExitStmt} & \rightarrow & \textcolor{green1}{\textbf{EXIT}\quad LoopType\quad LoopTypeEnd}	\\
 %###############################################################################
-\textcolor{green1}{ContinueStmt} & \rightarrow & \textcolor{green1}{\textbf{CONTINUE}\quad LoopType}	\\
+\textcolor{green1}{ContinueStmt} & \rightarrow & \textcolor{green1}{\textbf{CONTINUE}\quad LoopType\quad LoopTypeEnd}	\\
 %###############################################################################
-\textcolor{green1}{Looptype} & \rightarrow & \textcolor{green1}{\textbf{DO}}\\
+\textcolor{green1}{LoopType} & \rightarrow & \textcolor{green1}{\textbf{DO}}\\
 &	|		&	\textcolor{green1}{\textbf{FOR}}   \\
+\textcolor{green1}{LoopTypeEnd} & \rightarrow & \textcolor{green1}{\textbf{,}\quad LoopType \quad LoopTypeEnd}\\
+&	|		&	\textcolor{green1}{\varepsilon}   \\
 %###############################################################################
 \textcolor{green1}{ForStmt} &	 \rightarrow	&  \textcolor{green1}{\textbf{FOR}\quad \textbf{ID}\quad TypeOpt\quad `=`\quad Expression\quad \textbf{TO}\quad Expression\quad StepOpt\quad \textbf{EOL}\quad StmtSeq\quad \textbf{NEXT}\quad IdOpt\quad} \\
 \textcolor{green1}{TypeOpt} & \rightarrow  & \textcolor{green1}{\textbf{AS}\quad Type} \\
