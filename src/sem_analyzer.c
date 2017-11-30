@@ -1393,6 +1393,9 @@ int sem_expr_assign(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (op == NULL)
 					return EXIT_INTERN_ERROR;
 
+				if (op->id == TOKEN_DIVR_ASIGN && sem_an->value->id->id_data->type == TOKEN_KW_STRING)
+					return EXIT_SEMANTIC_COMP_ERROR;
+
 				SEM_NEXT_STATE(SEM_STATE_OPERAND);
 			}
 		} END_STATE;
