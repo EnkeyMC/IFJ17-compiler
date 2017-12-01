@@ -21,7 +21,7 @@ typedef void* Block;
 
 struct {
 	Block* memory;
-	unsigned last_free;
+	unsigned first_free;
 	unsigned size;
 } mm;
 
@@ -40,15 +40,15 @@ static void memory_expand() {
 }
 
 static Block* get_free_memory_item() {
-	if (mm.last_free >= mm.size - 1) {
+	if (mm.first_free >= mm.size - 1) {
 		memory_expand();
 	}
 
-	return &mm.memory[mm.last_free++];
+	return &mm.memory[mm.first_free++];
 }
 
 static Block* memory_item_find(void* ptr) {
-	for (unsigned i = 0; i < mm.last_free; ++i) {
+	for (unsigned i = 0; i < mm.first_free; ++i) {
 		if (mm.memory[i] == ptr)
 			return &mm.memory[i];
 	}
@@ -65,14 +65,14 @@ void mem_manager_init() {
 		exit(EXIT_INTERN_ERROR);
 
 	mm.size = MEMORY_CHUNK;
-	mm.last_free = 0;
+	mm.first_free = 0;
 }
 
 void mem_manager_free() {
-	debug("In use at exit: %d blocks\n", mm.last_free);
+	debug("In use at exit: %d blocks\n", mm.first_free);
 
-	while (mm.last_free > 0) {
-		free(mm.memory[mm.last_free - 1]);
+	for (; mm.first_free > 0; mm.first_free--) {
+		free(mm.memory[mm.first_free - 1]);
 	}
 
 	free(mm.memory);
@@ -106,6 +106,6 @@ void mm_free(void* ptr) {
 	assert(ptr != NULL);
 	Block * item = memory_item_find(ptr);
 
-	mm.last_free--;
-	memory_item_swap(item, &mm.memory[mm.last_free]);
+	mm.first_free--;
+	memory_item_swap(item, &mm.memory[mm.first_free]);
 }
