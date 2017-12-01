@@ -13,6 +13,7 @@
 
 #include "grammar.h"
 #include "token.h"
+#include "memory_manager.h"
 
 /// Add epsilon rule to grammar, cleanup on failure
 #define ADD_EPSILON_RULE(nt)  if (!grammar_add_epsilon_rule(curr_idx++, nt)) { grammar_free(); return false; }
@@ -40,14 +41,14 @@ static void array_reverse(unsigned* array, int length) {
 static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 	assert(idx < NUM_OF_RULES);
 
-	Rule* rule = (Rule*) malloc(sizeof(Rule));
+	Rule* rule = (Rule*) mm_malloc(sizeof(Rule));
 	if (rule == NULL) {
 		return false;
 	}
 
-	rule->production = (unsigned*) malloc(sizeof(unsigned));
+	rule->production = (unsigned*) mm_malloc(sizeof(unsigned));
 	if (rule->production == NULL) {
-		free(rule);
+		mm_free(rule);
 		return false;
 	}
 
@@ -63,16 +64,16 @@ static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 static bool grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_action, int va_num, ...) {
 	assert(idx < NUM_OF_RULES);
 
-	Rule* rule = (Rule*) malloc(sizeof(Rule));
+	Rule* rule = (Rule*) mm_malloc(sizeof(Rule));
 	if (rule == NULL) {
 		return false;
 	}
 
 
-	rule->production = (unsigned*) malloc(sizeof(unsigned) * (va_num + 1));
+	rule->production = (unsigned*) mm_malloc(sizeof(unsigned) * (va_num + 1));
 
 	if (rule->production == NULL) {
-		free(rule);
+		mm_free(rule);
 		return false;
 	}
 
@@ -98,8 +99,8 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_a
 void rule_free(Rule* rule) {
 	if (rule != NULL) {
 		if (rule->production != NULL)
-			free(rule->production);
-		free(rule);
+			mm_free(rule->production);
+		mm_free(rule);
 	}
 }
 

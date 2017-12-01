@@ -10,9 +10,10 @@
 #include <malloc.h>
 #include <assert.h>
 #include "dllist.h"
+#include "memory_manager.h"
 
 DLList* dllist_init(free_data_f free_data) {
-	DLList* l = (DLList*) malloc(sizeof(DLList));
+	DLList* l = (DLList*) mm_malloc(sizeof(DLList));
 	if (l == NULL) {
 		return NULL;
 	}
@@ -37,7 +38,7 @@ void dllist_free(DLList *l) {
 		}
 	}
 
-	free(l);
+	mm_free(l);
 }
 
 DLList* dllist_copy(DLList *l) {
@@ -50,7 +51,7 @@ DLList* dllist_copy(DLList *l) {
 	dllist_activate_first(l);
 	if (dllist_active(l)) {
 		if (! dllist_insert_first(l_copy, dllist_get_active(l))) {
-			free(l_copy);
+			mm_free(l_copy);
 			return NULL;
 		}
 		dllist_succ(l);
@@ -69,7 +70,7 @@ DLList* dllist_copy(DLList *l) {
 bool dllist_insert_first(DLList *l, void *data) {
 	assert(l != NULL);
 
-	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
+	DLListItem* new_item = (DLListItem*) mm_malloc(sizeof(DLListItem));
 	if (new_item == NULL) {
 		return false;
 	}
@@ -92,7 +93,7 @@ bool dllist_insert_first(DLList *l, void *data) {
 bool dllist_insert_last(DLList *l, void *data) {
 	assert(l != NULL);
 
-	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
+	DLListItem* new_item = (DLListItem*) mm_malloc(sizeof(DLListItem));
 	if (new_item == NULL) {
 		return false;
 	}
@@ -118,7 +119,7 @@ bool dllist_post_insert(DLList *l, void *data) {
 	if (l->active == NULL)
 		return false;
 
-	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
+	DLListItem* new_item = (DLListItem*) mm_malloc(sizeof(DLListItem));
 	if (new_item == NULL) {
 		return false;
 	}
@@ -144,7 +145,7 @@ bool dllist_pre_insert(DLList *l, void *data) {
 	if (l->active == NULL)
 		return false;
 
-	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
+	DLListItem* new_item = (DLListItem*) mm_malloc(sizeof(DLListItem));
 	if (new_item == NULL) {
 		return false;
 	}
@@ -221,7 +222,7 @@ void* dllist_delete_first(DLList *l) {
 	else
 		l->last = NULL;
 
-	free(to_delete);
+	mm_free(to_delete);
 	return data;
 }
 
@@ -243,7 +244,7 @@ void* dllist_delete_last(DLList *l) {
 	else
 		l->first = NULL;
 
-	free(to_delete);
+	mm_free(to_delete);
 	return data;	
 }
 
@@ -279,7 +280,7 @@ void* dllist_delete_and_succ(DLList *l) {
 
 	l->active = l->active->next;
 
-	free(to_delete);
+	mm_free(to_delete);
 	return data;
 }
 
@@ -315,7 +316,7 @@ void* dllist_delete_and_pred(DLList *l) {
 
 	l->active = l->active->prev;
 
-	free(to_delete);
+	mm_free(to_delete);
 	return data;
 }
 

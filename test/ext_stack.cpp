@@ -9,6 +9,7 @@ protected:
 	ExtStack* s = nullptr;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		expr_grammar_init();
 		s = ext_stack_init();
 	}
@@ -16,6 +17,7 @@ protected:
 	virtual void TearDown() {
 		ext_stack_free(s);
 		expr_grammar_free();
+		mem_manager_free();
 	}
 };
 

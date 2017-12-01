@@ -21,6 +21,7 @@
 #include "buffer.h"
 #include "debug.h"
 #include "scanner.h"
+#include "memory_manager.h"
 
 
 /**
@@ -220,26 +221,26 @@ static bool add_built_ins(HashTable* htab) {
 }
 
 Parser* parser_init(Scanner* scanner) {
-	Parser* parser = (Parser*) malloc(sizeof(Parser));
+	Parser* parser = (Parser*) mm_malloc(sizeof(Parser));
 	if (parser == NULL)
 		return NULL;
 
 	parser->scanner = scanner;
 
 	if (!grammar_init()) {
-		free(parser);
+		mm_free(parser);
 		return NULL;
 	}
 
 	if (!expr_grammar_init()) {
-		free(parser);
+		mm_free(parser);
 		grammar_free();
 		return NULL;
 	}
 
 	parser->dtree_stack = stack_init(30);
 	if (parser->dtree_stack == NULL) {
-		free(parser);
+		mm_free(parser);
 		grammar_free();
 		expr_grammar_free();
 		return NULL;
@@ -248,7 +249,7 @@ Parser* parser_init(Scanner* scanner) {
 	parser->sym_tab_stack = dllist_init(htab_free);
 	if (parser->sym_tab_stack == NULL) {
 		stack_free(parser->dtree_stack, NULL);
-		free(parser);
+		mm_free(parser);
 		grammar_free();
 		expr_grammar_free();
 		return NULL;
@@ -258,7 +259,7 @@ Parser* parser_init(Scanner* scanner) {
 	if (parser->sym_tab_global == NULL) {
 		dllist_free(parser->sym_tab_stack);
 		stack_free(parser->dtree_stack, NULL);
-		free(parser);
+		mm_free(parser);
 		grammar_free();
 		expr_grammar_free();
 		return NULL;
@@ -269,7 +270,7 @@ Parser* parser_init(Scanner* scanner) {
 		htab_free(parser->sym_tab_global);
 		dllist_free(parser->sym_tab_stack);
 		stack_free(parser->dtree_stack, NULL);
-		free(parser);
+		mm_free(parser);
 		grammar_free();
 		expr_grammar_free();
 		return NULL;
@@ -278,7 +279,7 @@ Parser* parser_init(Scanner* scanner) {
 		htab_free(parser->sym_tab_global);
 		dllist_free(parser->sym_tab_stack);
 		stack_free(parser->dtree_stack, NULL);
-		free(parser);
+		mm_free(parser);
 		grammar_free();
 		expr_grammar_free();
 		return NULL;
@@ -291,7 +292,7 @@ Parser* parser_init(Scanner* scanner) {
 		htab_free(parser->sym_tab_global);
 		dllist_free(parser->sym_tab_stack);
 		stack_free(parser->dtree_stack, NULL);
-		free(parser);
+		mm_free(parser);
 		grammar_free();
 		expr_grammar_free();
 		return NULL;
@@ -313,7 +314,7 @@ void parser_free(Parser* parser) {
 	grammar_free();
 	expr_grammar_free();
 	stack_free(parser->dtree_stack, NULL);
-	free(parser);
+	mm_free(parser);
 }
 
 int parse(Parser* parser) {

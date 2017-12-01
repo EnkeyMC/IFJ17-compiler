@@ -10,11 +10,13 @@ protected:
 	int dominant = 0;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		sparse_table = sparse_table_init(nrows, ncols, dominant);
 	}
 
 	virtual void TearDown() {
 		EXPECT_NO_FATAL_FAILURE(sparse_table_free(sparse_table));
+		mem_manager_free();
 	}
 };
 
@@ -26,6 +28,7 @@ protected:
 	int dominant = 0;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		sparse_table = sparse_table_init(nrows, ncols, dominant);
 
 		sparse_table_set(sparse_table, 0, 0, 1);
@@ -36,6 +39,7 @@ protected:
 
 	virtual void TearDown() {
 		EXPECT_NO_FATAL_FAILURE(sparse_table_free(sparse_table));
+		mem_manager_free();
 	}
 };
 

@@ -7,6 +7,7 @@ protected:
 	Stack* stack = nullptr;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		stack = stack_init(0);
 	}
 
@@ -14,6 +15,7 @@ protected:
 		if (stack != nullptr) {
 			EXPECT_NO_FATAL_FAILURE(stack_free(stack, FreeData));
 		}
+		mem_manager_free();
 	}
 
 	static void FreeData(void* data) {

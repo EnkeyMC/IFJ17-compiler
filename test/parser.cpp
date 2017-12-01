@@ -22,6 +22,7 @@ protected:
 	FILE* test_file;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		scanner = scanner_init();
 		parser = parser_init(scanner);
 	}
@@ -30,6 +31,7 @@ protected:
 		fclose(test_file);
 		scanner_free(scanner);
 		parser_free(parser);
+		mem_manager_free();
 	}
 
 	void SetInputFile(const char *file) {
@@ -43,6 +45,7 @@ protected:
 };
 
 TEST(UIDGeneratorTest, UIDS200) {
+	mem_manager_init();
 	constexpr int n = 500;
 	char* uids[n];
 	for (int i = 0; i < n; i++) {
@@ -54,8 +57,9 @@ TEST(UIDGeneratorTest, UIDS200) {
 	}
 
 	for (int i = 0; i < n; i++) {
-		free(uids[i]);
+		mm_free(uids[i]);
 	}
+	mem_manager_free();
 }
 
 TEST_F(ParserTestFixture, SuccEmpty) {

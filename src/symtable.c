@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "symtable.h"
+#include "memory_manager.h"
 
 /**
  * Hash function djb2 (http://www.cse.yorku.ca/~oz/hash.html)
@@ -29,7 +30,7 @@ static unsigned long hash_func(const char *str) {
 }
 
 HashTable* htab_init(size_t bucket_count) {
-	HashTable* htab_ptr = (HashTable*) malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item*));
+	HashTable* htab_ptr = (HashTable*) mm_malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item*));
 	if (htab_ptr == NULL)
 		return NULL;
 	htab_ptr->bucket_count = bucket_count;
@@ -53,18 +54,18 @@ static void htab_clear(HashTable *htab_ptr, bool func) {
 		htab_item *next;
 		for (prev = htab_ptr->ptr[i]; prev != NULL; prev = next) {
 			next = prev->next;
-			free(prev->key);
+			mm_free(prev->key);
 			if (func) {
 				buffer_free(prev->func_data->par_types);
 				buffer_free(prev->func_data->par_names);
-				free(prev->func_data);
+				mm_free(prev->func_data);
 			}
 			else
-				free(prev->id_data);
-			free(prev);
+				mm_free(prev->id_data);
+			mm_free(prev);
 		}
 	}
-	free(htab_ptr);
+	mm_free(htab_ptr);
 }
 
 void htab_free(void* htab_ptr) {
@@ -110,16 +111,16 @@ static bool htab_remove_item(HashTable *htab_ptr, const char *key, bool func) {
 	htab_item * tmp = *item;
 	*item = (*item)->next;
 
-	free(tmp->key);
+	mm_free(tmp->key);
 	if (func) {
 		buffer_free(tmp->func_data->par_types);
 		buffer_free(tmp->func_data->par_names);
-		free(tmp->func_data);
+		mm_free(tmp->func_data);
 	}
 	else
-		free(tmp->id_data);
+		mm_free(tmp->id_data);
 
-	free(tmp);
+	mm_free(tmp);
 	return true;
 }
 
@@ -137,25 +138,25 @@ bool htab_func_remove(HashTable* htab_ptr, const char *key) {
  * @return true on succes, false if allocation fails
  */
 static bool alloc_func_item(htab_item* item) {
-	item->func_data = (htab_func_item*) malloc(sizeof(htab_func_item));
+	item->func_data = (htab_func_item*) mm_malloc(sizeof(htab_func_item));
 	if (item->func_data == NULL) {
-		free(item->key);
-		free(item);
+		mm_free(item->key);
+		mm_free(item);
 		return false;
 	}
 	item->func_data->par_types = buffer_init(BUFFER_INIT_SIZE);
 	if (item->func_data->par_types == NULL) {
-		free(item->key);
-		free(item->func_data);
-		free(item);
+		mm_free(item->key);
+		mm_free(item->func_data);
+		mm_free(item);
 		return false;
 	}
 	item->func_data->par_names = buffer_init(BUFFER_INIT_SIZE);
 	if (item->func_data->par_names == NULL) {
-		free(item->key);
+		mm_free(item->key);
 		buffer_free(item->func_data->par_types);
-		free(item->func_data);
-		free(item);
+		mm_free(item->func_data);
+		mm_free(item);
 		return false;
 	}
 	item->func_data->rt = END_OF_TERMINALS;
@@ -182,15 +183,15 @@ static htab_item * htab_add_item(HashTable *htab_ptr, const char *key, bool func
 	}
 
 	// Allocate memory for new item
-	htab_item* new_item = (htab_item*) malloc(sizeof(htab_item));
+	htab_item* new_item = (htab_item*) mm_malloc(sizeof(htab_item));
 	if (new_item == NULL)
 		return NULL;
 
 	// Alllocate memory for the key
 	size_t key_length = strlen(key) + 1;
-	new_item->key = (char*) malloc(sizeof(char) * key_length);
+	new_item->key = (char*) mm_malloc(sizeof(char) * key_length);
 	if (new_item->key == NULL) {
-		free(new_item);
+		mm_free(new_item);
 		return NULL;
 	}
 	strncpy(new_item->key, key, key_length); // Copy the key into the new item
@@ -201,10 +202,10 @@ static htab_item * htab_add_item(HashTable *htab_ptr, const char *key, bool func
 			return NULL;
 	}
 	else {
-		new_item->id_data = (htab_id_item*) malloc(sizeof(htab_id_item));
+		new_item->id_data = (htab_id_item*) mm_malloc(sizeof(htab_id_item));
 		if (new_item->id_data == NULL) {
-			free(new_item->key);
-			free(new_item);
+			mm_free(new_item->key);
+			mm_free(new_item);
 			return NULL;
 		}
 		new_item->id_data->type = END_OF_TERMINALS;
@@ -358,7 +359,7 @@ char* func_get_param_name(htab_item* item, unsigned idx) {
 	while (*(start + len) != '#')
 		len++;
 
-	char* param_name = (char*) malloc(sizeof(char) * (len + 1));
+	char* param_name = (char*) mm_malloc(sizeof(char) * (len + 1));
 	if (param_name == NULL)
 		return NULL;
 

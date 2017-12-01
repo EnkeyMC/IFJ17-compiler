@@ -12,13 +12,14 @@
 #include <string.h>
 #include "buffer.h"
 #include "debug.h"
+#include "memory_manager.h"
 
 
 static bool buffer_realloc(Buffer* b, size_t size) {
 	if (size == b->buffer_size)
 		return true;
 
-	b->str = (char*) realloc(b->str, size);
+	b->str = (char*) mm_realloc(b->str, size);
 	if (b->str == NULL) {
 		b->buffer_size = 0;
 		b->len = 0;
@@ -37,16 +38,16 @@ Buffer* buffer_init(size_t size) {
 	if (size < 1)
 		size = 1;
 
-	Buffer* b = (Buffer*) malloc(sizeof(Buffer));
+	Buffer* b = (Buffer*) mm_malloc(sizeof(Buffer));
 	if (b == NULL)
 		return NULL;
 
 	b->buffer_size = size;
 	b->len = 0;
-	b->str = (char*) malloc(sizeof(char) * b->buffer_size);
+	b->str = (char*) mm_malloc(sizeof(char) * b->buffer_size);
 
 	if (b->str == NULL) {
-		free(b);
+		mm_free(b);
 		return NULL;
 	}
 
@@ -58,8 +59,8 @@ Buffer* buffer_init(size_t size) {
 void buffer_free(Buffer* b) {
 	assert(b != NULL);
 	if (b->str != NULL)
-		free(b->str);
-	free(b);
+		mm_free(b->str);
+	mm_free(b);
 }
 
 bool buffer_append_c(Buffer* b, char c) {

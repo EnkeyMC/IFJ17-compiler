@@ -53,7 +53,7 @@ static Block* memory_item_find(void* ptr) {
 			return &mm.memory[i];
 	}
 
-	debugs("ERROR: Memory was not allocated or was already freed!");
+	debugs("(Memory Manager) ERROR: Memory was not allocated or was already freed!");
 	exit(EXIT_INTERN_ERROR);
 }
 
@@ -69,11 +69,12 @@ void mem_manager_init() {
 }
 
 void mem_manager_free() {
-	debug("In use at exit: %d blocks\n", mm.first_free);
-
+	debug("(Memory Manager) In use at exit: %d blocks\n", mm.first_free);
+#ifndef MEM_MNG_NO_FREE
 	for (; mm.first_free > 0; mm.first_free--) {
 		free(mm.memory[mm.first_free - 1]);
 	}
+#endif
 
 	free(mm.memory);
 }
@@ -105,6 +106,7 @@ void* mm_realloc(void* ptr, size_t size) {
 void mm_free(void* ptr) {
 	assert(ptr != NULL);
 	Block * item = memory_item_find(ptr);
+	free(*item);
 
 	mm.first_free--;
 	memory_item_swap(item, &mm.memory[mm.first_free]);

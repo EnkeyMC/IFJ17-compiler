@@ -19,12 +19,14 @@ protected:
 	FILE* test_file;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		scanner = scanner_init();
 	}
 
 	virtual void TearDown() {
 		fclose(test_file);
 		scanner_free(scanner);
+		mem_manager_free();
 	}
 
 	void SetInputFile(const char *file) {
