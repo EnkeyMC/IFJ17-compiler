@@ -71,12 +71,20 @@ typedef struct if_val_t {
     char* elseif_id;  // Current elseif ID
 } IfValue;
 
+typedef struct for_val_t {
+    struct htab_item_t* iterator;  // FOR LOOP iterator variable ID
+    char* uid;  // Current FOR LOOP ID
+	char* endval_id;	// End value identifier
+	char* step_id;	// Step value identifier
+} ForValue;
+
 typedef enum {
 	VTYPE_TOKEN,
 	VTYPE_ID,
 	VTYPE_LIST,
 	VTYPE_EXPR,
-    VTYPE_IF
+    VTYPE_IF,
+    VTYPE_FOR
 } value_type_e;
 
 typedef struct sem_value_t {
@@ -87,6 +95,7 @@ typedef struct sem_value_t {
 		DLList* list;
 		int expr_type;	/// Should be token_e but can't include token.h
         IfValue if_val;
+		ForValue for_val;
 	};
 } SemValue;
 

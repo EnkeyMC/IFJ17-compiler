@@ -299,6 +299,7 @@ Parser* parser_init(Scanner* scanner) {
 
 	parser->il_override = NULL;
 	parser->static_var_decl = false;
+	parser->step_found = false;
 
 	return parser;
 }

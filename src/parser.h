@@ -27,6 +27,7 @@ typedef struct parser_t {
     HashTable* sym_tab_functions;  /// Functions symbol table
     DLList* il_override;  /// If this variable is not NULL get_current_il_list will return it
     bool static_var_decl;  /// Indicates if static variable is currently being defined
+	bool step_found; /// Indicates whether for loop has explicitly specified step value
 } Parser;
 
 /**
