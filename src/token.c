@@ -16,7 +16,7 @@
 #include "memory_manager.h"
 
 Token* token_init() {
-	return mm_malloc(sizeof(Token));
+	return (Token*) mm_malloc(sizeof(Token));
 }
 
 void token_free(Token* token) {
