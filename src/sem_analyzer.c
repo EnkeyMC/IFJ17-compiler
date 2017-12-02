@@ -3000,7 +3000,10 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						return EXIT_SEMANTIC_OTHER_ERROR;
 
 					// Store this loop ID as last
-					sem_an->value->token->data.str = sem_action->value->token->data.str;
+					if (last_loop_type == TOKEN_KW_DO)
+						sem_an->value->token->data.str = sem_action->value->token->data.str;
+					else
+						sem_an->value->token->data.str = sem_action->value->for_val.uid;
 				} else if (value.token->id == TOKEN_EOL) {  // End of exit list
 					// Deactivate semantic action search
 					sem_action_search_end(parser);
@@ -3070,7 +3073,10 @@ int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						return EXIT_SEMANTIC_OTHER_ERROR;
 
 					// Store this loop ID as last
-					sem_an->value->token->data.str = sem_action->value->token->data.str;
+					if (last_loop_type == TOKEN_KW_DO)
+						sem_an->value->token->data.str = sem_action->value->token->data.str;
+					else
+						sem_an->value->token->data.str = sem_action->value->for_val.uid;
 				} else if (value.token->id == TOKEN_EOL) {  // End of exit list
 					// Deactivate semantic action search
 					sem_action_search_end(parser);
