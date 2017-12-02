@@ -3044,12 +3044,7 @@ int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 
 				sem_an->value->value_type = VTYPE_TOKEN;
-				sem_an->value->token = (Token*) mm_malloc(sizeof(Token));
-				if (sem_an->value->token == NULL) {
-					mm_free(sem_an->value);
-					return EXIT_INTERN_ERROR;
-				}
-
+				sem_an->value->token = token_init();
 				sem_an->value->token->data.str = NULL;
 
 				SEM_NEXT_STATE(SEM_STATE_NEXT_LOOP_TYPE);

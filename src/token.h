@@ -117,6 +117,12 @@ typedef struct token_t {
 } Token;
 
 /**
+ * Allocate new token
+ * @return new Token
+ */
+Token* token_init();
+
+/**
  * Free token
  * @param token
  */

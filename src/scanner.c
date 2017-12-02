@@ -173,9 +173,7 @@ Token* scanner_get_token(Scanner* scanner) {
 	}
 
 	int ch;
-	Token* token = (Token*) mm_malloc(sizeof(Token));
-	if (token == NULL)
-		return NULL;
+	Token* token = token_init();
 	token->id = LEX_ERROR;
 	token->data.str = NULL;
 

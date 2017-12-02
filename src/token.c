@@ -15,6 +15,10 @@
 #include "debug.h"
 #include "memory_manager.h"
 
+Token* token_init() {
+	return mm_malloc(sizeof(Token));
+}
+
 void token_free(Token* token) {
 	if (token == NULL)
 		return;
@@ -33,11 +37,7 @@ Token* token_copy(Token* token) {
 	if (token == NULL)
 		return NULL;
 
-	Token* copy = (Token*) mm_malloc(sizeof(Token));
-	if (copy == NULL) {
-		return NULL;
-	}
-
+	Token* copy = token_init();
 	copy->id = token->id;
 
 	switch (token->id) {
