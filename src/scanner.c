@@ -26,14 +26,8 @@
 
 Scanner* scanner_init() {
 	Scanner* scanner = (Scanner*) mm_malloc(sizeof(Scanner));
-	if (scanner == NULL)
-		return NULL;
 
 	scanner->buffer = buffer_init(BUFFER_CHUNK);
-	if (scanner->buffer == NULL) {
-		mm_free(scanner);
-		return NULL;
-	}
 
 	scanner->stream = stdin;
 	scanner->backlog_token = NULL;
@@ -48,18 +42,15 @@ void scanner_free(Scanner* scanner) {
 	mm_free(scanner);
 }
 
-static bool str_duplicate(char ** str_dst, const char* str_src) {
+static void str_duplicate(char ** str_dst, const char* str_src) {
 	assert(str_dst != NULL);
 	assert(str_src != NULL);
 	// TODO move to utils
 	// Allocate memory for string
 	*str_dst = (char*) mm_malloc(sizeof(char) * (strlen(str_src) + 1));
-	if (*str_dst == NULL) {
-		return false;
-	}
+
 	// Copy string to token
 	strcpy(*str_dst, str_src);
-	return true;
 }
 
 static token_e get_string_token(const char* str) {
@@ -148,10 +139,6 @@ char* convert_white_char(const char* str) {
 		buffer_append_str(buffer, esc_seq);
  	}
 	esc_str = (char*) mm_malloc(sizeof(char)*(buffer->len+1));
-	if (esc_str == NULL) {
-		buffer_free(buffer);
-		return  NULL;
-	}
 	strcpy(esc_str, buffer->str);
 	buffer_free(buffer);
 
@@ -168,9 +155,7 @@ Token* scanner_get_token(Scanner* scanner) {
 		return backlog;
 	}
 
-	if (!buffer_clear(scanner->buffer)) {
-		return NULL;
-	}
+	buffer_clear(scanner->buffer);
 
 	int ch;
 	Token* token = token_init();
@@ -450,10 +435,7 @@ Token* scanner_get_token(Scanner* scanner) {
 				token->id = get_string_token(scanner->buffer->str);
 
 				if (token->id == TOKEN_IDENTIFIER) {
-					if (!str_duplicate(&token->data.str, scanner->buffer->str)) {
-						mm_free(token);
-						return NULL;
-					}
+					str_duplicate(&token->data.str, scanner->buffer->str);
 				}
 
 				return token;
@@ -654,10 +636,6 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(string_end) {
 			token->id = TOKEN_STRING;
 			token->data.str = convert_white_char(scanner->buffer->str);
-			if (token->data.str == NULL) {
-				mm_free(token);
-				return NULL;
-			}
 			return token;
 		}
 

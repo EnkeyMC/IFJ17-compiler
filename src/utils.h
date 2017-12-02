@@ -12,7 +12,7 @@
 
 /**
  * Generates unique identifier
- * @return identifier, NULL on error
+ * @return identifier
  */
 char* generate_uid();
 
@@ -20,7 +20,7 @@ char* generate_uid();
  * Concatenate two strings into a new one
  * @param str1 first string
  * @param str2 second string
- * @return new string with concatenated strings, NULL on error
+ * @return new string with concatenated strings
  */
 char* concat(const char* str1, const char* str2);
 

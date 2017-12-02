@@ -17,8 +17,6 @@
 char* generate_uid() {
 	static unsigned int seed = 1;
 	Buffer* buffer = buffer_init(5);
-	if (buffer == NULL)
-		return NULL;
 
 	buffer_append_str(buffer, "ID");
 
@@ -31,10 +29,6 @@ char* generate_uid() {
 	seed++;
 
 	char* out = (char*) mm_malloc(sizeof(char) * (strlen(buffer->str) + 1));
-	if (out == NULL) {
-		buffer_free(buffer);
-		return NULL;
-	}
 
 	strcpy(out, buffer->str);
 	buffer_free(buffer);
@@ -46,8 +40,6 @@ char* concat(const char* str1, const char* str2) {
 	assert(str2 != NULL);
 
 	char* result = (char*) mm_malloc(sizeof(char) * (strlen(str1) + strlen(str2) + 1));
-	if (result == NULL)
-		return NULL;
 
 	strcpy(result, str1);
 	strcat(result, str2);

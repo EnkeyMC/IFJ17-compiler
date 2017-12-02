@@ -28,7 +28,7 @@ typedef struct {
 
 /**
  * Initialize scanner object
- * @return scanner, NULL on allocation error
+ * @return scanner
  */
 Scanner* scanner_init();
 
@@ -40,7 +40,7 @@ void scanner_free(Scanner* scanner);
 
 /**
  * Get next token
- * @return token, NULL on allocation error
+ * @return token
  */
 Token* scanner_get_token(Scanner* scanner);
 

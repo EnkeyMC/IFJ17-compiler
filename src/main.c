@@ -15,22 +15,9 @@
 
 int main(int argc, char* argv[]) {
 	mem_manager_init();
-	if (!il_init()) {
-		return EXIT_INTERN_ERROR;
-	}
-
+	il_init();
 	Scanner* scanner = scanner_init();
-	if (scanner == NULL) {
-		il_free();
-		return EXIT_INTERN_ERROR;
-	}
-
 	Parser* parser = parser_init(scanner);
-	if (parser == NULL) {
-		il_free();
-		scanner_free(scanner);
-		return EXIT_INTERN_ERROR;
-	}
 
 	FILE* in_file = NULL;
 
@@ -39,8 +26,7 @@ int main(int argc, char* argv[]) {
 
 		if (in_file == NULL) {
 			perror("Error");
-			scanner_free(scanner);
-			parser_free(parser);
+			mem_manager_free();
 			return EXIT_INTERN_ERROR;
 		}
 

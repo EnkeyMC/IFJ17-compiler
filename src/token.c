@@ -44,10 +44,6 @@ Token* token_copy(Token* token) {
 		case TOKEN_STRING:
 		case TOKEN_IDENTIFIER:
 			copy->data.str = (char*) mm_malloc(sizeof(char) * (strlen(token->data.str) + 1));
-			if (copy->data.str == NULL) {
-				mm_free(copy);
-				return NULL;
-			}
 			strcpy(copy->data.str, token->data.str);
 			break;
 		case TOKEN_INT:
@@ -74,7 +70,6 @@ Token token_make_str(const char* string) {
 	Token token;
 	token.id = TOKEN_STRING;
 	char* copy = (char*) mm_malloc(sizeof(char) * (strlen(string) + 1));
-	if (copy == NULL) exit(EXIT_INTERN_ERROR);  // I do not have time to make proper exit, sorry
 
 	strcpy(copy, string);
 
