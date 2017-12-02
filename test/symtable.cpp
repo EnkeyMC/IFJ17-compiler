@@ -52,13 +52,6 @@ TEST_F(HashTableTestFixture, Initialization) {
 	EXPECT_NE(hash_table, nullptr) << "Initialized hash table is not null";
 }
 
-TEST_F(HashTableTestFixture, SizeEmpty) {
-	EXPECT_EQ(
-		htab_size(hash_table),
-		(unsigned) 0
-	) << "Size is not 0";
-}
-
 TEST_F(HashTableTestFixture, InsertItems) {
 	constexpr size_t n_samples = 3;
 	const char *keys[n_samples] = {"test1", "test2", "test3"};
@@ -77,11 +70,6 @@ TEST_F(HashTableTestFixture, InsertItems) {
 		) << "Function should return item ptr";
 	}
 
-	// Check size
-	EXPECT_EQ(
-		htab_size(hash_table),
-		n_samples
-	) << "Hash table should have " << n_samples << " items";
 }
 
 TEST_F(HashTableTestFixture, MemoryDeallocation) {

@@ -40,12 +40,12 @@ static bool add_built_ins(HashTable* htab) {
 			return false;
 		}
 
-		func_set_def(built_in);
+		func_set_defined(built_in);
 		// Set parameter types and return types
 		switch (i) {
 			// length
 			case 0:
-				func_set_rt(built_in, TOKEN_KW_INTEGER);
+				func_set_ret_type(built_in, TOKEN_KW_INTEGER);
 				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
 					htab_func_free(htab);
 					return false;
@@ -53,7 +53,7 @@ static bool add_built_ins(HashTable* htab) {
 				break;
 			// substr
 			case 1:
-				func_set_rt(built_in, TOKEN_KW_STRING);
+				func_set_ret_type(built_in, TOKEN_KW_STRING);
 				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
 					htab_func_free(htab);
 					return false;
@@ -68,7 +68,7 @@ static bool add_built_ins(HashTable* htab) {
 				}
 				break;
 			case 2:
-				func_set_rt(built_in, TOKEN_KW_INTEGER);
+				func_set_ret_type(built_in, TOKEN_KW_INTEGER);
 				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
 					htab_func_free(htab);
 					return false;
@@ -79,7 +79,7 @@ static bool add_built_ins(HashTable* htab) {
 				}
 				break;
 			case 3:
-				func_set_rt(built_in, TOKEN_KW_STRING);
+				func_set_ret_type(built_in, TOKEN_KW_STRING);
 				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
 					htab_func_free(htab);
 					return false;

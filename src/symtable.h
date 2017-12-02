@@ -22,17 +22,17 @@
 /**
  * Function hash table item
  */
-typedef struct htab_func_item_t {
-	token_e rt;	/// Return type
-	unsigned par_num;	/// Number of parameters
-	Buffer* par_types;	/// String containing paramater types
-	Buffer* par_names;	/// String containing paramater names
-	bool definition;	/// Was already defined?
-} htab_func_item;
+typedef struct htab_function_item_t {
+	token_e ret_type;	/// Return type
+	unsigned params_num;	/// Number of parameters
+	Buffer* param_types;	/// String containing paramater types
+	Buffer* param_names;	/// String containing paramater names
+	bool defined;	/// Was already defined?
+} htab_function_item;
 
-typedef struct htab_id_item_t {
+typedef struct htab_variable_item_t {
 	token_e type;	/// Identifier type
-} htab_id_item;
+} htab_variable_item;
 
 /**
  * Identifier hash table item
@@ -41,8 +41,8 @@ typedef struct htab_item_t {
 	char *key;	/// Name of identifier
 	struct htab_item_t * next;	/// Pointer to next item in the list
 	union {
-		htab_func_item* func_data;
-		htab_id_item* id_data;
+		htab_function_item* function;
+		htab_variable_item* variable;
 	};
 } htab_item;
 
@@ -51,7 +51,6 @@ typedef struct htab_item_t {
  */
 typedef struct hash_table {
 	size_t bucket_count;	/// Number of buckets contained in the hash table
-	size_t size;	/// Number of all items. Useful for testing
 	htab_item *ptr[];	/// Array(of size 'bucket_count') of buckets
 } HashTable;
 
@@ -64,73 +63,55 @@ HashTable *htab_init(size_t bucket_count);
 
 /**
  * Free whole hash table from memory
- * @param htab_ptr Pointer to hash table
+ * @param htab Pointer to hash table
  */
-void htab_free(void* htab_ptr);
-void htab_func_free(HashTable *htab_ptr);
+void htab_free(void* htab);
+void htab_func_free(HashTable *htab);
 
 /**
  * Find item
- * @param htab_ptr Pointer to hash table
+ * @param htab Pointer to hash table
  * @param key String identifying an item
  * @return Pointer to item or NULL if the item does not exist
  */
-htab_item * htab_find(HashTable *htab_ptr, const char* key);
+htab_item * htab_find(HashTable *htab, const char* key);
 
 /**
- * Remove given bucket
- * @param htab_ptr Pointer to hash table
+ * Remove bucket containing given key
+ * @param htab Pointer to hash table
  * @param key String identifying an item
  * @return true on seccuss or false if the item does not exist
  */
-bool htab_remove(HashTable *htab_ptr, const char *key);
-bool htab_func_remove(HashTable *htab_ptr, const char *key);
+bool htab_remove(HashTable *htab, const char *key);
+bool htab_func_remove(HashTable *htab, const char *key);
 
 /**
  * Find existing bucket or add new one if it does not exist
- * @param htab_ptr Pointer to hash table
+ * @param htab Pointer to hash table
  * @param key String identifying an item
  * @return Pointer to item or NULL if allocation of memory for new item fails
  */
-htab_item* htab_lookup(HashTable *htab_ptr, const char* key);
-htab_item* htab_func_lookup(HashTable *htab_ptr, const char* key);
+htab_item* htab_lookup(HashTable *htab, const char* key);
+htab_item* htab_func_lookup(HashTable *htab, const char* key);
 
 /**
- * Get the number of buckets
- * @param htab_ptr Pointer to hash table
- * @return Number of buckets
- */
-size_t htab_bucket_count(HashTable *htab_ptr);
-
-/**
- * Get hash table size
- * @param htab_ptr Pointer to hash table
- * @return Number of all entries/items in the hash table
- */
-size_t htab_size(HashTable *htab_ptr);
-
-/**
- * For each entry in the hash table call function given as 2nd argument
- * @param htab_ptr Pointer to hash table
+ * For each entry in the hash table call function 'func'
+ * @param htab Pointer to hash table
  * @param func Pointer to function which takes pointer to hash table item as argument
  */
-void htab_foreach(HashTable *htab_ptr, void (*func)(htab_item *item_ptr));
+void htab_foreach(HashTable *htab, void (*func)(htab_item *item));
 
 /**
- * Check whether all declared functions have been defined
- * @param htab_ptr hash table storing function records
- * @return true if every function was correctly defined, false otherwise
+ * Print contents of hash table item. Ment to be used with htab_foreach primarily
+ * @param item Pointer to hash table item
  */
-bool htab_check_definition(HashTable *htab_ptr);
+void variable_item_debug(htab_item *item);
+void function_item_debug(htab_item *item);
 
-/**
- * Print contents of an identifier/function data to stdout. Use with htab_foreach in first place.
- * @param item_ptr Pointer to hash table item
- */
-void id_item_debug(htab_item *item_ptr);
-void func_item_debug(htab_item *item_ptr);
+// --------------------------------------------------------------------
+// FUNCTIONS TO MODIFY/ACCESS HASH TABLE ITEMS (and their 'attributes')
+// --------------------------------------------------------------------
 
-// FUNCTIONS TO MODIFY FUNCTION DATA STORED IN HASH TABLE
 /**
  * Add parameter type to function record in hash table
  * @param item Pointer to hash table item (that stores function data)
@@ -155,24 +136,12 @@ token_e func_get_param(htab_item* item, unsigned idx);
 unsigned func_get_param_idx(htab_item* item);
 
 /**
- * Set function return type
- * @param item Item containing function data
- * @param type Function return type
+ * Store parameter name in function atribute
+ * @param item Item with function data
+ * @param name name of the parameter
+ * @return true on succes, false othetwise
  */
-void func_set_rt(htab_item* item, token_e type);
-
-/**
- * Get function return type
- * @param item Item containing function data
- * @return function return type
- */
-token_e func_get_rt(htab_item* item);
-
-/**
- * Function was already defined
- * @param item Item containing function data
- */
-void func_set_def(htab_item* item);
+bool func_store_param_name(htab_item* item, const char* name);
 
 /**
  * Get parameter name
@@ -183,18 +152,57 @@ void func_set_def(htab_item* item);
 char* func_get_param_name(htab_item* item, unsigned idx);
 
 /**
- * Store parameter name in function atribute
- * @param item Item with function data
- * @param name name of the parameter
- * @return true on succes, false othetwise
- */
-bool func_store_param_name(htab_item* item, const char* name);
-
-/**
  * Get number of function parameters
  * @param item Item with function data
  * @return number of parameters
  */
-unsigned int func_params_num(htab_item* item);
+unsigned int func_get_params_num(htab_item* item);
+
+/**
+ * Set function return type
+ * @param item Item containing function data
+ * @param type Function return type
+ */
+void func_set_ret_type(htab_item* item, token_e type);
+
+/**
+ * Get function return type
+ * @param item Item containing function data
+ * @return function return type
+ */
+token_e func_get_ret_type(htab_item* item);
+
+/**
+ * Function definition provided
+ * @param item Item containing function data
+ */
+void func_set_defined(htab_item* item);
+
+/**
+ * Function was already defined
+ * @param item Item containing function data
+ * @return true if function was already defined
+ */
+bool func_get_defined(htab_item* item);
+
+/**
+ * Check whether all declared functions have been defined
+ * @param htab hash table storing function records
+ * @return true if every function was correctly defined, false otherwise
+ */
+bool func_check_all_defined(HashTable *htab);
+
+/**
+ * Get variable type
+ * @param item
+ */
+token_e var_get_type(htab_item* item);
+
+/**
+ * Set variable type
+ * @param item
+ * @param type
+ */
+void var_set_type(htab_item* item, token_e type);
 
 #endif //IFJ17_COMPILER_SYMTABLE_H
