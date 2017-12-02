@@ -41,6 +41,10 @@ int parse_expression(Parser *parser) {
 			break;
 		}
 
+		// Detect step keyword if for loop statement
+		if (token->id == TOKEN_KW_STEP)
+			parser->step_found = true;
+
 		// Handle unary minus
 		if (token->id == TOKEN_SUB) {
 			switch (last_token) {

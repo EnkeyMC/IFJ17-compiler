@@ -41,6 +41,10 @@
 #define LABEL_PREFIX_LOOP_COND "LOOP_COND_"
 #define LABEL_PREFIX_LOOP_END "LOOP_END_"
 #define LABEL_PREFIX_DO_LOOP "DO_LOOP_"
+#define LABEL_PREFIX_FOR_LOOP "FOR_LOOP_"
+#define FOR_PREFIX_ENDVAL "FOR_ENDVAL_"
+#define FOR_PREFIX_STEPVAL "FOR_STEPVAL_"
+#define LABEL_PREFIX_FOR_EQUAL "FOR_EQUAL_"
 
 
 SemAnalyzer* sem_an_init(semantic_action_f sem_action) {
@@ -114,6 +118,8 @@ SemValue* sem_value_copy(const SemValue* value) {
 				return NULL;
 			}
 			break;
+		default:
+			return NULL;
 	}
 
 	return new_val;
@@ -139,6 +145,11 @@ void sem_value_free(void* value) {
 				mm_free(to_free->if_val.if_id);
 			if (to_free->if_val.elseif_id != NULL)
 				mm_free(to_free->if_val.elseif_id);
+			break;
+		case VTYPE_FOR:
+			mm_free(to_free->for_val.uid);
+			mm_free(to_free->for_val.step_id);
+			mm_free(to_free->for_val.endval_id);
 		default:
 			break;
 	}
@@ -211,6 +222,8 @@ void sem_value_debug(void* val) {
 			case VTYPE_IF:
 				debug(".type = IF, .if_id = %s, .elseif_id = %s", value->if_val.if_id, value->if_val.elseif_id);
 				break;
+			case VTYPE_FOR:
+				return;
 		}
 	}
 
@@ -337,10 +350,27 @@ static char* get_static_var_name(const char* func_name, const char* var_name) {
  */
 static htab_item* find_symbol(Parser* parser, const char* key) {
 	dllist_activate_first(parser->sym_tab_stack);
+	SemAnalyzer* sem_an;
 	htab_item* item;
 
+	// If inside for loop with temporary iterator variable return it
+	sem_action_search_activate(parser);
+	sem_an = sem_action_search_next(parser, sem_for_loop);
+	while (sem_an != NULL) {
+		if (sem_an->value->value_type == VTYPE_FOR) {
+			char* for_iterator = concat(key, sem_an->value->for_val.uid);
+			item = htab_find(parser->sym_tab_global, for_iterator);
+			free(for_iterator);
+			if (item != NULL) {
+				return item;
+			}
+		}
+		sem_an = sem_action_search_next(parser, sem_for_loop);
+	}
+	sem_action_search_end(parser);
+
 	// Try to find static variable first
-	SemAnalyzer* sem_an = find_sem_action(parser, sem_func_def);
+	sem_an = find_sem_action(parser, sem_func_def);
 	if (sem_an != NULL) {
 		char* static_id = get_static_var_name(sem_an->value->id->key, key);
 		item = htab_find(parser->sym_tab_global, static_id);
@@ -2367,6 +2397,7 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 			{
 				// Infinite loop
 				IL_ADD(il, OP_JUMP, addr_symbol(LABEL_PREFIX_DO_LOOP, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_END, sem_an->value->token->data.str), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 				sem_an->finished = true;
 			}
 		} END_STATE;
@@ -2416,8 +2447,8 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 	SEM_ACTION_CHECK;
 
-	HashTable* symtab = NULL;
 	htab_item* item = NULL;
+	DLList* il = get_current_il_list(parser);
 
 	SEM_FSM {
 		SEM_STATE(SEM_STATE_START) {
@@ -2439,6 +2470,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				item = find_symbol(parser, sem_an->value->token->data.str);
 				if (item == NULL)
 					return EXIT_SEMANTIC_PROG_ERROR;
+
 				// variable must be integer or double
 				if (item->id_data->type == TOKEN_KW_STRING
 						|| item->id_data->type == TOKEN_KW_BOOLEAN)
@@ -2446,6 +2478,34 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 				if (create_scope(parser) == NULL)
 					return EXIT_INTERN_ERROR;
+
+				// Generate uids
+				char *uid = generate_uid();
+				if (uid == NULL)
+					return EXIT_INTERN_ERROR;
+				char* step_id = concat(FOR_PREFIX_STEPVAL, uid);
+				if (step_id == NULL) {
+					free(uid);
+					return EXIT_INTERN_ERROR;
+				}
+				char* end_id = concat(FOR_PREFIX_ENDVAL, uid);
+				if (end_id == NULL) {
+					free(uid);
+					free(step_id);
+					return EXIT_INTERN_ERROR;
+				}
+
+				// change SemValue to VTYPE_FOR
+				sem_value_free(sem_an->value);
+				sem_an->value = sem_value_init();
+				if (sem_an->value == NULL)
+					return EXIT_INTERN_ERROR;
+
+				sem_an->value->value_type = VTYPE_FOR;
+				sem_an->value->for_val.iterator = item;
+				sem_an->value->for_val.uid = uid;
+				sem_an->value->for_val.step_id = step_id;
+				sem_an->value->for_val.endval_id = end_id;
 
 				SEM_NEXT_STATE(SEM_STATE_FOR_INIT);
 			}
@@ -2461,13 +2521,42 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						if (create_scope(parser) == NULL)
 							return EXIT_INTERN_ERROR;
 
-						// add iterator variable to new scope
-						symtab = get_current_sym_tab(parser);
-						item = htab_lookup(symtab, sem_an->value->token->data.str);
-						if (item == NULL) {
+						// Generate uids
+						char* uid = generate_uid();
+						if (uid == NULL)
+							return EXIT_INTERN_ERROR;
+						char* step_id = concat(FOR_PREFIX_STEPVAL, uid);
+						if (step_id == NULL) {
+							free(uid);
 							return EXIT_INTERN_ERROR;
 						}
+						char* end_id = concat(FOR_PREFIX_ENDVAL, uid);
+						if (end_id == NULL) {
+							free(uid);
+							free(step_id);
+							return EXIT_INTERN_ERROR;
+						}
+
+						// create new iterator by concatenating var name and UID
+						char* iterator_id = concat(sem_an->value->token->data.str, uid);
+						item = htab_lookup(parser->sym_tab_global, iterator_id);
+						if (item == NULL)
+							return EXIT_INTERN_ERROR;
 						item->id_data->type = value.token->id;
+
+						sem_value_free(sem_an->value);
+						sem_an->value = sem_value_init();
+						if (sem_an->value == NULL)
+							return EXIT_INTERN_ERROR;
+
+						// Save id to SemValue
+						sem_an->value->value_type = VTYPE_FOR;
+						sem_an->value->for_val.iterator = item;
+						sem_an->value->for_val.uid = uid;
+						sem_an->value->for_val.step_id = step_id;
+						sem_an->value->for_val.endval_id = end_id;
+
+						IL_ADD(global_il, OP_DEFVAR, addr_symbol(F_GLOBAL, item->key), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 						SEM_NEXT_STATE(SEM_STATE_FOR_INIT);
 					}
@@ -2481,8 +2570,37 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_FOR_INIT) {
 			if (value.value_type == VTYPE_ID)
 			{
-				if (value.id->id_data->type == TOKEN_KW_STRING)
+				if (value.id->id_data->type == TOKEN_KW_STRING
+						|| value.id->id_data->type == TOKEN_KW_BOOLEAN)
 					return EXIT_SEMANTIC_COMP_ERROR;
+
+				ForValue for_val = sem_an->value->for_val;
+				char* key = for_val.iterator->key;
+
+				// Implicit conversion
+				if (value.id->id_data->type == TOKEN_KW_DOUBLE
+						&& for_val.iterator->id_data->type == TOKEN_KW_INTEGER)
+				{
+					IL_ADD(il, OP_FLOAT2R2EINT,
+							addr_symbol(get_var_scope_prefix(parser, key), key),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, EXIT_INTERN_ERROR);
+				}
+				else if (value.id->id_data->type == TOKEN_KW_INTEGER
+						&& for_val.iterator->id_data->type == TOKEN_KW_DOUBLE)
+				{
+					IL_ADD(il, OP_INT2FLOAT,
+							addr_symbol(get_var_scope_prefix(parser, key), key),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, EXIT_INTERN_ERROR);
+				}
+				else
+				{
+					IL_ADD(il, OP_MOVE,
+						addr_symbol(get_var_scope_prefix(parser, key), key),
+						addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+						NO_ADDR, EXIT_INTERN_ERROR);
+				}
 
 				SEM_NEXT_STATE(SEM_STATE_FOR_ENDVAL);
 			}
@@ -2492,23 +2610,271 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		SEM_STATE(SEM_STATE_FOR_ENDVAL) {
 			if (value.value_type == VTYPE_ID)
 			{
-				if (value.id->id_data->type == TOKEN_KW_STRING)
+				if (value.id->id_data->type == TOKEN_KW_STRING
+						|| value.id->id_data->type == TOKEN_KW_BOOLEAN)
 					return EXIT_SEMANTIC_COMP_ERROR;
 
-				SEM_NEXT_STATE(SEM_STATE_FOR_STEP);
+				ForValue for_val = sem_an->value->for_val;
+
+				IL_ADD(global_il, OP_DEFVAR,
+						addr_symbol(F_GLOBAL, for_val.endval_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(global_il, OP_DEFVAR,
+						addr_symbol(F_GLOBAL, for_val.step_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				// Implicit conversion of end value
+				if (value.id->id_data->type == TOKEN_KW_DOUBLE &&
+						for_val.iterator->id_data->type == TOKEN_KW_INTEGER)
+				{
+					IL_ADD(il, OP_FLOAT2R2EINT,
+							addr_symbol(F_GLOBAL, for_val.endval_id),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, EXIT_INTERN_ERROR);
+				}
+				else if (value.id->id_data->type == TOKEN_KW_INTEGER
+						&& for_val.iterator->id_data->type == TOKEN_KW_DOUBLE)
+				{
+					IL_ADD(il, OP_INT2FLOAT,
+							addr_symbol(F_GLOBAL, for_val.endval_id),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, EXIT_INTERN_ERROR);
+				}
+				else
+				{
+					IL_ADD(il, OP_MOVE,
+							addr_symbol(F_GLOBAL, for_val.endval_id),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, EXIT_INTERN_ERROR);
+				}
+
+				// If step value is explicitly specified
+				if (parser->step_found) {
+					parser->step_found = false;
+					SEM_NEXT_STATE(SEM_STATE_FOR_STEP);
+				}
+				else {
+					// "Implicit covnersion" of default step value
+					if (for_val.iterator->id_data->type == TOKEN_KW_INTEGER)
+					{
+						IL_ADD(il, OP_MOVE,
+								addr_symbol(F_GLOBAL, for_val.step_id),
+								addr_constant(MAKE_TOKEN_INT(1)),
+								NO_ADDR, EXIT_INTERN_ERROR);
+					}
+					else
+					{
+						IL_ADD(il, OP_MOVE,
+								addr_symbol(F_GLOBAL, for_val.step_id),
+								addr_constant(MAKE_TOKEN_REAL(1)),
+								NO_ADDR, EXIT_INTERN_ERROR);
+					}
+
+					// For loop LABEL
+					IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_LABEL,
+							addr_symbol(LABEL_PREFIX_FOR_LOOP, for_val.uid),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+					// Check condition
+					IL_ADD(il, OP_PUSHS,
+							addr_symbol(get_var_scope_prefix(parser, for_val.iterator->key), for_val.iterator->key),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_PUSHS,
+							addr_symbol(F_GLOBAL, for_val.endval_id),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_EQS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_POPS,
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_JUMPIFEQ,
+							addr_symbol(LABEL_PREFIX_FOR_EQUAL, for_val.uid),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							addr_constant(MAKE_TOKEN_BOOL(true)), EXIT_INTERN_ERROR);
+					IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+					IL_ADD(il, OP_PUSHS,
+							addr_symbol(get_var_scope_prefix(parser, for_val.iterator->key), for_val.iterator->key),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_PUSHS,
+							addr_symbol(F_GLOBAL, for_val.endval_id),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_LTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_PUSHS,
+							addr_symbol(F_GLOBAL, for_val.step_id),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+					if (for_val.iterator->id_data->type == TOKEN_KW_INTEGER)
+					{
+						IL_ADD(il, OP_PUSHS,
+								addr_constant(MAKE_TOKEN_INT(0)),
+								NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					}
+					else
+					{
+						IL_ADD(il, OP_PUSHS,
+								addr_constant(MAKE_TOKEN_REAL(0)),
+								NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					}
+
+					IL_ADD(il, OP_GTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_PUSHS,
+							addr_symbol(F_GLOBAL, for_val.step_id),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+					if (for_val.iterator->id_data->type == TOKEN_KW_INTEGER)
+					{
+						IL_ADD(il, OP_PUSHS,
+								addr_constant(MAKE_TOKEN_INT(0)),
+								NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					}
+					else
+					{
+						IL_ADD(il, OP_PUSHS,
+								addr_constant(MAKE_TOKEN_REAL(0)),
+								NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					}
+
+					IL_ADD(il, OP_EQS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_ORS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_EQS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD(il, OP_POPS,
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+					IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_FOR_EQUAL, for_val.uid),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+					IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+					IL_ADD(il, OP_JUMPIFEQ,
+							addr_symbol(LABEL_PREFIX_LOOP_END, for_val.uid),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							addr_constant(MAKE_TOKEN_BOOL(false)), EXIT_INTERN_ERROR);
+					IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+					SEM_NEXT_STATE(SEM_STATE_FOR_NEXT);
+				}
 			}
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_FOR_STEP) {
-			if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_KW_NEXT)
+			if (value.value_type == VTYPE_ID)
 			{
-				SEM_NEXT_STATE(SEM_STATE_FOR_END);
-			}
-			else if (value.value_type == VTYPE_ID)
-			{
-				if (value.id->id_data->type == TOKEN_KW_STRING)
+				if (value.id->id_data->type == TOKEN_KW_STRING
+						|| value.id->id_data->type == TOKEN_KW_BOOLEAN)
 					return EXIT_SEMANTIC_COMP_ERROR;
+
+				ForValue for_val = sem_an->value->for_val;
+
+				// Implicit conversion of explicit step value
+				if (value.id->id_data->type == TOKEN_KW_DOUBLE &&
+						for_val.iterator->id_data->type == TOKEN_KW_INTEGER)
+				{
+					IL_ADD(il, OP_FLOAT2R2EINT,
+							addr_symbol(F_GLOBAL, for_val.step_id),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, EXIT_INTERN_ERROR);
+				}
+				else if (value.id->id_data->type == TOKEN_KW_INTEGER
+						&& for_val.iterator->id_data->type == TOKEN_KW_DOUBLE)
+				{
+					IL_ADD(il, OP_INT2FLOAT,
+							addr_symbol(F_GLOBAL, for_val.step_id),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, EXIT_INTERN_ERROR);
+				}
+				else
+				{
+					IL_ADD(il, OP_MOVE,
+							addr_symbol(F_GLOBAL, for_val.step_id),
+							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+							NO_ADDR, EXIT_INTERN_ERROR);
+				}
+
+				// For loop LABEL
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_FOR_LOOP, for_val.uid), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+				// Check condition
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(get_var_scope_prefix(parser, for_val.iterator->key), for_val.iterator->key),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(F_GLOBAL, for_val.endval_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_EQS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_POPS,
+						addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_JUMPIFEQ,
+						addr_symbol(LABEL_PREFIX_FOR_EQUAL, for_val.uid),
+						addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+						addr_constant(MAKE_TOKEN_BOOL(true)), EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(get_var_scope_prefix(parser, for_val.iterator->key), for_val.iterator->key),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(F_GLOBAL, for_val.endval_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(F_GLOBAL, for_val.step_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				if (for_val.iterator->id_data->type == TOKEN_KW_INTEGER)
+				{
+					IL_ADD(il, OP_PUSHS,
+							addr_constant(MAKE_TOKEN_INT(0)),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				}
+				else
+				{
+					IL_ADD(il, OP_PUSHS,
+							addr_constant(MAKE_TOKEN_REAL(0)),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				}
+
+				IL_ADD(il, OP_GTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(F_GLOBAL, for_val.step_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				if (for_val.iterator->id_data->type == TOKEN_KW_INTEGER)
+				{
+					IL_ADD(il, OP_PUSHS,
+							addr_constant(MAKE_TOKEN_INT(0)),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				}
+				else
+				{
+					IL_ADD(il, OP_PUSHS,
+							addr_constant(MAKE_TOKEN_REAL(0)),
+							NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				}
+
+				IL_ADD(il, OP_EQS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_ORS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_EQS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_POPS,
+						addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_FOR_EQUAL, for_val.uid),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+				IL_ADD(il, OP_JUMPIFEQ,
+						addr_symbol(LABEL_PREFIX_LOOP_END, for_val.uid),
+						addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+						addr_constant(MAKE_TOKEN_BOOL(false)), EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
 
 				SEM_NEXT_STATE(SEM_STATE_FOR_NEXT);
 			}
@@ -2523,28 +2889,58 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 		} END_STATE;
 
 		SEM_STATE(SEM_STATE_FOR_END) {
+
+			ForValue for_val = sem_an->value->for_val;
+
 			if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_EOL)
 			{
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_COND, for_val.uid),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(get_var_scope_prefix(parser, for_val.iterator->key), for_val.iterator->key),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(F_GLOBAL, for_val.step_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_ADDS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_POPS,
+						addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_MOVE,
+						addr_symbol(get_var_scope_prefix(parser, for_val.iterator->key), for_val.iterator->key),
+						addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
+						NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(F_GLOBAL, for_val.endval_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_PUSHS,
+						addr_symbol(F_GLOBAL, for_val.step_id),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+				IL_ADD(il, OP_JUMP,
+						addr_symbol(LABEL_PREFIX_FOR_LOOP, for_val.uid),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
+				// Label LOOP END
+				IL_ADD(il, OP_LABEL, addr_symbol(LABEL_PREFIX_LOOP_END, for_val.uid),
+						NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
+				IL_ADD_SPACE(il, EXIT_INTERN_ERROR);
+
 				delete_scope(parser);
 				sem_an->finished = true;
 			}
 			else if (value.value_type == VTYPE_TOKEN &&
 				value.token->id == TOKEN_IDENTIFIER)
 			{
-				item = find_symbol(parser, sem_an->value->token->data.str);
-				if (strcmp(item->key, value.token->data.str) != 0)
+				item = find_symbol(parser, value.token->data.str);
+				if (item == NULL)
 					return EXIT_SEMANTIC_PROG_ERROR;
-				SEM_NEXT_STATE(SEM_STATE_EOL);
-			}
-		} END_STATE;
-
-		SEM_STATE(SEM_STATE_EOL) {
-			if (value.value_type == VTYPE_TOKEN &&
-				value.token->id == TOKEN_EOL)
-			{
-				delete_scope(parser);
-				sem_an->finished = true;
+				if (strcmp(for_val.iterator->key, item->key) != 0)
+					return EXIT_SEMANTIC_PROG_ERROR;
 			}
 		} END_STATE;
 
@@ -2605,7 +3001,10 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						return EXIT_SEMANTIC_OTHER_ERROR;
 
 					// Store this loop ID as last
-					sem_an->value->token->data.str = sem_action->value->token->data.str;
+					if (last_loop_type == TOKEN_KW_DO)
+						sem_an->value->token->data.str = sem_action->value->token->data.str;
+					else
+						sem_an->value->token->data.str = sem_action->value->for_val.uid;
 				} else if (value.token->id == TOKEN_EOL) {  // End of exit list
 					// Deactivate semantic action search
 					sem_action_search_end(parser);
@@ -2675,7 +3074,10 @@ int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						return EXIT_SEMANTIC_OTHER_ERROR;
 
 					// Store this loop ID as last
-					sem_an->value->token->data.str = sem_action->value->token->data.str;
+					if (last_loop_type == TOKEN_KW_DO)
+						sem_an->value->token->data.str = sem_action->value->token->data.str;
+					else
+						sem_an->value->token->data.str = sem_action->value->for_val.uid;
 				} else if (value.token->id == TOKEN_EOL) {  // End of exit list
 					// Deactivate semantic action search
 					sem_action_search_end(parser);
