@@ -360,7 +360,7 @@ static htab_item* find_symbol(Parser* parser, const char* key) {
 		if (sem_an->value->value_type == VTYPE_FOR) {
 			char* for_iterator = concat(key, sem_an->value->for_val.uid);
 			item = htab_find(parser->sym_tab_global, for_iterator);
-			free(for_iterator);
+			mm_free(for_iterator);
 			if (item != NULL) {
 				return item;
 			}
@@ -2485,13 +2485,13 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 				char* step_id = concat(FOR_PREFIX_STEPVAL, uid);
 				if (step_id == NULL) {
-					free(uid);
+					mm_free(uid);
 					return EXIT_INTERN_ERROR;
 				}
 				char* end_id = concat(FOR_PREFIX_ENDVAL, uid);
 				if (end_id == NULL) {
-					free(uid);
-					free(step_id);
+					mm_free(uid);
+					mm_free(step_id);
 					return EXIT_INTERN_ERROR;
 				}
 
@@ -2527,13 +2527,13 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 							return EXIT_INTERN_ERROR;
 						char* step_id = concat(FOR_PREFIX_STEPVAL, uid);
 						if (step_id == NULL) {
-							free(uid);
+							mm_free(uid);
 							return EXIT_INTERN_ERROR;
 						}
 						char* end_id = concat(FOR_PREFIX_ENDVAL, uid);
 						if (end_id == NULL) {
-							free(uid);
-							free(step_id);
+							mm_free(uid);
+							mm_free(step_id);
 							return EXIT_INTERN_ERROR;
 						}
 
