@@ -353,8 +353,9 @@ static htab_item* find_symbol(Parser* parser, const char* key) {
 	htab_item* item;
 
 	// If inside for loop with temporary iterator variable return it
-	sem_an = find_sem_action(parser, sem_for_loop);
-	if (sem_an != NULL) {
+	sem_action_search_activate(parser);
+	sem_an = sem_action_search_next(parser, sem_for_loop);
+	while (sem_an != NULL) {
 		if (sem_an->value->value_type == VTYPE_FOR) {
 			char* for_iterator = concat(key, sem_an->value->for_val.uid);
 			item = htab_find(parser->sym_tab_global, for_iterator);
@@ -363,7 +364,9 @@ static htab_item* find_symbol(Parser* parser, const char* key) {
 				return item;
 			}
 		}
+		sem_an = sem_action_search_next(parser, sem_for_loop);
 	}
+	sem_action_search_end(parser);
 
 	// Try to find static variable first
 	sem_an = find_sem_action(parser, sem_func_def);
