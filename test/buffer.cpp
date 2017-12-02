@@ -7,11 +7,13 @@ protected:
 	Buffer* buffer = nullptr;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		buffer = buffer_init(0);
 	}
 
 	virtual void TearDown() {
 		EXPECT_NO_FATAL_FAILURE(buffer_free(buffer));
+		mem_manager_free();
 	}
 };
 

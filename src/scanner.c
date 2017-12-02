@@ -16,6 +16,7 @@
 #include "scanner.h"
 #include "fsm.h"
 #include "buffer.h"
+#include "memory_manager.h"
 
 #define READ_CHAR() getc(scanner->stream);
 #define STR_IS(keyword) strcmp(str, keyword) == 0
@@ -24,13 +25,13 @@
 
 
 Scanner* scanner_init() {
-	Scanner* scanner = (Scanner*) malloc(sizeof(Scanner));
+	Scanner* scanner = (Scanner*) mm_malloc(sizeof(Scanner));
 	if (scanner == NULL)
 		return NULL;
 
 	scanner->buffer = buffer_init(BUFFER_CHUNK);
 	if (scanner->buffer == NULL) {
-		free(scanner);
+		mm_free(scanner);
 		return NULL;
 	}
 
@@ -43,16 +44,16 @@ Scanner* scanner_init() {
 void scanner_free(Scanner* scanner) {
 	assert(scanner != NULL);
 	buffer_free(scanner->buffer);
-	free(scanner->backlog_token);
-	free(scanner);
+	token_free(scanner->backlog_token);
+	mm_free(scanner);
 }
 
 static bool str_duplicate(char ** str_dst, const char* str_src) {
 	assert(str_dst != NULL);
 	assert(str_src != NULL);
-
+	// TODO move to utils
 	// Allocate memory for string
-	*str_dst = (char*) malloc(sizeof(char) * (strlen(str_src) + 1));
+	*str_dst = (char*) mm_malloc(sizeof(char) * (strlen(str_src) + 1));
 	if (*str_dst == NULL) {
 		return false;
 	}
@@ -146,7 +147,7 @@ char* convert_white_char(const char* str) {
 		}
 		buffer_append_str(buffer, esc_seq);
  	}
-	esc_str = (char*) malloc(sizeof(char)*(buffer->len+1));
+	esc_str = (char*) mm_malloc(sizeof(char)*(buffer->len+1));
 	if (esc_str == NULL) {
 		buffer_free(buffer);
 		return  NULL;
@@ -172,7 +173,7 @@ Token* scanner_get_token(Scanner* scanner) {
 	}
 
 	int ch;
-	Token* token = (Token*) malloc(sizeof(Token));
+	Token* token = (Token*) mm_malloc(sizeof(Token));
 	if (token == NULL)
 		return NULL;
 	token->id = LEX_ERROR;
@@ -452,7 +453,7 @@ Token* scanner_get_token(Scanner* scanner) {
 
 				if (token->id == TOKEN_IDENTIFIER) {
 					if (!str_duplicate(&token->data.str, scanner->buffer->str)) {
-						free(token);
+						mm_free(token);
 						return NULL;
 					}
 				}
@@ -656,7 +657,7 @@ Token* scanner_get_token(Scanner* scanner) {
 			token->id = TOKEN_STRING;
 			token->data.str = convert_white_char(scanner->buffer->str);
 			if (token->data.str == NULL) {
-				free(token);
+				mm_free(token);
 				return NULL;
 			}
 			return token;

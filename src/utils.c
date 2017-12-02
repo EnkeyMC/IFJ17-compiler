@@ -12,6 +12,7 @@
 #include <assert.h>
 #include "utils.h"
 #include "buffer.h"
+#include "memory_manager.h"
 
 char* generate_uid() {
 	static unsigned int seed = 1;
@@ -29,7 +30,7 @@ char* generate_uid() {
 
 	seed++;
 
-	char* out = (char*) malloc(sizeof(char) * (strlen(buffer->str) + 1));
+	char* out = (char*) mm_malloc(sizeof(char) * (strlen(buffer->str) + 1));
 	if (out == NULL) {
 		buffer_free(buffer);
 		return NULL;
@@ -44,7 +45,7 @@ char* concat(const char* str1, const char* str2) {
 	assert(str1 != NULL);
 	assert(str2 != NULL);
 
-	char* result = (char*) malloc(sizeof(char) * (strlen(str1) + strlen(str2) + 1));
+	char* result = (char*) mm_malloc(sizeof(char) * (strlen(str1) + strlen(str2) + 1));
 	if (result == NULL)
 		return NULL;
 

@@ -13,6 +13,7 @@
 #include <stdio.h>
 #include "3ac.h"
 #include "debug.h"
+#include "memory_manager.h"
 
 static const char* opcodes_str[] = {
 	FOREACH_OPCODE(GENERATE_STRING) ""
@@ -25,7 +26,7 @@ DLList* func_il = NULL;
 const char* scope_prefix[3] = {"GF@", "LF@", "TF@"};
 
 Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, Address addr3) {
-	Instruction* inst = (Instruction*) malloc(sizeof(Instruction));
+	Instruction* inst = (Instruction*) mm_malloc(sizeof(Instruction));
 	if (inst == NULL)
 		return NULL;
 
@@ -36,7 +37,7 @@ Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, 
 		address_free(addr1);
 		address_free(addr2);
 		address_free(addr3);
-		free(inst);
+		mm_free(inst);
 		return NULL;
 	}
 
@@ -54,13 +55,13 @@ void instruction_free(void* inst) {
 		address_free(instruction->addresses[i]);
 	}
 
-	free(inst);
+	mm_free(inst);
 }
 
 Address addr_symbol(const char* prefix, const char* symbol) {
 	Address addr;
 
-	addr.symbol = (char*) malloc(sizeof(char) * (strlen(prefix) + strlen(symbol) + 1));
+	addr.symbol = (char*) mm_malloc(sizeof(char) * (strlen(prefix) + strlen(symbol) + 1));
 	if (addr.symbol == NULL) {
 		addr.type = ADDR_TYPE_ERROR;
 		return addr;
@@ -90,7 +91,7 @@ Address addr_constant(Token token) {
 void address_free(Address addr) {
 	switch (addr.type) {
 		case ADDR_TYPE_SYMBOL:
-			free(addr.symbol);
+			mm_free(addr.symbol);
 			break;
 		case ADDR_TYPE_CONST:
 			token_free(addr.constant);

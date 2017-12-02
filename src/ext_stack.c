@@ -14,6 +14,7 @@
 #include "expr_grammar.h"
 #include "error_code.h"
 #include "debug.h"
+#include "memory_manager.h"
 
 ExtStack* ext_stack_init() {
 	ExtStack* s = dllist_init(ext_stack_item_free);
@@ -61,7 +62,7 @@ bool ext_stack_shift(ExtStack* s, Token* token) {
 	}
 
 	// allocate memory for handle marker
-	stack_item* handle_marker = (stack_item *) malloc(sizeof(stack_item));
+	stack_item* handle_marker = (stack_item *) mm_malloc(sizeof(stack_item));
 	if (handle_marker == NULL)
 		return false;
 	handle_marker->type_id = EXPR_HANDLE_MARKER;
@@ -74,7 +75,7 @@ bool ext_stack_shift(ExtStack* s, Token* token) {
 	}
 
 	// Allocate memory for token
-	stack_item* token_ptr = (stack_item*) malloc(sizeof(stack_item));
+	stack_item* token_ptr = (stack_item*) mm_malloc(sizeof(stack_item));
 	if (token_ptr == NULL)
 		return false;
 	token_ptr->type_id = token->id;
@@ -159,7 +160,7 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 		// Push current semantic analyzer on stack
 		if (sem_an != NULL) {
 			if (!sem_stack_push(parser->sem_an_stack, sem_an)) {
-				free(sem_an);
+				mm_free(sem_an);
 				return EXIT_INTERN_ERROR;
 			}
 		}
@@ -173,7 +174,7 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 }
 
 bool ext_stack_push(ExtStack* s, unsigned type_id, Token* token) {
-	stack_item* item = (stack_item*) malloc(sizeof(stack_item));
+	stack_item* item = (stack_item*) mm_malloc(sizeof(stack_item));
 	if (item == NULL)
 		return false;
 	item->type_id = type_id;
@@ -189,7 +190,7 @@ bool ext_stack_push(ExtStack* s, unsigned type_id, Token* token) {
 
 void ext_stack_item_free(void* item) {
 	token_free(((stack_item*) item)->token);
-	free(item);
+	mm_free(item);
 }
 
 void ext_stack_free(ExtStack* s) {

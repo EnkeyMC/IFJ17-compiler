@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Werror -Wextra -g")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Werror -Wextra -DNDEBUG")
 set(EXT_PROJECTS_DIR ${PROJECT_SOURCE_DIR}/ext)
+set(PROJECT_NO_FREE ${PROJECT_NAME}_no_free)
 
 # Google Tests
 find_package(Threads REQUIRED)
@@ -47,6 +48,9 @@ add_custom_command(TARGET ${PROJECT_NAME}_test PRE_BUILD
 
 file(GLOB SOURCE_FILES src/*.c)
 add_executable(${PROJECT_NAME} ${SOURCE_FILES})
+
+add_executable(${PROJECT_NO_FREE} ${SOURCE_FILES})
+set_target_properties(${PROJECT_NO_FREE} PROPERTIES COMPILE_FLAGS "${CMAKE_C_FLAGS} -DMEM_MNG_NO_FREE")
 
 add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory

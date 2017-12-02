@@ -14,12 +14,14 @@ protected:
 	HashTable* hash_table = nullptr;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		hash_table = htab_init(8);
 		foreach_cnt = 0;
 	}
 
 	virtual void TearDown() {
 		EXPECT_NO_FATAL_FAILURE(htab_free(hash_table));
+		mem_manager_init();
 	}
 };
 
@@ -30,6 +32,7 @@ protected:
 	const char* keys[n_samples] = {"test1", "test2", "test3", "test4", "test5"};
 
 	virtual void SetUp() {
+		mem_manager_init();
 		foreach_cnt = 0;
 		hash_table = htab_init(n_samples);
 
@@ -41,6 +44,7 @@ protected:
 
 	virtual void TearDown() {
 		EXPECT_NO_FATAL_FAILURE(htab_free(hash_table));
+		mem_manager_free();
 	}
 };
 

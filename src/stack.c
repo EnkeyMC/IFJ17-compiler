@@ -10,6 +10,7 @@
 #include <malloc.h>
 #include <assert.h>
 #include "stack.h"
+#include "memory_manager.h"
 
 
 static bool stack_realloc(Stack* s, int size) {
@@ -18,7 +19,7 @@ static bool stack_realloc(Stack* s, int size) {
 		return true;
 
 	// Reallocate stack to new size
-	s->stack = (void**) realloc(s->stack, sizeof(void*) * size);
+	s->stack = (void**) mm_realloc(s->stack, sizeof(void*) * size);
 	if (s->stack == NULL) { // Check reallocation success
 		s->size = 0;
 		s->top = -1;
@@ -32,14 +33,14 @@ static bool stack_realloc(Stack* s, int size) {
 
 Stack* stack_init(int size) {
 	// Allocate new Stack
-	Stack* s = (Stack*) malloc(sizeof(Stack));
+	Stack* s = (Stack*) mm_malloc(sizeof(Stack));
 	if (s == NULL)
 		return NULL;
 
 	// Allocate stack
-	s->stack = (void**) malloc(sizeof(void*) * size);
+	s->stack = (void**) mm_malloc(sizeof(void*) * size);
 	if (s->stack == NULL) {
-		free(s);
+		mm_free(s);
 		return NULL;
 	}
 
@@ -100,8 +101,8 @@ void stack_free(Stack* s, stack_free_callback free_item_f) {
 	}
 
 	if (s->stack != NULL)
-		free(s->stack);
-	free(s);
+		mm_free(s->stack);
+	mm_free(s);
 }
 
 void stack_debug(Stack* s, debug_func func) {

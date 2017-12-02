@@ -9,11 +9,13 @@ protected:
 	int numbers[nnums] = {1, 2, 3, 4, 5};
 
 	virtual void SetUp() {
+		mem_manager_init();
 		l = dllist_init(nullptr);
 	}
 
 	virtual void TearDown() {
 		dllist_free(l);
+		mem_manager_free();
 	}
 };
 

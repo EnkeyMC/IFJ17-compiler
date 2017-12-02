@@ -20,6 +20,7 @@
 #include "3ac.h"
 #include "debug.h"
 #include "utils.h"
+#include "memory_manager.h"
 
 #define SEM_FSM switch(sem_an->state)
 #define SEM_STATE(state) case state:
@@ -47,7 +48,7 @@
 
 
 SemAnalyzer* sem_an_init(semantic_action_f sem_action) {
-	SemAnalyzer* sem_an = (SemAnalyzer*) malloc(sizeof(SemAnalyzer));
+	SemAnalyzer* sem_an = (SemAnalyzer*) mm_malloc(sizeof(SemAnalyzer));
 	if (sem_an == NULL)
 		return NULL;
 
@@ -64,18 +65,18 @@ void sem_an_free(void* sem_an) {
 		sem_value_free(((SemAnalyzer*) sem_an)->value);
 	}
 
-	free(sem_an);
+	mm_free(sem_an);
 }
 
 SemValue* sem_value_init() {
-	return (SemValue*) malloc(sizeof(SemValue));
+	return (SemValue*) mm_malloc(sizeof(SemValue));
 }
 
 SemValue* sem_value_copy(const SemValue* value) {
 	if (value == NULL)
 		return NULL;
 
-	SemValue* new_val = (SemValue*) malloc(sizeof(SemValue));
+	SemValue* new_val = (SemValue*) mm_malloc(sizeof(SemValue));
 	if (new_val == NULL)
 		return NULL;
 
@@ -85,7 +86,7 @@ SemValue* sem_value_copy(const SemValue* value) {
 		case VTYPE_TOKEN:
 			new_val->token = token_copy(value->token);
 			if (new_val->token == NULL) {
-				free(new_val);
+				mm_free(new_val);
 				return NULL;
 			}
 			break;
@@ -105,15 +106,15 @@ SemValue* sem_value_copy(const SemValue* value) {
 			new_val->expr_type = value->expr_type;
 			break;
 		case VTYPE_IF:
-			new_val->if_val.if_id = (char*) malloc(sizeof(char) * (strlen(value->if_val.if_id) + 1));
+			new_val->if_val.if_id = (char*) mm_malloc(sizeof(char) * (strlen(value->if_val.if_id) + 1));
 			if (new_val->if_val.if_id == NULL) {
-				free(new_val);
+				mm_free(new_val);
 				return NULL;
 			}
 
-			new_val->if_val.elseif_id = (char*) malloc(sizeof(char) * (strlen(value->if_val.elseif_id) + 1));
+			new_val->if_val.elseif_id = (char*) mm_malloc(sizeof(char) * (strlen(value->if_val.elseif_id) + 1));
 			if (new_val->if_val.elseif_id == NULL) {
-				free(new_val);
+				mm_free(new_val);
 				return NULL;
 			}
 			break;
@@ -141,19 +142,19 @@ void sem_value_free(void* value) {
 			break;
 		case VTYPE_IF:
 			if (to_free->if_val.if_id != NULL)
-				free(to_free->if_val.if_id);
+				mm_free(to_free->if_val.if_id);
 			if (to_free->if_val.elseif_id != NULL)
-				free(to_free->if_val.elseif_id);
+				mm_free(to_free->if_val.elseif_id);
 			break;
 		case VTYPE_FOR:
-			free(to_free->for_val.uid);
-			free(to_free->for_val.step_id);
-			free(to_free->for_val.endval_id);
+			mm_free(to_free->for_val.uid);
+			mm_free(to_free->for_val.step_id);
+			mm_free(to_free->for_val.endval_id);
 		default:
 			break;
 	}
 
-	free(value);
+	mm_free(value);
 }
 
 // ------------------------
@@ -332,7 +333,7 @@ static char* get_static_var_name(const char* func_name, const char* var_name) {
 		return NULL;
 
 	char* static_id = concat(static_prefix, var_name);
-	free(static_prefix);
+	mm_free(static_prefix);
 	if (static_id == NULL) {
 		return NULL;
 	}
@@ -373,7 +374,7 @@ static htab_item* find_symbol(Parser* parser, const char* key) {
 	if (sem_an != NULL) {
 		char* static_id = get_static_var_name(sem_an->value->id->key, key);
 		item = htab_find(parser->sym_tab_global, static_id);
-		free(static_id);
+		mm_free(static_id);
 		if (item != NULL) {
 			return item;
 		}
@@ -405,7 +406,7 @@ static const char* get_var_scope_prefix(Parser* parser, const char* key) {
 	if (sem_an != NULL) {
 		char* static_id = get_static_var_name(sem_an->value->id->key, key);
 		item = htab_find(parser->sym_tab_global, static_id);
-		free(static_id);
+		mm_free(static_id);
 		if (item != NULL) {
 			return F_GLOBAL;
 		}
@@ -433,7 +434,7 @@ static HashTable* create_scope(Parser* parser) {
 		return NULL;
 
 	if (! dllist_insert_first(parser->sym_tab_stack, local)) {
-		free(local);
+		mm_free(local);
 		return NULL;
 	}
 
@@ -535,7 +536,7 @@ static bool cast_second_operand(Parser* parser, opcode_e inst) {
 	IL_ADD(il, inst, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 	// Push tmp_var back on stack
 	IL_ADD(il, OP_PUSHS, addr_symbol(F_GLOBAL, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-	free(tmp_var);	// Free generated uid
+	mm_free(tmp_var);	// Free generated uid
 	return true;
 }
 
@@ -800,7 +801,7 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 						char* tmp2 = generate_uid();
 						if (tmp2 == NULL) {
-							free(tmp1);
+							mm_free(tmp1);
 							return EXIT_INTERN_ERROR;
 						}
 
@@ -820,8 +821,8 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(il, OP_ORS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
 
-						free(tmp1);
-						free(tmp2);
+						mm_free(tmp1);
+						mm_free(tmp2);
 					}
 					break;
 				case TOKEN_GE:
@@ -833,7 +834,7 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 						char* tmp2 = generate_uid();
 						if (tmp2 == NULL) {
-							free(tmp1);
+							mm_free(tmp1);
 							return EXIT_INTERN_ERROR;
 						}
 
@@ -852,8 +853,8 @@ int sem_expr_lte_gte(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						// ORS
 						IL_ADD(il, OP_ORS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
-						free(tmp1);
-						free(tmp2);
+						mm_free(tmp1);
+						mm_free(tmp2);
 					}
 					break;
 				default:
@@ -1036,7 +1037,7 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 
 						char* tmp2 = generate_uid();
 						if (tmp2 == NULL) {
-							free(tmp1);
+							mm_free(tmp1);
 							return EXIT_INTERN_ERROR;
 						}
 
@@ -1047,8 +1048,8 @@ int sem_expr_aritmetic_basic(SemAnalyzer* sem_an, Parser* parser, SemValue value
 						IL_ADD(il, OP_CONCAT, addr_symbol(F_GLOBAL, tmp1), addr_symbol(F_GLOBAL, tmp2), addr_symbol(F_GLOBAL, tmp1), EXIT_INTERN_ERROR);
 						IL_ADD(il, OP_PUSHS, addr_symbol(F_GLOBAL, tmp1), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 
-						free(tmp1);
-						free(tmp2);
+						mm_free(tmp1);
+						mm_free(tmp2);
 					} else {
 						IL_ADD(il, OP_ADDS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 					}
@@ -1125,7 +1126,7 @@ int sem_expr_div(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(il, OP_FLOAT2R2EINTS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(il, OP_INT2FLOATS, NO_ADDR, NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(il, OP_PUSHS, addr_symbol(F_GLOBAL, tmp_var), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(tmp_var);	// Free generated string
+						mm_free(tmp_var);	// Free generated string
 					} else {
 						return EXIT_SEMANTIC_COMP_ERROR;
 					}
@@ -1611,7 +1612,7 @@ int sem_var_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 
 				int ret_val = def_var(parser, parser->sym_tab_global, static_id, &sem_an->value);
-				free(static_id);
+				mm_free(static_id);
 				if (ret_val != EXIT_SUCCESS)
 					return ret_val;
 
@@ -2119,7 +2120,7 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", label), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("int")), EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_INT2FLOAT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(label);
+						mm_free(label);
 					} else if (func_get_param(sem_an->value->id, i) == TOKEN_KW_INTEGER) {
 						char* label = generate_uid();
 						if (label == NULL)
@@ -2129,7 +2130,7 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", label), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(label);
+						mm_free(label);
 					}
 				}
 
@@ -2172,7 +2173,7 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", label), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("int")), EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_INT2FLOAT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(label);
+						mm_free(label);
 					} else if (func_get_param(sem_an->value->id, i) == TOKEN_KW_INTEGER) {
 						char* label = generate_uid();
 						if (label == NULL)
@@ -2182,7 +2183,7 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 						IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", label), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), addr_symbol(F_LOCAL, func_get_param_name(sem_an->value->id, i)), NO_ADDR, EXIT_INTERN_ERROR);
 						IL_ADD(func_il, OP_LABEL, addr_symbol("", label), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-						free(label);
+						mm_free(label);
 					}
 				}
 
@@ -2285,17 +2286,17 @@ int sem_do_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// Generate id for condition
 				char* id = generate_uid();
 				if (id == NULL) {
-					free(sem_an->value);
+					mm_free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
 
 				// Save id to SemValue
 				sem_an->value->value_type = VTYPE_TOKEN;
 				Token token = token_make_str(id);
-				free(id);
+				mm_free(id);
 				sem_an->value->token = token_copy(&token);
 				if (sem_an->value->token == NULL) {
-					free(sem_an->value);
+					mm_free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
 				sem_an->value->token->id = TOKEN_IDENTIFIER;
@@ -2970,9 +2971,9 @@ int sem_exit(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 
 				sem_an->value->value_type = VTYPE_TOKEN;
-				sem_an->value->token = (Token*) malloc(sizeof(Token));
+				sem_an->value->token = (Token*) mm_malloc(sizeof(Token));
 				if (sem_an->value->token == NULL) {
-					free(sem_an->value);
+					mm_free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
 
@@ -3043,9 +3044,9 @@ int sem_continue(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					return EXIT_INTERN_ERROR;
 
 				sem_an->value->value_type = VTYPE_TOKEN;
-				sem_an->value->token = (Token*) malloc(sizeof(Token));
+				sem_an->value->token = (Token*) mm_malloc(sizeof(Token));
 				if (sem_an->value->token == NULL) {
-					free(sem_an->value);
+					mm_free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
 
@@ -3155,14 +3156,14 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// Generate id for if
 				char* id = generate_uid();
 				if (id == NULL) {
-					free(sem_an->value);
+					mm_free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
 
 				// Generate id for elseif
 				char* elseif_id = generate_uid();
 				if (elseif_id == NULL) {
-					free(sem_an->value);
+					mm_free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
 
@@ -3240,11 +3241,11 @@ int sem_condition(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				// Generate new id for elseif
 				char* id = generate_uid();
 				if (id == NULL) {
-					free(sem_an->value);
+					mm_free(sem_an->value);
 					return EXIT_INTERN_ERROR;
 				}
 
-				free(sem_an->value->if_val.elseif_id);  // Free old ID
+				mm_free(sem_an->value->if_val.elseif_id);  // Free old ID
 				sem_an->value->if_val.elseif_id = id;  // Assign new one
 
 				DLList* il = get_current_il_list(parser);

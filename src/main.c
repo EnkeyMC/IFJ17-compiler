@@ -11,8 +11,10 @@
 #include "parser.h"
 #include "error_code.h"
 #include "3ac.h"
+#include "memory_manager.h"
 
 int main(int argc, char* argv[]) {
+	mem_manager_init();
 	if (!il_init()) {
 		return EXIT_INTERN_ERROR;
 	}
@@ -58,6 +60,8 @@ int main(int argc, char* argv[]) {
 	if (in_file !=  NULL) {
 		fclose(in_file);
 	}
+
+	mem_manager_free();
 
 	return ret_code;
 }

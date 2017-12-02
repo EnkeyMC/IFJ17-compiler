@@ -10,9 +10,10 @@
 #include <malloc.h>
 #include <assert.h>
 #include "sparse_table.h"
+#include "memory_manager.h"
 
 SparseTable* sparse_table_init(unsigned int nrows, unsigned int ncols, int dominant_value) {
-	SparseTable* stab = (SparseTable*) malloc(sizeof(SparseTable));
+	SparseTable* stab = (SparseTable*) mm_malloc(sizeof(SparseTable));
 	if (stab == NULL)
 		return NULL;
 
@@ -20,9 +21,9 @@ SparseTable* sparse_table_init(unsigned int nrows, unsigned int ncols, int domin
 	stab->ncols = ncols;
 	stab->dominant_value = dominant_value;
 
-	stab->table = (SparseTableListItem**) malloc(sizeof(SparseTableListItem*) * nrows);
+	stab->table = (SparseTableListItem**) mm_malloc(sizeof(SparseTableListItem*) * nrows);
 	if (stab->table == NULL) {
-		free(stab);
+		mm_free(stab);
 		return NULL;
 	}
 
@@ -42,13 +43,13 @@ void sparse_table_free(SparseTable* stab) {
 			while (stab->table[i] != NULL) {
 				tmp = stab->table[i];
 				stab->table[i] = tmp->next;
-				free(tmp);
+				mm_free(tmp);
 			}
 		}
 
-		free(stab->table);
+		mm_free(stab->table);
 	}
-	free(stab);
+	mm_free(stab);
 }
 
 int sparse_table_get(SparseTable* stab, unsigned int row, unsigned int column) {
@@ -92,7 +93,7 @@ bool sparse_table_set(SparseTable* stab, unsigned int row, unsigned int column, 
 			tmp = last_item->next;
 		} while (tmp != NULL);
 
-		last_item->next = (SparseTableListItem*) malloc(sizeof(SparseTableListItem));
+		last_item->next = (SparseTableListItem*) mm_malloc(sizeof(SparseTableListItem));
 		if (last_item->next == NULL)
 			return false;
 
@@ -100,7 +101,7 @@ bool sparse_table_set(SparseTable* stab, unsigned int row, unsigned int column, 
 		last_item->next->value = value;
 		last_item->next->column = column;
 	} else {
-		stab->table[row] = (SparseTableListItem*) malloc(sizeof(SparseTableListItem));
+		stab->table[row] = (SparseTableListItem*) mm_malloc(sizeof(SparseTableListItem));
 		if (stab->table[row] == NULL)
 			return false;
 
