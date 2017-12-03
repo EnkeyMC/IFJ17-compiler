@@ -1,0 +1,6 @@
+' bad start value type
+
+scope
+	for i as integer = !"hello" to 13
+	next i
+end scope

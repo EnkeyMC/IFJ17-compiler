@@ -1,0 +1,11 @@
+' exit too many loops
+
+scope
+	do
+		do
+			do
+				exit do, do, do, do
+			loop
+		loop
+	loop
+end scope

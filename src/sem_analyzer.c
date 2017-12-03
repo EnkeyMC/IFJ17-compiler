@@ -3246,7 +3246,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				if (item == NULL)
 					return EXIT_SEMANTIC_PROG_ERROR;
 				if (strcmp(for_val.iterator->key, item->key) != 0)
-					return EXIT_SEMANTIC_PROG_ERROR;
+					return EXIT_SEMANTIC_OTHER_ERROR;
 			}
 		} END_STATE;
 

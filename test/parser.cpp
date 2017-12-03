@@ -465,6 +465,60 @@ TEST_F(ParserTestFixture, SuccLoops19) {
 	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
 }
 
+TEST_F(ParserTestFixture, SuccLoops20) {
+	SetInputFile("test_files/syntax/loops/20.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SEMANTIC_OTHER_ERROR);
+}
+
+TEST_F(ParserTestFixture, SuccLoops21) {
+	SetInputFile("test_files/syntax/loops/21.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
+}
+
+TEST_F(ParserTestFixture, SuccLoops22) {
+	SetInputFile("test_files/syntax/loops/22.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
+}
+
+TEST_F(ParserTestFixture, SuccLoops23) {
+	SetInputFile("test_files/syntax/loops/23.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SEMANTIC_OTHER_ERROR);
+}
+
+TEST_F(ParserTestFixture, SuccLoops24) {
+	SetInputFile("test_files/syntax/loops/24.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SEMANTIC_PROG_ERROR);
+}
+
+TEST_F(ParserTestFixture, SuccLoops25) {
+	SetInputFile("test_files/syntax/loops/25.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SEMANTIC_COMP_ERROR);
+}
+
+TEST_F(ParserTestFixture, SuccLoops26) {
+	SetInputFile("test_files/syntax/loops/26.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SEMANTIC_COMP_ERROR);
+}
+
+TEST_F(ParserTestFixture, SuccLoops27) {
+	SetInputFile("test_files/syntax/loops/27.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SEMANTIC_COMP_ERROR);
+}
+
+TEST_F(ParserTestFixture, SuccLoops28) {
+	SetInputFile("test_files/syntax/loops/28.code");
+
+	EXPECT_EQ(parse(parser), EXIT_SYNTAX_ERROR);
+}
+
 // ----------
 // CONDITIONS
 // ----------

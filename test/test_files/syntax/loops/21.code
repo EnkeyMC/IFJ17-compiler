@@ -1,0 +1,10 @@
+' wrong exit syntax
+
+scope
+	for i as double = 1 to 3.3 step 0.4
+		do while i < 12.5
+			i = i + 2.3333
+			exit do, for
+		loop
+	next
+end scope
