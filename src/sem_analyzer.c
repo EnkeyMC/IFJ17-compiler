@@ -421,7 +421,7 @@ static void delete_scope(Parser* parser) {
 		return;
 	else {
 		HashTable* local_symtab = (HashTable*) dllist_delete_first(parser->sym_tab_stack);
-		htab_free(local_symtab);
+		htab_var_free(local_symtab);
 	}
 }
 
@@ -471,7 +471,7 @@ static int def_var(Parser* parser, HashTable* symtab, const char* id, SemValue**
 	}
 
 	// Put variable in value table
-	htab_item* item = htab_lookup(symtab, id);
+	htab_item* item = htab_var_insert(symtab, id);
 
 	*value_out = sem_value_init();
 
@@ -525,7 +525,7 @@ int sem_expr_result(SemAnalyzer *sem_an, Parser *parser, SemValue value) {
 							addr_symbol(F_GLOBAL, EXPR_VALUE_VAR),
 							NO_ADDR, NO_ADDR);
 
-					item = htab_lookup(parser->sym_tab_global, EXPR_VALUE_VAR);
+					item = htab_var_insert(parser->sym_tab_global, EXPR_VALUE_VAR);
 				}
 
 				var_set_type(item, (token_e)value.expr_type);
@@ -1824,7 +1824,7 @@ int sem_param_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				}
 
 				// Put variable in local symtable
-				htab_lookup(symtab, value.token->data.str);
+				htab_var_insert(symtab, value.token->data.str);
 
 				SEM_NEXT_STATE(SEM_STATE_VAR_TYPE);
 			}
@@ -1884,7 +1884,7 @@ int sem_func_decl(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 				}
 
 				// Put function name in symtable
-				htab_func_lookup(symtab_func, value.token->data.str);
+				htab_func_insert(symtab_func, value.token->data.str);
 				// Create new local symtable
 				create_scope(parser);
 
@@ -2131,9 +2131,8 @@ int sem_func_def(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 					}
 				}
 
-				// Function was NOT declared
-				// add it to symtable
-				item = htab_func_lookup(symtab_func, value.token->data.str);
+				// Function was NOT declared -- add it to symtable
+				item = htab_func_insert(symtab_func, value.token->data.str);
 
 				sem_an->value = sem_value_init();
 
@@ -2652,7 +2651,7 @@ int sem_for_loop(SemAnalyzer* sem_an, Parser* parser, SemValue value) {
 
 						// create new iterator by concatenating var name and UID
 						char* iterator_id = concat(sem_an->value->token->data.str, uid);
-						item = htab_lookup(parser->sym_tab_global, iterator_id);
+						item = htab_var_insert(parser->sym_tab_global, iterator_id);
 						if (item == NULL)
 							return EXIT_INTERN_ERROR;
 						var_set_type(item, value.token->id);

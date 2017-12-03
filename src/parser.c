@@ -33,7 +33,7 @@ static void add_built_ins(HashTable* htab) {
 
 	htab_item* built_in;
 	for (int i = 0; i < 4; i++) {
-		built_in = htab_func_lookup(htab, built_in_func[i]);
+		built_in = htab_func_insert(htab, built_in_func[i]);
 
 		func_set_defined(built_in);
 		// Set parameter types and return types
@@ -198,7 +198,7 @@ Parser* parser_init(Scanner* scanner) {
 	grammar_init();
 	expr_grammar_init();
 	parser->dtree_stack = stack_init(30);
-	parser->sym_tab_stack = dllist_init(htab_free);
+	parser->sym_tab_stack = dllist_init(htab_var_free);
 	parser->sym_tab_global = htab_init(HTAB_INIT_SIZE);
 	parser->sym_tab_functions = htab_init(HTAB_INIT_SIZE);
 	add_built_ins(parser->sym_tab_functions);
@@ -216,7 +216,7 @@ Parser* parser_init(Scanner* scanner) {
 void parser_free(Parser* parser) {
 	assert(parser != NULL);
 
-	htab_free(parser->sym_tab_global);
+	htab_var_free(parser->sym_tab_global);
 	dllist_free(parser->sym_tab_stack);
 	dllist_free(parser->sem_an_stack);
 	htab_func_free(parser->sym_tab_functions);

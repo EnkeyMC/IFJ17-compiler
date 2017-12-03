@@ -20,7 +20,7 @@ protected:
 	}
 
 	virtual void TearDown() {
-		EXPECT_NO_FATAL_FAILURE(htab_free(hash_table));
+		EXPECT_NO_FATAL_FAILURE(htab_var_free(hash_table));
 		mem_manager_init();
 	}
 };
@@ -38,12 +38,12 @@ protected:
 
 		// Insert items
 		for (auto &key : keys) {
-			htab_lookup(hash_table, key);
+			htab_var_insert(hash_table, key);
 		}
 	}
 
 	virtual void TearDown() {
-		EXPECT_NO_FATAL_FAILURE(htab_free(hash_table));
+		EXPECT_NO_FATAL_FAILURE(htab_var_free(hash_table));
 		mem_manager_free();
 	}
 };
@@ -58,14 +58,14 @@ TEST_F(HashTableTestFixture, InsertItems) {
 
 	// Test function
 	ASSERT_EQ(
-		htab_lookup(nullptr, "null"),
+		htab_var_insert(nullptr, "null"),
 		nullptr
 	) << "No item should be created with nullptr passed as table";
 
 	// Insert items
 	for (auto &key : keys) {
 		EXPECT_NE(
-			htab_lookup(hash_table, key),
+			htab_var_insert(hash_table, key),
 		nullptr
 		) << "Function should return item ptr";
 	}
@@ -113,21 +113,21 @@ TEST_F(HashTableWithDataTestFixture, FindValidItem) {
 }
 
 TEST_F(HashTableWithDataTestFixture, RemoveInvalidItem) {
-	EXPECT_FALSE(htab_remove(hash_table, "invalid")) << "Invalid key should return false";
+	EXPECT_FALSE(htab_var_remove(hash_table, "invalid")) << "Invalid key should return false";
 }
 
 TEST_F(HashTableWithDataTestFixture, DeleteValidItem) {
-	EXPECT_TRUE(htab_remove(hash_table, keys[2])) << "Deleting valid key should return true";
+	EXPECT_TRUE(htab_var_remove(hash_table, keys[2])) << "Deleting valid key should return true";
 }
 
 TEST_F(HashTableTestFixture, RemoveOnEmptyTable) {
-	ASSERT_FALSE(htab_remove(hash_table, "nokey")) << "Empty table should return false";
+	ASSERT_FALSE(htab_var_remove(hash_table, "nokey")) << "Empty table should return false";
 }
 
 
 TEST_F(HashTableTestFixture, InvalidRemove) {
-	ASSERT_FALSE(htab_remove(nullptr, "nokey")) << "Null table should return false";
-	ASSERT_FALSE(htab_remove(hash_table, nullptr)) << "Null key should return false";
+	ASSERT_FALSE(htab_var_remove(nullptr, "nokey")) << "Null table should return false";
+	ASSERT_FALSE(htab_var_remove(hash_table, nullptr)) << "Null key should return false";
 }
 
 TEST_F(HashTableTestFixture, ForeachInvalid) {

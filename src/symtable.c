@@ -40,7 +40,7 @@ HashTable* htab_init(size_t bucket_count) {
 }
 
 /**
- * Free all items contained in the hash table
+ * Free all items from hash table
  * @param htab Pointer to hash table
  */
 static void htab_clear(HashTable *htab, bool func) {
@@ -65,7 +65,7 @@ static void htab_clear(HashTable *htab, bool func) {
 	mm_free(htab);
 }
 
-void htab_free(void* htab) {
+void htab_var_free(void* htab) {
 	htab_clear((HashTable*)htab, false);
 }
 
@@ -105,7 +105,7 @@ static bool htab_remove_item(HashTable *htab, const char *key, bool func) {
 	if (*item == NULL)	// Item not found
 		return false;
 
-	htab_item * tmp = *item;
+	htab_item *tmp = *item;
 	*item = (*item)->next;
 
 	mm_free(tmp->key);
@@ -121,7 +121,7 @@ static bool htab_remove_item(HashTable *htab, const char *key, bool func) {
 	return true;
 }
 
-bool htab_remove(HashTable* htab, const char *key) {
+bool htab_var_remove(HashTable* htab, const char *key) {
 	return htab_remove_item(htab, key, false);
 }
 
@@ -151,9 +151,8 @@ static htab_item * htab_add_item(HashTable *htab, const char *key, bool func) {
 	// Item contains address of pointer to next item
 	htab_item ** item = &(htab->ptr[index]);
 	while (*item != NULL) {
-		if (strcmp(key, (*item)->key) == 0) {
+		if (strcmp(key, (*item)->key) == 0)
 			return *item;
-		}
 		else
 			item = &((*item)->next);
 	}
@@ -167,9 +166,8 @@ static htab_item * htab_add_item(HashTable *htab, const char *key, bool func) {
 	strncpy(new_item->key, key, key_length); // Copy the key into the new item
 
 	// Allocate memory for item data
-	if (func) {
+	if (func)
 		alloc_func_item(new_item);
-	}
 	else {
 		new_item->variable = (htab_variable_item*) mm_malloc(sizeof(htab_variable_item));
 		new_item->variable->type = END_OF_TERMINALS;
@@ -183,11 +181,11 @@ static htab_item * htab_add_item(HashTable *htab, const char *key, bool func) {
 	return new_item;
 }
 
-htab_item * htab_lookup(HashTable* htab, const char* key) {
+htab_item * htab_var_insert(HashTable* htab, const char* key) {
 	return htab_add_item(htab, key, false);
 }
 
-htab_item * htab_func_lookup(HashTable* htab, const char* key) {
+htab_item * htab_func_insert(HashTable* htab, const char* key) {
 	return htab_add_item(htab, key, true);
 }
 

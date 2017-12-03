@@ -25,8 +25,8 @@
 typedef struct htab_function_item_t {
 	token_e ret_type;	/// Return type
 	unsigned params_num;	/// Number of parameters
-	Buffer* param_types;	/// String containing paramater types
-	Buffer* param_names;	/// String containing paramater names
+	Buffer* param_types;	/// Paramater types
+	Buffer* param_names;	/// Paramater names
 	bool defined;	/// Was already defined?
 } htab_function_item;
 
@@ -38,7 +38,7 @@ typedef struct htab_variable_item_t {
  * Identifier hash table item
  */
 typedef struct htab_item_t {
-	char *key;	/// Name of identifier
+	char *key;	/// Identifier
 	struct htab_item_t * next;	/// Pointer to next item in the list
 	union {
 		htab_function_item* function;
@@ -57,15 +57,15 @@ typedef struct hash_table {
 /**
  * Initialize empty hash table
  * @param bucket_count Size of array of buckets
- * @return Pointer to empty hash table or NULL if allocation of memory failed
+ * @return Pointer to empty hash table
  */
 HashTable *htab_init(size_t bucket_count);
 
 /**
- * Free whole hash table from memory
+ * Free hash table
  * @param htab Pointer to hash table
  */
-void htab_free(void* htab);
+void htab_var_free(void* htab);
 void htab_func_free(HashTable *htab);
 
 /**
@@ -80,19 +80,19 @@ htab_item * htab_find(HashTable *htab, const char* key);
  * Remove bucket containing given key
  * @param htab Pointer to hash table
  * @param key String identifying an item
- * @return true on seccuss or false if the item does not exist
+ * @return true on success, false if item does not exist
  */
-bool htab_remove(HashTable *htab, const char *key);
+bool htab_var_remove(HashTable *htab, const char *key);
 bool htab_func_remove(HashTable *htab, const char *key);
 
 /**
  * Find existing bucket or add new one if it does not exist
  * @param htab Pointer to hash table
  * @param key String identifying an item
- * @return Pointer to item or NULL if allocation of memory for new item fails
+ * @return Pointer to inserted item
  */
-htab_item* htab_lookup(HashTable *htab, const char* key);
-htab_item* htab_func_lookup(HashTable *htab, const char* key);
+htab_item* htab_var_insert(HashTable *htab, const char* key);
+htab_item* htab_func_insert(HashTable *htab, const char* key);
 
 /**
  * For each entry in the hash table call function 'func'
@@ -123,7 +123,7 @@ void func_add_param(htab_item* item, token_e type);
  * Get type of function parameter from given index
  * @param item Pointer to hash table item (that stores function data)
  * @param idx Parameter index - INDEXING STARTS AT 1 !!!
- * @return Parameter data type (e.g. TOKEN_KW_STRING, TOKEN_KW_INTEGER,...) on success, END_OF_TERMINALS otherwise
+ * @return Parameter data type (e.g. TOKEN_KW_STRING, ,...) on success, END_OF_TERMINALS otherwise
  */
 token_e func_get_param(htab_item* item, unsigned idx);
 
@@ -135,7 +135,7 @@ token_e func_get_param(htab_item* item, unsigned idx);
 unsigned func_get_param_idx(htab_item* item);
 
 /**
- * Store parameter name in function atribute
+ * Store parameter name in function attribute
  * @param item Item with function data
  * @param name name of the parameter
  */
