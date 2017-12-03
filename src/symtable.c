@@ -245,7 +245,9 @@ void func_add_param(htab_item* item, token_e type) {
 		case TOKEN_KW_BOOLEAN:
 			c = 'b';
 			break;
-		default: assert(!"Invalid param type");
+		default:
+			assert(!"Invalid param type");
+			return;
 	}
 	item->function->params_num++;
 	buffer_append_c(item->function->param_types, c);
