@@ -27,8 +27,6 @@ const char* scope_prefix[3] = {"GF@", "LF@", "TF@"};
 
 Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, Address addr3) {
 	Instruction* inst = (Instruction*) mm_malloc(sizeof(Instruction));
-	if (inst == NULL)
-		return NULL;
 
 	if (addr1.type == ADDR_TYPE_ERROR ||
 		addr2.type == ADDR_TYPE_ERROR ||
@@ -62,10 +60,6 @@ Address addr_symbol(const char* prefix, const char* symbol) {
 	Address addr;
 
 	addr.symbol = (char*) mm_malloc(sizeof(char) * (strlen(prefix) + strlen(symbol) + 1));
-	if (addr.symbol == NULL) {
-		addr.type = ADDR_TYPE_ERROR;
-		return addr;
-	}
 
 	strcpy(addr.symbol, prefix);
 	strcat(addr.symbol, symbol);
@@ -78,10 +72,6 @@ Address addr_constant(Token token) {
 	Address addr;
 
 	addr.constant = token_copy(&token);
-	if (addr.constant == NULL) {
-		addr.type = ADDR_TYPE_ERROR;
-		return addr;
-	}
 
 	addr.type = ADDR_TYPE_CONST;
 
@@ -101,24 +91,10 @@ void address_free(Address addr) {
 	}
 }
 
-bool il_init() {
+void il_init() {
 	main_il = dllist_init(instruction_free);
-	if (main_il == NULL)
-		return false;
-
 	func_il = dllist_init(instruction_free);
-	if (func_il == NULL) {
-		dllist_free(main_il);
-		return false;
-	}
-
 	global_il = dllist_init(instruction_free);
-	if (global_il == NULL) {
-		dllist_free(main_il);
-		dllist_free(func_il);
-		return false;
-	}
-	return true;
 }
 
 void il_free() {
@@ -127,15 +103,15 @@ void il_free() {
 	dllist_free(global_il);
 }
 
-bool il_add(DLList* il, Instruction* instruction) {
+void il_add(DLList* il, Instruction* instruction) {
 	if (instruction == NULL)
-		return false;
+		return;
 
 	// Just for the sake of tests
 	if (il == NULL)
-		return true;
+		return;
 
-	return dllist_insert_last(il, instruction);
+	dllist_insert_last(il, instruction);
 }
 
 static void print_instruction(Instruction* instruction) {

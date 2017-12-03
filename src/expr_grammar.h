@@ -74,7 +74,7 @@ extern struct expr_grammar_t {
 /**
  * Initialize operator-precedence grammar
  */
-bool expr_grammar_init();
+void expr_grammar_init();
 
 /**
  * Free expression grammar

@@ -116,9 +116,8 @@ void function_item_debug(htab_item *item);
  * Add parameter type to function record in hash table
  * @param item Pointer to hash table item (that stores function data)
  * @param type parameter data type
- * @return true on success, false otherwise
  */
-bool func_add_param(htab_item* item, token_e type);
+void func_add_param(htab_item* item, token_e type);
 
 /**
  * Get type of function parameter from given index
@@ -139,15 +138,14 @@ unsigned func_get_param_idx(htab_item* item);
  * Store parameter name in function atribute
  * @param item Item with function data
  * @param name name of the parameter
- * @return true on succes, false othetwise
  */
-bool func_store_param_name(htab_item* item, const char* name);
+void func_store_param_name(htab_item* item, const char* name);
 
 /**
  * Get parameter name
  * @param item Item with function data
  * @param idx Parameter index - INDEXING STARTS AT 1 !!!
- * @return Copy of parameter name on success, NULL otherwise
+ * @return Copy of parameter name on success
  */
 char* func_get_param_name(htab_item* item, unsigned idx);
 

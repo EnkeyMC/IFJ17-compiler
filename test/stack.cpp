@@ -31,9 +31,8 @@ TEST_F(StackTestFixture, Initialization) {
 
 TEST_F(StackTestFixture, PushSingle) {
 	int val = 42;
-	bool ret = stack_push(stack, &val);
+	stack_push(stack, &val);
 
-	ASSERT_TRUE(ret) << "Stack push shouldn't fail";
 	EXPECT_FALSE(stack_empty(stack)) << "Stack should not be empty";
 	EXPECT_EQ(*((int*) stack_top(stack)), val);
 
@@ -46,7 +45,7 @@ TEST_F(StackTestFixture, PushMultiple) {
 
 	int i;
 	for (i = 0; i < 10; i++) {
-		ASSERT_TRUE(stack_push(stack, values + i)) << "Stack push shouldn't fail";
+		stack_push(stack, values + i);
 	}
 
 	while (!stack_empty(stack) && i > 0) {
@@ -64,7 +63,7 @@ TEST_F(StackTestFixture, PushMultipleMalloc) {
 	}
 
 	for (int i = 0; i < 5; i++) {
-		ASSERT_TRUE(stack_push(stack, values[i])) << "Stack push shouldn't fail";
+		stack_push(stack, values[i]);
 		EXPECT_EQ(*((int*) stack_top(stack)), *values[i]);
 	}
 

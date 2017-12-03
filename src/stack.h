@@ -33,7 +33,7 @@ typedef struct {
 /**
  * Allocate and initialize new stack
  * @param default_size default stack allocation size
- * @return pointer to new stack, NULL on allocation error
+ * @return pointer to new stack
  */
 Stack* stack_init(int default_size);
 
@@ -62,9 +62,8 @@ void* stack_pop(Stack* s);
  * Push item to a top of the stack
  * @param s valid Stack object
  * @param item to push to stack
- * @return true on success, false on allocation error
  */
-bool stack_push(Stack* s, void* item);
+void stack_push(Stack* s, void* item);
 
 /**
  * Free stack, calls free_item_f function on every item that is left in the stack if given

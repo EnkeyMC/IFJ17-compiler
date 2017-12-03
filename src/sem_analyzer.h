@@ -121,7 +121,7 @@ typedef struct sem_analyzer_t {
 /**
  * Initialize semantic analyzer with sem_action and SEM_STATE_START state
  * @param sem_action Semantic action function
- * @return new SemAnalyzer object, NULL on error
+ * @return new SemAnalyzer object
  */
 SemAnalyzer* sem_an_init(semantic_action_f sem_action);
 
@@ -140,7 +140,7 @@ SemValue* sem_value_init();
 /**
  * Deep copy semantic value, but only move VTYPE_LIST
  * @param value semantic value
- * @return deep copy of value, NULL on error
+ * @return deep copy of value
  */
 SemValue* sem_value_copy(const SemValue* value);
 
@@ -191,9 +191,8 @@ void* sem_stack_pop(DLList *s);
  * Push item to a top of the stack
  * @param s valid Stack object
  * @param item to push to stack
- * @return true on success, false on allocation error
  */
-bool sem_stack_push(DLList *s, void* item);
+void sem_stack_push(DLList *s, void* item);
 
 // ------------------
 // SEMANTIC FUNCTIONS

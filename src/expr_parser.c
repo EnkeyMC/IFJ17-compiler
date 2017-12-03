@@ -21,8 +21,6 @@ int parse_expression(Parser *parser) {
 	assert(parser != NULL);
 
 	ExtStack* s = ext_stack_init();
-	if (s == NULL)
-		return EXIT_INTERN_ERROR;
 
 	int ret_code = EXIT_SUCCESS;
 	Token* token = NULL;
@@ -32,11 +30,7 @@ int parse_expression(Parser *parser) {
 		token_free(token);
 
 		token = scanner_get_token(parser->scanner);
-		if (token == NULL) {
-			ret_code = EXIT_INTERN_ERROR;
-			break;
-		}
-		else if (token->id == LEX_ERROR) {
+		if (token->id == LEX_ERROR) {
 			ret_code = EXIT_LEX_ERROR;
 			break;
 		}
@@ -81,14 +75,10 @@ int parse_expression(Parser *parser) {
 		last_token = token->id;	// update last token
 
 		if (action == EXPR_PUSH_MARKER) {
-			if (! ext_stack_push(s, token->id, token)) {
-				ret_code = EXIT_INTERN_ERROR;
-			}
+			ext_stack_push(s, token->id, token);
 		}
 		else if (action == EXPR_HANDLE_MARKER) {
-			if (! ext_stack_shift(s, token)) {
-				ret_code = EXIT_INTERN_ERROR;
-			}
+			ext_stack_shift(s, token);
 		}
 		else if (action == EXPR_ERROR) {
 			ret_code = EXIT_SYNTAX_ERROR;

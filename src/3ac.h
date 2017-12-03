@@ -82,8 +82,8 @@
 #define F_TMP scope_prefix[2]
 
 // Helper macros for adding instructions
-#define IL_ADD(il, op, addr1, addr2, addr3, ret) if (!il_add(il, instruction_init(op, addr1, addr2, addr3))) return ret;
-#define IL_ADD_SPACE(il, ret) if (!il_add(il, instruction_init(OP_SPACE, NO_ADDR, NO_ADDR, NO_ADDR))) return ret;
+#define IL_ADD(il, op, addr1, addr2, addr3) il_add(il, instruction_init(op, addr1, addr2, addr3))
+#define IL_ADD_SPACE(il) il_add(il, instruction_init(OP_SPACE, NO_ADDR, NO_ADDR, NO_ADDR))
 #define MAKE_TOKEN_INT(num) token_make(TOKEN_INT, (union token_data){.i = (num)})
 #define MAKE_TOKEN_REAL(real) token_make(TOKEN_REAL, (union token_data){.d = (real)})
 #define MAKE_TOKEN_STRING(string) token_make_str(string)
@@ -140,7 +140,7 @@ extern DLList* global_il;  /// Global instruction list for global variables
  * @param addr1 Address 1
  * @param addr2 Address 2
  * @param addr3 Address 3
- * @return new instruction, NULL on error
+ * @return new instruction
  */
 Instruction* instruction_init(opcode_e operation, Address addr1, Address addr2, Address addr3);
 
@@ -173,9 +173,8 @@ void address_free(Address addr);
 
 /**
  * Initialize instruction list
- * @return true on success, false otherwise
  */
-bool il_init();
+void il_init();
 
 /**
  * Free instruction list
@@ -185,9 +184,8 @@ void il_free();
 /**
  * Adds instruction to instruction list
  * @param instruction Instruction to add
- * @return true on success, false if instruction is NULL or allocation error
  */
-bool il_add(DLList* il, Instruction* instruction);
+void il_add(DLList* il, Instruction* instruction);
 
 /**
  * Generate 3 address code

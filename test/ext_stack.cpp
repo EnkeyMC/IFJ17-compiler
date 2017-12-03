@@ -41,14 +41,14 @@ TEST_F(ExtendedStackTestFixture, PushAndTop) {
 
 	int i;
 	for (i = 0; i < npush; i++) {
-		EXPECT_EQ(ext_stack_push(s, push_items[i], NULL), true);
+		ext_stack_push(s, push_items[i], NULL);
 		EXPECT_EQ(ext_stack_top(s), push_items[i]);
 	}
 
 	i--; // Index of last termnal inserted
-	EXPECT_EQ(ext_stack_push(s, NT_EXPRESSION, NULL), true); // Push non_terminal
+	ext_stack_push(s, NT_EXPRESSION, NULL); // Push non_terminal
 	EXPECT_EQ(ext_stack_top(s), push_items[i]); // TOp should return last TERMINAL
 
-	EXPECT_EQ(ext_stack_push(s, NT_LIST, NULL), true);
+	ext_stack_push(s, NT_LIST, NULL);
 	EXPECT_EQ(ext_stack_top(s), push_items[i]);
 }

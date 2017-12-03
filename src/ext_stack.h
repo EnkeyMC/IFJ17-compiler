@@ -51,9 +51,8 @@ void ext_stack_item_free(void* item);
  * @param s stack to work with
  * @param type_id symbol to be pushed
  * @param token if type_id is token, this is the token data, otherwise NULL
- * @return true on success, false if memory allocation fails
  */
-bool ext_stack_push(ExtStack* s, unsigned type_id, Token* token);
+void ext_stack_push(ExtStack* s, unsigned type_id, Token* token);
 
 /**
  * Get topmost TERMINAL on the stack
@@ -74,9 +73,8 @@ bool ext_stack_expr_on_top(ExtStack* s);
  * Push given token on top of the stack.
  * @param s stack to work with
  * @param token token to be inserted on top of the stack
- * @return true on success, false if memory allocation fails
  */
-bool ext_stack_shift(ExtStack* s, Token* token);
+void ext_stack_shift(ExtStack* s, Token* token);
 
 /**
  * Try to reduce top of the stack till first EXPR_SHIFT mark on the stack

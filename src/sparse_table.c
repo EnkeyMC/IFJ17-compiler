@@ -14,18 +14,12 @@
 
 SparseTable* sparse_table_init(unsigned int nrows, unsigned int ncols, int dominant_value) {
 	SparseTable* stab = (SparseTable*) mm_malloc(sizeof(SparseTable));
-	if (stab == NULL)
-		return NULL;
 
 	stab->nrows = nrows;
 	stab->ncols = ncols;
 	stab->dominant_value = dominant_value;
 
 	stab->table = (SparseTableListItem**) mm_malloc(sizeof(SparseTableListItem*) * nrows);
-	if (stab->table == NULL) {
-		mm_free(stab);
-		return NULL;
-	}
 
 	for (unsigned int i = 0; i < nrows; i++) {
 		stab->table[i] = NULL;
@@ -75,9 +69,8 @@ int sparse_table_get(SparseTable* stab, unsigned int row, unsigned int column) {
 bool sparse_table_set(SparseTable* stab, unsigned int row, unsigned int column, int value) {
 	assert(stab != NULL);
 
-	if (row >= stab->nrows || column >= stab->ncols) {
+	if (row >= stab->nrows || column >= stab->ncols)
 		return false;
-	}
 
 	SparseTableListItem* last_item = stab->table[row];
 
@@ -94,20 +87,17 @@ bool sparse_table_set(SparseTable* stab, unsigned int row, unsigned int column, 
 		} while (tmp != NULL);
 
 		last_item->next = (SparseTableListItem*) mm_malloc(sizeof(SparseTableListItem));
-		if (last_item->next == NULL)
-			return false;
 
 		last_item->next->next = NULL;
 		last_item->next->value = value;
 		last_item->next->column = column;
 	} else {
 		stab->table[row] = (SparseTableListItem*) mm_malloc(sizeof(SparseTableListItem));
-		if (stab->table[row] == NULL)
-			return false;
 
 		stab->table[row]->next = NULL;
 		stab->table[row]->value = value;
 		stab->table[row]->column = column;
 	}
+
 	return true;
 }

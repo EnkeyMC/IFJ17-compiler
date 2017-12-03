@@ -15,27 +15,18 @@
 #include "memory_manager.h"
 
 /// Add rule to grammar, cleanup on failure
-#define ADD_EXPR_RULE(nt, sem_an, ...) if (!expr_grammar_add_rule(curr_idx++, nt, sem_an, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { expr_grammar_free(); return false; }
+#define ADD_EXPR_RULE(nt, sem_an, ...) expr_grammar_add_rule(curr_idx++, nt, sem_an, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)
 
 
 struct expr_grammar_t expr_grammar;
 
 
-static bool expr_grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_an, int va_num, ...) {
+static void expr_grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_an, int va_num, ...) {
 	assert(idx < NUM_OF_EXPR_RULES);
 
 	Rule* rule = (Rule*) mm_malloc(sizeof(Rule));
-	if (rule == NULL) {
-		return false;
-	}
-
 
 	rule->production = (unsigned*) mm_malloc(sizeof(unsigned) * (va_num + 1));
-
-	if (rule->production == NULL) {
-		mm_free(rule);
-		return false;
-	}
 
 	va_list va_args;
 	va_start(va_args, va_num);
@@ -51,25 +42,14 @@ static bool expr_grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f 
 	va_end(va_args);
 
 	expr_grammar.rules[idx] = rule;
-
-	return true;
 }
 
-bool expr_grammar_init() {
+void expr_grammar_init() {
 	// Precedence table allocation
 	expr_grammar.precedence_table = (unsigned**) mm_malloc(sizeof(unsigned*) * PT_INDEX_ENUM_SIZE);
-	if (expr_grammar.precedence_table != NULL) {
-		for (int j = 0; j < PT_INDEX_ENUM_SIZE; j++) {
-			expr_grammar.precedence_table[j] = (unsigned *) mm_malloc(sizeof(unsigned) * PT_INDEX_ENUM_SIZE);
-			if (expr_grammar.precedence_table[j] == NULL) {
-				for (j = j - 1;j >= 0; j--)
-					mm_free(expr_grammar.precedence_table[j]);
-				return false;
-			}
-		}
+	for (int j = 0; j < PT_INDEX_ENUM_SIZE; j++) {
+		expr_grammar.precedence_table[j] = (unsigned *) mm_malloc(sizeof(unsigned) * PT_INDEX_ENUM_SIZE);
 	}
-	else
-		return false;
 
 	// Grammar rules init -- Rules already REVERSED !!!
 	int curr_idx = 0;	// Starting at index 0
@@ -139,8 +119,6 @@ bool expr_grammar_init() {
 			else
 				expr_grammar.precedence_table[i][k] = EXPR_SUCCESS;
 		}
-
-	return true;
 }
 
 void expr_grammar_free() {

@@ -27,18 +27,13 @@
 /**
  * Add built-in functions to HashTable
  * @param htab Hash table that stores function entries
- * @return true on success, false otherwise
  */
-static bool add_built_ins(HashTable* htab) {
+static void add_built_ins(HashTable* htab) {
 	const char *built_in_func[] = { "length", "substr", "asc", "chr" };
 
 	htab_item* built_in;
 	for (int i = 0; i < 4; i++) {
 		built_in = htab_func_lookup(htab, built_in_func[i]);
-		if (built_in == NULL) {
-			htab_func_free(htab);
-			return false;
-		}
 
 		func_set_defined(built_in);
 		// Set parameter types and return types
@@ -46,257 +41,170 @@ static bool add_built_ins(HashTable* htab) {
 			// length
 			case 0:
 				func_set_ret_type(built_in, TOKEN_KW_INTEGER);
-				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
-					htab_func_free(htab);
-					return false;
-				}
+				func_add_param(built_in, TOKEN_KW_STRING);
 				break;
 			// substr
 			case 1:
 				func_set_ret_type(built_in, TOKEN_KW_STRING);
-				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
-					htab_func_free(htab);
-					return false;
-				}
-				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
-					htab_func_free(htab);
-					return false;
-				}
-				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
-					htab_func_free(htab);
-					return false;
-				}
+				func_add_param(built_in, TOKEN_KW_STRING);
+				func_add_param(built_in, TOKEN_KW_INTEGER);
+				func_add_param(built_in, TOKEN_KW_INTEGER);
 				break;
 			case 2:
 				func_set_ret_type(built_in, TOKEN_KW_INTEGER);
-				if (! func_add_param(built_in, TOKEN_KW_STRING)) {
-					htab_func_free(htab);
-					return false;
-				}
-				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
-					htab_func_free(htab);
-					return false;
-				}
+				func_add_param(built_in, TOKEN_KW_STRING);
+				func_add_param(built_in, TOKEN_KW_INTEGER);
 				break;
 			case 3:
 				func_set_ret_type(built_in, TOKEN_KW_STRING);
-				if (! func_add_param(built_in, TOKEN_KW_INTEGER)) {
-					htab_func_free(htab);
-					return false;
-				}
+				func_add_param(built_in, TOKEN_KW_INTEGER);
 			default: break;
 		}
 	}
 
 	// ASC function
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "asc"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "asc_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "asc_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "strlength"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_SUB, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)), false);
-	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "strlength"), addr_symbol(F_LOCAL, "str"), NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if1cond"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "if1cond"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(0)), false);
-	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "wrongindex"), addr_symbol(F_LOCAL, "if1cond"), addr_constant(MAKE_TOKEN_BOOL(true)), false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if2cond"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_GT, addr_symbol(F_LOCAL, "if2cond"), addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "strlength"), false);
-	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "wrongindex"), addr_symbol(F_LOCAL, "if2cond"), addr_constant(MAKE_TOKEN_BOOL(true)), false);
-	IL_ADD(func_il, OP_STRI2INT, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "str"), addr_symbol(F_LOCAL, "i"), false);
-	IL_ADD(func_il, OP_JUMP, addr_symbol("", "ascvalue"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "wrongindex"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "retval"), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "ascvalue"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "asc"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "asc_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")));
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "asc_noconvert"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "strlength"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_SUB, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)));
+	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "strlength"), addr_symbol(F_LOCAL, "str"), NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if1cond"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "if1cond"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(0)));
+	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "wrongindex"), addr_symbol(F_LOCAL, "if1cond"), addr_constant(MAKE_TOKEN_BOOL(true)));
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if2cond"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_GT, addr_symbol(F_LOCAL, "if2cond"), addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "strlength"));
+	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "wrongindex"), addr_symbol(F_LOCAL, "if2cond"), addr_constant(MAKE_TOKEN_BOOL(true)));
+	IL_ADD(func_il, OP_STRI2INT, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "str"), addr_symbol(F_LOCAL, "i"));
+	IL_ADD(func_il, OP_JUMP, addr_symbol("", "ascvalue"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "wrongindex"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "retval"), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "ascvalue"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR);
 
 	// SUBSTR function
-	IL_ADD_SPACE(func_il, false);
-	IL_ADD_SPACE(func_il, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "n"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "n"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "n"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "substr_n_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "n"), addr_symbol(F_TMP, "n"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr_n_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "substr_i_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr_i_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "substr"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "anotherchar"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "counter"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "total"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "str"), NO_ADDR, false);
-	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "substr"), addr_constant(MAKE_TOKEN_STRING("")), NO_ADDR, false);
-	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "counter"), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if1cond"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "if1cond"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)), false);
-	IL_ADD(func_il, OP_SUB, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)), false);
-	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "finalstring"), addr_symbol(F_LOCAL, "if1cond"), addr_constant(MAKE_TOKEN_BOOL(true)), false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if2cond"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "if2cond"), addr_symbol(F_LOCAL, "n"), addr_constant(MAKE_TOKEN_INT(0)), false);
-	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "itoend"), addr_symbol(F_LOCAL, "if2cond"), addr_constant(MAKE_TOKEN_BOOL(true)), false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if3cond"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_SUB, addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "i"), false);
-	IL_ADD(func_il, OP_GT, addr_symbol(F_LOCAL, "if3cond"), addr_symbol(F_LOCAL, "n"), addr_symbol(F_LOCAL, "total"), false);
-	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "itoend"), addr_symbol(F_LOCAL, "if3cond"), addr_constant(MAKE_TOKEN_BOOL(true)), false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "charloop"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "finalstring"), addr_symbol(F_LOCAL, "counter"), addr_symbol(F_LOCAL, "n"), false);
-	IL_ADD(func_il, OP_GETCHAR, addr_symbol(F_LOCAL, "anotherchar"), addr_symbol(F_LOCAL, "str"), addr_symbol(F_LOCAL, "i"), false);
-	IL_ADD(func_il, OP_CONCAT, addr_symbol(F_LOCAL, "substr"), addr_symbol(F_LOCAL, "substr"), addr_symbol(F_LOCAL, "anotherchar"), false);
-	IL_ADD(func_il, OP_ADD, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)), false);
-	IL_ADD(func_il, OP_ADD, addr_symbol(F_LOCAL, "counter"), addr_symbol(F_LOCAL, "counter"), addr_constant(MAKE_TOKEN_INT(1)), false);
-	IL_ADD(func_il, OP_JUMP, addr_symbol("", "charloop"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "itoend"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "str"), NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "itoendwhilecond"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "itoendwhile"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "itoendwhilecond"), addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "total"), false);
-	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "finalstring"), addr_symbol(F_LOCAL, "itoendwhilecond"), addr_constant(MAKE_TOKEN_BOOL(false)), false);
-	IL_ADD(func_il, OP_GETCHAR, addr_symbol(F_LOCAL, "anotherchar"), addr_symbol(F_LOCAL, "str"), addr_symbol(F_LOCAL, "i"), false);
-	IL_ADD(func_il, OP_CONCAT, addr_symbol(F_LOCAL, "substr"), addr_symbol(F_LOCAL, "substr"), addr_symbol(F_LOCAL, "anotherchar"), false);
-	IL_ADD(func_il, OP_ADD, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)), false);
-	IL_ADD(func_il, OP_JUMP, addr_symbol("", "itoendwhile"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "finalstring"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "substr"), NO_ADDR, false);
-	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD_SPACE(func_il);
+	IL_ADD_SPACE(func_il);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "n"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "n"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "str"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "n"), NO_ADDR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "substr_n_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")));
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "n"), addr_symbol(F_TMP, "n"), NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr_n_noconvert"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "substr_i_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")));
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "substr_i_noconvert"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "substr"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "anotherchar"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "counter"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "total"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "str"), NO_ADDR);
+	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "substr"), addr_constant(MAKE_TOKEN_STRING("")), NO_ADDR);
+	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "counter"), addr_constant(MAKE_TOKEN_INT(0)), NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if1cond"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "if1cond"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)));
+	IL_ADD(func_il, OP_SUB, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)));
+	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "finalstring"), addr_symbol(F_LOCAL, "if1cond"), addr_constant(MAKE_TOKEN_BOOL(true)));
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if2cond"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "if2cond"), addr_symbol(F_LOCAL, "n"), addr_constant(MAKE_TOKEN_INT(0)));
+	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "itoend"), addr_symbol(F_LOCAL, "if2cond"), addr_constant(MAKE_TOKEN_BOOL(true)));
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "if3cond"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_SUB, addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "i"));
+	IL_ADD(func_il, OP_GT, addr_symbol(F_LOCAL, "if3cond"), addr_symbol(F_LOCAL, "n"), addr_symbol(F_LOCAL, "total"));
+	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "itoend"), addr_symbol(F_LOCAL, "if3cond"), addr_constant(MAKE_TOKEN_BOOL(true)));
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "charloop"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "finalstring"), addr_symbol(F_LOCAL, "counter"), addr_symbol(F_LOCAL, "n"));
+	IL_ADD(func_il, OP_GETCHAR, addr_symbol(F_LOCAL, "anotherchar"), addr_symbol(F_LOCAL, "str"), addr_symbol(F_LOCAL, "i"));
+	IL_ADD(func_il, OP_CONCAT, addr_symbol(F_LOCAL, "substr"), addr_symbol(F_LOCAL, "substr"), addr_symbol(F_LOCAL, "anotherchar"));
+	IL_ADD(func_il, OP_ADD, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)));
+	IL_ADD(func_il, OP_ADD, addr_symbol(F_LOCAL, "counter"), addr_symbol(F_LOCAL, "counter"), addr_constant(MAKE_TOKEN_INT(1)));
+	IL_ADD(func_il, OP_JUMP, addr_symbol("", "charloop"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "itoend"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "total"), addr_symbol(F_LOCAL, "str"), NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "itoendwhilecond"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "itoendwhile"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_LT, addr_symbol(F_LOCAL, "itoendwhilecond"), addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "total"));
+	IL_ADD(func_il, OP_JUMPIFEQ, addr_symbol("", "finalstring"), addr_symbol(F_LOCAL, "itoendwhilecond"), addr_constant(MAKE_TOKEN_BOOL(false)));
+	IL_ADD(func_il, OP_GETCHAR, addr_symbol(F_LOCAL, "anotherchar"), addr_symbol(F_LOCAL, "str"), addr_symbol(F_LOCAL, "i"));
+	IL_ADD(func_il, OP_CONCAT, addr_symbol(F_LOCAL, "substr"), addr_symbol(F_LOCAL, "substr"), addr_symbol(F_LOCAL, "anotherchar"));
+	IL_ADD(func_il, OP_ADD, addr_symbol(F_LOCAL, "i"), addr_symbol(F_LOCAL, "i"), addr_constant(MAKE_TOKEN_INT(1)));
+	IL_ADD(func_il, OP_JUMP, addr_symbol("", "itoendwhile"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "finalstring"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_MOVE, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "substr"), NO_ADDR);
+	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR);
 
 	// LENGTH function
-	IL_ADD_SPACE(func_il, false);
-	IL_ADD_SPACE(func_il, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "length"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "sl"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "length_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "sl"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "length_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "sl"), NO_ADDR, false);
-	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
+	IL_ADD_SPACE(func_il);
+	IL_ADD_SPACE(func_il);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "length"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "sl"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "sl"), NO_ADDR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "length_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")));
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "sl"), NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "length_noconvert"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_STRLEN, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "sl"), NO_ADDR);
+	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR);
 
 	// CHR function
-	IL_ADD_SPACE(func_il, false);
-	IL_ADD_SPACE(func_il, false);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "chr"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "chr_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")), EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_LABEL, addr_symbol("", "chr_noconvert"), NO_ADDR, NO_ADDR, EXIT_INTERN_ERROR);
-	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_INT2CHAR, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "i"), NO_ADDR, false);
-	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR, false);
-	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR, false);
-
-	return true;
+	IL_ADD_SPACE(func_il);
+	IL_ADD_SPACE(func_il);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "chr"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_CREATEFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPS, addr_symbol(F_TMP, "i"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_TYPE, addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_symbol(F_TMP, "i"), NO_ADDR);
+	IL_ADD(func_il, OP_JUMPIFNEQ, addr_symbol("", "chr_noconvert"), addr_symbol(F_GLOBAL, EXPR_VALUE_VAR), addr_constant(MAKE_TOKEN_STRING("float")));
+	IL_ADD(func_il, OP_FLOAT2R2EINT, addr_symbol(F_TMP, "i"), addr_symbol(F_TMP, "i"), NO_ADDR);
+	IL_ADD(func_il, OP_LABEL, addr_symbol("", "chr_noconvert"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_PUSHFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_DEFVAR, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_INT2CHAR, addr_symbol(F_LOCAL, "retval"), addr_symbol(F_LOCAL, "i"), NO_ADDR);
+	IL_ADD(func_il, OP_PUSHS, addr_symbol(F_LOCAL, "retval"), NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_POPFRAME, NO_ADDR, NO_ADDR, NO_ADDR);
+	IL_ADD(func_il, OP_RETURN, NO_ADDR, NO_ADDR, NO_ADDR);
 }
 
 Parser* parser_init(Scanner* scanner) {
 	Parser* parser = (Parser*) mm_malloc(sizeof(Parser));
-	if (parser == NULL)
-		return NULL;
-
 	parser->scanner = scanner;
-
-	if (!grammar_init()) {
-		mm_free(parser);
-		return NULL;
-	}
-
-	if (!expr_grammar_init()) {
-		mm_free(parser);
-		grammar_free();
-		return NULL;
-	}
-
+	grammar_init();
+	expr_grammar_init();
 	parser->dtree_stack = stack_init(30);
-	if (parser->dtree_stack == NULL) {
-		mm_free(parser);
-		grammar_free();
-		expr_grammar_free();
-		return NULL;
-	}
-
 	parser->sym_tab_stack = dllist_init(htab_free);
-	if (parser->sym_tab_stack == NULL) {
-		stack_free(parser->dtree_stack, NULL);
-		mm_free(parser);
-		grammar_free();
-		expr_grammar_free();
-		return NULL;
-	}
-
 	parser->sym_tab_global = htab_init(HTAB_INIT_SIZE);
-	if (parser->sym_tab_global == NULL) {
-		dllist_free(parser->sym_tab_stack);
-		stack_free(parser->dtree_stack, NULL);
-		mm_free(parser);
-		grammar_free();
-		expr_grammar_free();
-		return NULL;
-	}
-
 	parser->sym_tab_functions = htab_init(HTAB_INIT_SIZE);
-	if (parser->sym_tab_functions == NULL) {
-		htab_free(parser->sym_tab_global);
-		dllist_free(parser->sym_tab_stack);
-		stack_free(parser->dtree_stack, NULL);
-		mm_free(parser);
-		grammar_free();
-		expr_grammar_free();
-		return NULL;
-	}
-	else if (! add_built_ins(parser->sym_tab_functions)) {
-		htab_free(parser->sym_tab_global);
-		dllist_free(parser->sym_tab_stack);
-		stack_free(parser->dtree_stack, NULL);
-		mm_free(parser);
-		grammar_free();
-		expr_grammar_free();
-		return NULL;
-	}
+	add_built_ins(parser->sym_tab_functions);
 
 
 	parser->sem_an_stack = dllist_init(sem_an_free);
-	if (parser->sem_an_stack == NULL) {
-		htab_func_free(parser->sym_tab_functions);
-		htab_free(parser->sym_tab_global);
-		dllist_free(parser->sym_tab_stack);
-		stack_free(parser->dtree_stack, NULL);
-		mm_free(parser);
-		grammar_free();
-		expr_grammar_free();
-		return NULL;
-	}
 
 	parser->il_override = NULL;
 	parser->static_var_decl = false;
@@ -342,9 +250,7 @@ int parse(Parser* parser) {
 		// Get next token from scanner
 
 		token = scanner_get_token(parser->scanner);
-		if (token == NULL) {  // Internal allocation error
-			ret_code = EXIT_INTERN_ERROR;
-		} else if (token->id == LEX_ERROR) {  // Lexical error
+		if (token->id == LEX_ERROR) {  // Lexical error
 			ret_code = EXIT_LEX_ERROR;
 		}
 
@@ -360,9 +266,7 @@ int parse(Parser* parser) {
 				ret_code = parse_expression(parser);
 				// Get new token
 				token = scanner_get_token(parser->scanner);
-				if (token == NULL) {  // Internal allocation error
-					ret_code = EXIT_INTERN_ERROR;
-				} else if (token->id == LEX_ERROR) {  // Lexical error
+				if (token->id == LEX_ERROR) {  // Lexical error
 					ret_code = EXIT_LEX_ERROR;
 				}
 
@@ -381,11 +285,7 @@ int parse(Parser* parser) {
 					if (rule->sem_action != NULL) {  // If rule has semantic action
 						// Create semantic analyzer for the action and push it on stack
 						sem_an = sem_an_init(rule->sem_action);
-						if (sem_an == NULL) {
-							ret_code = EXIT_INTERN_ERROR;
-						} else {
-							sem_stack_push(parser->sem_an_stack, sem_an);
-						}
+						sem_stack_push(parser->sem_an_stack, sem_an);
 					}
 
 					// Pop the current non terminal on top of stack

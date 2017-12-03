@@ -31,8 +31,6 @@ static unsigned long hash_func(const char *str) {
 
 HashTable* htab_init(size_t bucket_count) {
 	HashTable* htab= (HashTable*) mm_malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item*));
-	if (htab == NULL)
-		return NULL;
 	htab->bucket_count = bucket_count;
 
 	for (size_t i = 0; i < bucket_count; i++)
@@ -134,35 +132,14 @@ bool htab_func_remove(HashTable* htab, const char *key) {
 /**
  * Alloc memory for function data stored in Hash Table item
  * @param item Hash table item
- * @return true on succes, false if allocation fails
  */
-static bool alloc_func_item(htab_item* item) {
+static void alloc_func_item(htab_item* item) {
 	item->function = (htab_function_item*) mm_malloc(sizeof(htab_function_item));
-	if (item->function == NULL) {
-		mm_free(item->key);
-		mm_free(item);
-		return false;
-	}
 	item->function->param_types = buffer_init(BUFFER_INIT_SIZE);
-	if (item->function->param_types == NULL) {
-		mm_free(item->key);
-		mm_free(item->function);
-		mm_free(item);
-		return false;
-	}
 	item->function->param_names = buffer_init(BUFFER_INIT_SIZE);
-	if (item->function->param_names == NULL) {
-		mm_free(item->key);
-		buffer_free(item->function->param_types);
-		mm_free(item->function);
-		mm_free(item);
-		return false;
-	}
 	item->function->ret_type = END_OF_TERMINALS;
 	item->function->params_num = 0;
 	item->function->defined = false;
-
-	return true;
 }
 
 static htab_item * htab_add_item(HashTable *htab, const char *key, bool func) {
@@ -183,30 +160,18 @@ static htab_item * htab_add_item(HashTable *htab, const char *key, bool func) {
 
 	// Allocate memory for new item
 	htab_item* new_item = (htab_item*) mm_malloc(sizeof(htab_item));
-	if (new_item == NULL)
-		return NULL;
 
 	// Alllocate memory for the key
 	size_t key_length = strlen(key) + 1;
 	new_item->key = (char*) mm_malloc(sizeof(char) * key_length);
-	if (new_item->key == NULL) {
-		mm_free(new_item);
-		return NULL;
-	}
 	strncpy(new_item->key, key, key_length); // Copy the key into the new item
 
 	// Allocate memory for item data
 	if (func) {
-		if (! alloc_func_item(new_item))
-			return NULL;
+		alloc_func_item(new_item);
 	}
 	else {
 		new_item->variable = (htab_variable_item*) mm_malloc(sizeof(htab_variable_item));
-		if (new_item->variable == NULL) {
-			mm_free(new_item->key);
-			mm_free(new_item);
-			return NULL;
-		}
 		new_item->variable->type = END_OF_TERMINALS;
 	}
 
@@ -263,7 +228,7 @@ void function_item_debug(htab_item * item) {
 // FUNCTIONS TO MODIFY/ACCESS HASH TABLE ITEMS (and their 'attributes')
 // --------------------------------------------------------------------
 
-bool func_add_param(htab_item* item, token_e type) {
+void func_add_param(htab_item* item, token_e type) {
 	assert(item != NULL);
 
 	char c;
@@ -280,10 +245,10 @@ bool func_add_param(htab_item* item, token_e type) {
 		case TOKEN_KW_BOOLEAN:
 			c = 'b';
 			break;
-		default: return false;
+		default: assert(!"Invalid param type");
 	}
 	item->function->params_num++;
-	return buffer_append_c(item->function->param_types, c);
+	buffer_append_c(item->function->param_types, c);
 }
 
 token_e func_get_param(htab_item* item, unsigned idx) {
@@ -338,8 +303,6 @@ char* func_get_param_name(htab_item* item, unsigned idx) {
 		len++;
 
 	char* param_name = (char*) mm_malloc(sizeof(char) * (len + 1));
-	if (param_name == NULL)
-		return NULL;
 
 	if (! strncpy(param_name, start, len))
 		return NULL;
@@ -347,13 +310,12 @@ char* func_get_param_name(htab_item* item, unsigned idx) {
 	return param_name;
 }
 
-bool func_store_param_name(htab_item* item, const char* name) {
+void func_store_param_name(htab_item* item, const char* name) {
 	assert(item != NULL);
 	assert(name != NULL);
 
-	if (buffer_append_str(item->function->param_names, name))
-		return buffer_append_c(item->function->param_names, '#');
-	return false;
+	buffer_append_str(item->function->param_names, name);
+	buffer_append_c(item->function->param_names, '#');
 }
 
 unsigned int func_get_params_num(htab_item* item) {

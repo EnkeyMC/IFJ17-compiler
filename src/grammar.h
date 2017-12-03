@@ -96,9 +96,8 @@ extern struct grammar_t {
 
 /**
  * Initialize grammar
- * @return true on success, false otherwise
  */
-bool grammar_init();
+void grammar_init();
 
 /**
  * Free rule

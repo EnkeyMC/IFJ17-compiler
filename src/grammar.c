@@ -15,15 +15,15 @@
 #include "token.h"
 #include "memory_manager.h"
 
-/// Add epsilon rule to grammar, cleanup on failure
-#define ADD_EPSILON_RULE(nt)  if (!grammar_add_epsilon_rule(curr_idx++, nt)) { grammar_free(); return false; }
-/// Add rule to grammar, cleanup on failure
-#define ADD_RULE(nt, ...) if (!grammar_add_rule(curr_idx++, nt, NULL, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
-/// Add rule with semantic action, cleanup on failure
-#define ADD_SEMANTIC_RULE(nt, sem_action, ...) if (!grammar_add_rule(curr_idx++, nt, sem_action, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
+/// Add epsilon rule to grammar
+#define ADD_EPSILON_RULE(nt)  grammar_add_epsilon_rule(curr_idx++, nt)
+/// Add rule to grammar
+#define ADD_RULE(nt, ...) grammar_add_rule(curr_idx++, nt, NULL, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)
+/// Add rule with semantic action
+#define ADD_SEMANTIC_RULE(nt, sem_action, ...) grammar_add_rule(curr_idx++, nt, sem_action, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)
 
-/// Set table value, cleanup on failure
-#define TABLE_SET(row, column, value) if (!sparse_table_set(grammar.LL_table, row, get_token_column_value(column), value)) { grammar_free(); return false; }
+/// Set table value
+#define TABLE_SET(row, column, value) sparse_table_set(grammar.LL_table, row, get_token_column_value(column), value)
 
 
 struct grammar_t grammar;
@@ -38,44 +38,26 @@ static void array_reverse(unsigned* array, int length) {
 	}
 }
 
-static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
+static void grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 	assert(idx < NUM_OF_RULES);
 
 	Rule* rule = (Rule*) mm_malloc(sizeof(Rule));
-	if (rule == NULL) {
-		return false;
-	}
 
 	rule->production = (unsigned*) mm_malloc(sizeof(unsigned));
-	if (rule->production == NULL) {
-		mm_free(rule);
-		return false;
-	}
 
 	rule->production[0] = END_OF_RULE;
 	rule->for_nt = nt;
 	rule->sem_action = NULL;
 
 	grammar.rules[idx] = rule;
-
-	return true;
 }
 
-static bool grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_action, int va_num, ...) {
+static void grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_action, int va_num, ...) {
 	assert(idx < NUM_OF_RULES);
 
 	Rule* rule = (Rule*) mm_malloc(sizeof(Rule));
-	if (rule == NULL) {
-		return false;
-	}
-
 
 	rule->production = (unsigned*) mm_malloc(sizeof(unsigned) * (va_num + 1));
-
-	if (rule->production == NULL) {
-		mm_free(rule);
-		return false;
-	}
 
 	va_list va_args;
 	va_start(va_args, va_num);
@@ -92,8 +74,6 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_a
 	va_end(va_args);
 
 	grammar.rules[idx] = rule;
-
-	return true;
 }
 
 void rule_free(Rule* rule) {
@@ -104,11 +84,9 @@ void rule_free(Rule* rule) {
 	}
 }
 
-bool grammar_init() {
+void grammar_init() {
 	// LL table init
 	grammar.LL_table = sparse_table_init(NT_ENUM_SIZE, END_OF_TERMINALS - TERMINALS_START, 0);
-	if (grammar.LL_table == NULL)
-		return false;
 
 	int curr_idx = 0;
 	grammar.rules[curr_idx++] = NULL;  // First index needs to be empty
@@ -338,10 +316,6 @@ bool grammar_init() {
 	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_MUL_ASIGN, 76);
 	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_DIVI_ASIGN, 77);
 	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_DIVR_ASIGN, 78);
-
-
-
-	return true;
 }
 
 void grammar_free() {

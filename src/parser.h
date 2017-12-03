@@ -33,7 +33,7 @@ typedef struct parser_t {
 /**
  * Init parser
  * @param scanner initialized Scanner object
- * @return new parser object, NULL on allocation error
+ * @return new parser object
  */
 Parser* parser_init(Scanner* scanner);
 
