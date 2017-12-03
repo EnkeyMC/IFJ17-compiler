@@ -178,7 +178,7 @@ unsigned pt_map_token(unsigned token) {
 		case TOKEN_KW_TRUE: return PT_INDEX_CONST;
 		case TOKEN_IDENTIFIER: return PT_INDEX_ID;
 
-		// Bitwise operators
+		// Boolean operators
 		case TOKEN_KW_NOT: return PT_INDEX_NOT;
 		case TOKEN_KW_AND: return PT_INDEX_AND;
 		case TOKEN_KW_OR: return PT_INDEX_OR;
