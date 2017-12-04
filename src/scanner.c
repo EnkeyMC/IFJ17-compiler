@@ -761,8 +761,5 @@ Token* scanner_get_token(Scanner* scanner) {
 			}
 		}
 	}
-
-	token_free(token);
-	return NULL;
 }
 
