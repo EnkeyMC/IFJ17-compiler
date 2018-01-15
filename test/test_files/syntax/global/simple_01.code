@@ -1,0 +1,6 @@
+dim shared glob as integer = 9
+
+scope
+    glob += 8
+    print glob;
+end scope

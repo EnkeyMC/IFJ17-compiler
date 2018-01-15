@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "symtable.h"
+#include "memory_manager.h"
 
 /**
  * Hash function djb2 (http://www.cse.yorku.ca/~oz/hash.html)
@@ -29,59 +30,56 @@ static unsigned long hash_func(const char *str) {
 }
 
 HashTable* htab_init(size_t bucket_count) {
-	HashTable* htab_ptr = (HashTable*) malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item*));
-	if (htab_ptr == NULL)
-		return NULL;
-	htab_ptr->bucket_count = bucket_count;
-	htab_ptr->size = 0;
+	HashTable* htab= (HashTable*) mm_malloc(sizeof(HashTable) + bucket_count*sizeof(htab_item*));
+	htab->bucket_count = bucket_count;
 
 	for (size_t i = 0; i < bucket_count; i++)
-		htab_ptr->ptr[i] = NULL;
+		htab->ptr[i] = NULL;
 
-	return htab_ptr;
+	return htab;
 }
 
 /**
- * Free all items contained in the hash table
- * @param htab_ptr Pointer to hash table
+ * Free all items from hash table
+ * @param htab Pointer to hash table
  */
-static void htab_clear(HashTable *htab_ptr, bool func) {
-	if (htab_ptr == NULL)
+static void htab_clear(HashTable *htab, bool func) {
+	if (htab == NULL)
 		return;
-	for (size_t i = 0; i < htab_ptr->bucket_count; i++) {
+	for (size_t i = 0; i < htab->bucket_count; i++) {
 		htab_item *prev;
 		htab_item *next;
-		for (prev = htab_ptr->ptr[i]; prev != NULL; prev = next) {
+		for (prev = htab->ptr[i]; prev != NULL; prev = next) {
 			next = prev->next;
-			free(prev->key);
+			mm_free(prev->key);
 			if (func) {
-				buffer_free(prev->func_data->par_types);
-				buffer_free(prev->func_data->par_names);
-				free(prev->func_data);
+				buffer_free(prev->function->param_types);
+				buffer_free(prev->function->param_names);
+				mm_free(prev->function);
 			}
 			else
-				free(prev->id_data);
-			free(prev);
+				mm_free(prev->variable);
+			mm_free(prev);
 		}
 	}
-	free(htab_ptr);
+	mm_free(htab);
 }
 
-void htab_free(void* htab_ptr) {
-	htab_clear((HashTable*)htab_ptr, false);
+void htab_var_free(void* htab) {
+	htab_clear((HashTable*)htab, false);
 }
 
-void htab_func_free(HashTable* htab_ptr) {
-	htab_clear(htab_ptr, true);
+void htab_func_free(HashTable* htab) {
+	htab_clear(htab, true);
 }
 
-htab_item* htab_find(HashTable *htab_ptr, const char *key) {
-	if (htab_ptr == NULL || key == NULL)
+htab_item* htab_find(HashTable *htab, const char *key) {
+	if (htab == NULL || key == NULL)
 		return NULL;
 
-	unsigned long index = hash_func(key) % htab_ptr->bucket_count;
+	unsigned long index = hash_func(key) % htab->bucket_count;
 
-	htab_item * item = htab_ptr->ptr[index];
+	htab_item * item = htab->ptr[index];
 	while (item != NULL) {
 		if (strcmp(key, item->key) == 0)
 			return item;
@@ -91,13 +89,13 @@ htab_item* htab_find(HashTable *htab_ptr, const char *key) {
 	return NULL;
 }
 
-static bool htab_remove_item(HashTable *htab_ptr, const char *key, bool func) {
-	if (htab_ptr == NULL || key == NULL)
+static bool htab_remove_item(HashTable *htab, const char *key, bool func) {
+	if (htab == NULL || key == NULL)
 		return false;
 
-	unsigned long index = hash_func(key) % htab_ptr->bucket_count;
+	unsigned long index = hash_func(key) % htab->bucket_count;
 
-	htab_item ** item = &(htab_ptr->ptr[index]);
+	htab_item ** item = &(htab->ptr[index]);
 	while (*item != NULL) {
 		if (strcmp(key, (*item)->key) == 0)
 			break;
@@ -107,107 +105,72 @@ static bool htab_remove_item(HashTable *htab_ptr, const char *key, bool func) {
 	if (*item == NULL)	// Item not found
 		return false;
 
-	htab_item * tmp = *item;
+	htab_item *tmp = *item;
 	*item = (*item)->next;
 
-	free(tmp->key);
+	mm_free(tmp->key);
 	if (func) {
-		buffer_free(tmp->func_data->par_types);
-		buffer_free(tmp->func_data->par_names);
-		free(tmp->func_data);
+		buffer_free(tmp->function->param_types);
+		buffer_free(tmp->function->param_names);
+		mm_free(tmp->function);
 	}
 	else
-		free(tmp->id_data);
+		mm_free(tmp->variable);
 
-	free(tmp);
+	mm_free(tmp);
 	return true;
 }
 
-bool htab_remove(HashTable* htab_ptr, const char *key) {
-	return htab_remove_item(htab_ptr, key, false);
+bool htab_var_remove(HashTable* htab, const char *key) {
+	return htab_remove_item(htab, key, false);
 }
 
-bool htab_func_remove(HashTable* htab_ptr, const char *key) {
-	return htab_remove_item(htab_ptr, key, true);
+bool htab_func_remove(HashTable* htab, const char *key) {
+	return htab_remove_item(htab, key, true);
 }
 
 /**
  * Alloc memory for function data stored in Hash Table item
  * @param item Hash table item
- * @return true on succes, false if allocation fails
  */
-static bool alloc_func_item(htab_item* item) {
-	item->func_data = (htab_func_item*) malloc(sizeof(htab_func_item));
-	if (item->func_data == NULL) {
-		free(item->key);
-		free(item);
-		return false;
-	}
-	item->func_data->par_types = buffer_init(BUFFER_INIT_SIZE);
-	if (item->func_data->par_types == NULL) {
-		free(item->key);
-		free(item->func_data);
-		free(item);
-		return false;
-	}
-	item->func_data->par_names = buffer_init(BUFFER_INIT_SIZE);
-	if (item->func_data->par_names == NULL) {
-		free(item->key);
-		buffer_free(item->func_data->par_types);
-		free(item->func_data);
-		free(item);
-		return false;
-	}
-	item->func_data->rt = END_OF_TERMINALS;
-	item->func_data->par_num = 0;
-	item->func_data->definition = false;
-
-	return true;
+static void alloc_func_item(htab_item* item) {
+	item->function = (htab_function_item*) mm_malloc(sizeof(htab_function_item));
+	item->function->param_types = buffer_init(BUFFER_INIT_SIZE);
+	item->function->param_names = buffer_init(BUFFER_INIT_SIZE);
+	item->function->ret_type = END_OF_TERMINALS;
+	item->function->params_num = 0;
+	item->function->defined = false;
 }
 
-static htab_item * htab_add_item(HashTable *htab_ptr, const char *key, bool func) {
-	if (htab_ptr == NULL || key == NULL)
+static htab_item * htab_add_item(HashTable *htab, const char *key, bool func) {
+	if (htab == NULL || key == NULL)
 		return NULL;
 
-	unsigned long index = hash_func(key) % htab_ptr->bucket_count;
+	unsigned long index = hash_func(key) % htab->bucket_count;
 
 	// Item contains address of pointer to next item
-	htab_item ** item = &(htab_ptr->ptr[index]);
+	htab_item ** item = &(htab->ptr[index]);
 	while (*item != NULL) {
-		if (strcmp(key, (*item)->key) == 0) {
+		if (strcmp(key, (*item)->key) == 0)
 			return *item;
-		}
 		else
 			item = &((*item)->next);
 	}
 
 	// Allocate memory for new item
-	htab_item* new_item = (htab_item*) malloc(sizeof(htab_item));
-	if (new_item == NULL)
-		return NULL;
+	htab_item* new_item = (htab_item*) mm_malloc(sizeof(htab_item));
 
 	// Alllocate memory for the key
 	size_t key_length = strlen(key) + 1;
-	new_item->key = (char*) malloc(sizeof(char) * key_length);
-	if (new_item->key == NULL) {
-		free(new_item);
-		return NULL;
-	}
+	new_item->key = (char*) mm_malloc(sizeof(char) * key_length);
 	strncpy(new_item->key, key, key_length); // Copy the key into the new item
 
 	// Allocate memory for item data
-	if (func) {
-		if (! alloc_func_item(new_item))
-			return NULL;
-	}
+	if (func)
+		alloc_func_item(new_item);
 	else {
-		new_item->id_data = (htab_id_item*) malloc(sizeof(htab_id_item));
-		if (new_item->id_data == NULL) {
-			free(new_item->key);
-			free(new_item);
-			return NULL;
-		}
-		new_item->id_data->type = END_OF_TERMINALS;
+		new_item->variable = (htab_variable_item*) mm_malloc(sizeof(htab_variable_item));
+		new_item->variable->type = END_OF_TERMINALS;
 	}
 
 	new_item->next = NULL;
@@ -215,64 +178,55 @@ static htab_item * htab_add_item(HashTable *htab_ptr, const char *key, bool func
 	// Put the new item at the end of the list of items
 	*item = new_item;
 
-	// Update the number of items
-	htab_ptr->size++;
-
 	return new_item;
 }
 
-htab_item * htab_lookup(HashTable* htab_ptr, const char* key) {
-	return htab_add_item(htab_ptr, key, false);
+htab_item * htab_var_insert(HashTable* htab, const char* key) {
+	return htab_add_item(htab, key, false);
 }
 
-htab_item * htab_func_lookup(HashTable* htab_ptr, const char* key) {
-	return htab_add_item(htab_ptr, key, true);
+htab_item * htab_func_insert(HashTable* htab, const char* key) {
+	return htab_add_item(htab, key, true);
 }
 
-size_t htab_size(HashTable *htab_ptr) {
-	return htab_ptr != NULL ? htab_ptr->size : 0;
-}
-
-size_t htab_bucket_count(HashTable *htab_ptr) {
-	return htab_ptr != NULL ? htab_ptr->bucket_count : 0;
-}
-
-void htab_foreach(HashTable *htab_ptr, void (*function)(htab_item *item_ptr)) {
-	if (htab_ptr == NULL || function == NULL)
+void htab_foreach(HashTable *htab, void (*function)(htab_item *item)) {
+	if (htab == NULL || function == NULL)
 		return;
 
-	for (size_t i = 0; i < htab_ptr->bucket_count; i++)
-		for (htab_item *item = htab_ptr->ptr[i]; item != NULL; item = item->next)
+	for (size_t i = 0; i < htab->bucket_count; i++)
+		for (htab_item *item = htab->ptr[i]; item != NULL; item = item->next)
 			function(item);
 }
 
-void id_item_debug(htab_item * item_ptr) {
-	htab_item* item = (htab_item*) item_ptr;
+void variable_item_debug(htab_item * item) {
 	debug("htab_item@%p: {", item);
 
 	if (item != NULL) {
-		debug(".key = %s, .type: %d", item->key, item->id_data->type);
+		debug(".key = %s, .type: %d", item->key, item->variable->type);
 	}
 
 	debugs("}\n");
 }
 
-void func_item_debug(htab_item * item_ptr) {
-	htab_item* item = (htab_item*) item_ptr;
+void function_item_debug(htab_item * item) {
 	debug("htab_item@%p: {", item);
 
 	if (item != NULL) {
-		debug(".key = %s, .rt = %d", item->key, item->func_data->rt);
-		printf(", .nparams = %u, .types = %s", item->func_data->par_num, item->func_data->par_types->str);
-		printf(", .defined = %s", item->func_data->definition ? "true" : "false");
+		debug(".key = %s, .rt = %d", item->key, item->function->ret_type);
+		debug(", .nparams = %u, .types = %s",
+				item->function->params_num,
+				item->function->param_types->str);
+		debug(", .defined = %s", item->function->defined ? "true" : "false");
 	}
 
 	debugs("}\n");
 }
 
-// FUNCTIONS TO MODIFY FUNCTION DATA STORED IN HASH TABLE
+// --------------------------------------------------------------------
+// FUNCTIONS TO MODIFY/ACCESS HASH TABLE ITEMS (and their 'attributes')
+// --------------------------------------------------------------------
 
-bool func_add_param(htab_item* item, token_e type) {
+void func_add_param(htab_item* item, token_e type) {
 	assert(item != NULL);
 
 	char c;
@@ -289,20 +243,22 @@ bool func_add_param(htab_item* item, token_e type) {
 		case TOKEN_KW_BOOLEAN:
 			c = 'b';
 			break;
-		default: return false;
+		default:
+			assert(!"Invalid param type");
+			return;
 	}
-	item->func_data->par_num++;
-	return buffer_append_c(item->func_data->par_types, c);
+	item->function->params_num++;
+	buffer_append_c(item->function->param_types, c);
 }
 
 token_e func_get_param(htab_item* item, unsigned idx) {
 	assert(item != NULL);
 	assert(idx != 0);
 
-	if (idx > item->func_data->par_num)
+	if (idx > item->function->params_num)
 		return END_OF_TERMINALS;
 
-	char param_type = item->func_data->par_types->str[idx-1];
+	char param_type = item->function->param_types->str[idx-1];
 	switch (param_type) {
 		case 's': return TOKEN_KW_STRING;
 		case 'b': return TOKEN_KW_BOOLEAN;
@@ -316,25 +272,24 @@ unsigned func_get_param_idx(htab_item* item) {
 	assert(item != NULL);
 
 	unsigned num = 1;
-	for (size_t i = 0; i <= item->func_data->par_names->len; i++) {
-		if (num > item->func_data->par_num)
+	for (size_t i = 0; i <= item->function->param_names->len; i++) {
+		if (num > item->function->params_num)
 			break;
-		if (item->func_data->par_names->str[i] == '#')
+		if (item->function->param_names->str[i] == '#')
 			num++;
 	}
 	return num;
 }
 
-
 char* func_get_param_name(htab_item* item, unsigned idx) {
 	assert(item != NULL);
 	assert(idx != 0);
 
-	if (idx > item->func_data->par_num)
+	if (idx > item->function->params_num)
 		return NULL;
 
 	unsigned markers_found = 0;
-	char* start = item->func_data->par_names->str;
+	char* start = item->function->param_names->str;
 	while (markers_found != (idx -1)) {
 		start++;
 		if (*start == '#') {
@@ -347,9 +302,7 @@ char* func_get_param_name(htab_item* item, unsigned idx) {
 	while (*(start + len) != '#')
 		len++;
 
-	char* param_name = (char*) malloc(sizeof(char) * (len + 1));
-	if (param_name == NULL)
-		return NULL;
+	char* param_name = (char*) mm_malloc(sizeof(char) * (len + 1));
 
 	if (! strncpy(param_name, start, len))
 		return NULL;
@@ -357,35 +310,63 @@ char* func_get_param_name(htab_item* item, unsigned idx) {
 	return param_name;
 }
 
-bool func_store_param_name(htab_item* item, const char* name) {
+void func_store_param_name(htab_item* item, const char* name) {
 	assert(item != NULL);
 	assert(name != NULL);
 
-	if (buffer_append_str(item->func_data->par_names, name))
-		return buffer_append_c(item->func_data->par_names, '#');
-	return false;
+	buffer_append_str(item->function->param_names, name);
+	buffer_append_c(item->function->param_names, '#');
 }
 
-void func_set_rt(htab_item* item, token_e type) {
+unsigned int func_get_params_num(htab_item* item) {
 	assert(item != NULL);
 
-	item->func_data->rt = type;
+	return item->function->params_num;
 }
 
-token_e func_get_rt(htab_item* item) {
+void func_set_ret_type(htab_item* item, token_e type) {
 	assert(item != NULL);
 
-	return item->func_data->rt;
+	item->function->ret_type = type;
 }
 
-void func_set_def(htab_item* item) {
+token_e func_get_ret_type(htab_item* item) {
 	assert(item != NULL);
 
-	item->func_data->definition = true;
+	return item->function->ret_type;
 }
 
-unsigned int func_params_num(htab_item* item) {
+void func_set_defined(htab_item* item) {
 	assert(item != NULL);
 
-	return item->func_data->par_num;
+	item->function->defined = true;
+}
+
+bool func_get_defined(htab_item* item) {
+	assert(item != NULL);
+
+	return item->function->defined;
+}
+
+bool func_check_all_defined(HashTable *htab) {
+	assert(htab != NULL);
+
+	for (size_t i = 0; i < htab->bucket_count; i++)
+		for (htab_item *item = htab->ptr[i]; item != NULL; item = item->next) {
+			if (item->function->defined == false)
+				return false;
+		}
+	return true;
+}
+
+void var_set_type(htab_item* item, token_e type) {
+	assert(item != NULL);
+
+	item->variable->type = type;
+}
+
+token_e var_get_type(htab_item* item) {
+	assert(item != NULL);
+
+	return item->variable->type;
 }

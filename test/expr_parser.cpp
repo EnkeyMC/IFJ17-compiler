@@ -1,4 +1,5 @@
 #include <cstdio>
+#include <memory_manager.h>
 #include "gtest/gtest.h"
 #include "expr_parser.c"
 
@@ -10,6 +11,7 @@ protected:
 	FILE* test_file;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		scanner = scanner_init();
 		parser = parser_init(scanner);
 	}
@@ -18,6 +20,7 @@ protected:
 		fclose(test_file);
 		scanner_free(scanner);
 		parser_free(parser);
+		mem_manager_free();
 	}
 
 	void SetInputFile(const char *file) {

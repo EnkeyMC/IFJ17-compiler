@@ -117,6 +117,12 @@ typedef struct token_t {
 } Token;
 
 /**
+ * Allocate new token
+ * @return new Token
+ */
+Token* token_init();
+
+/**
  * Free token
  * @param token
  */
@@ -132,7 +138,7 @@ unsigned int get_token_column_value(token_e token);
 /**
  * Deep copy a token
  * @param token Token to copy
- * @return copied token, NULL on error
+ * @return copied token
  */
 Token* token_copy(Token* token);
 

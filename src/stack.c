@@ -10,38 +10,26 @@
 #include <malloc.h>
 #include <assert.h>
 #include "stack.h"
+#include "memory_manager.h"
 
 
-static bool stack_realloc(Stack* s, int size) {
+static void stack_realloc(Stack* s, int size) {
 	// If size is same, no need to reallocate
 	if (size == s->size)
-		return true;
+		return;
 
 	// Reallocate stack to new size
-	s->stack = (void**) realloc(s->stack, sizeof(void*) * size);
-	if (s->stack == NULL) { // Check reallocation success
-		s->size = 0;
-		s->top = -1;
-		return false;
-	}
+	s->stack = (void**) mm_realloc(s->stack, sizeof(void*) * size);
 	// Set new size
 	s->size = size;
-
-	return true;
 }
 
 Stack* stack_init(int size) {
 	// Allocate new Stack
-	Stack* s = (Stack*) malloc(sizeof(Stack));
-	if (s == NULL)
-		return NULL;
+	Stack* s = (Stack*) mm_malloc(sizeof(Stack));
 
 	// Allocate stack
-	s->stack = (void**) malloc(sizeof(void*) * size);
-	if (s->stack == NULL) {
-		free(s);
-		return NULL;
-	}
+	s->stack = (void**) mm_malloc(sizeof(void*) * size);
 
 	s->size = size;
 	s->top = -1;
@@ -73,19 +61,16 @@ void* stack_pop(Stack* s) {
 	return s->stack[s->top--];
 }
 
-bool stack_push(Stack* s, void* item) {
+void stack_push(Stack* s, void* item) {
 	assert(s != NULL);
 
 	// If the stack is full, reallocate to new size
 	if (s->top + 1 >= s->size) {
-		if (!stack_realloc(s, s->size + STACK_CHUNK)) {
-			return false;
-		}
+		stack_realloc(s, s->size + STACK_CHUNK);
 	}
 
 	// Increment top and asign new item
 	s->stack[++s->top] = item;
-	return true;
 }
 
 void stack_free(Stack* s, stack_free_callback free_item_f) {
@@ -100,8 +85,8 @@ void stack_free(Stack* s, stack_free_callback free_item_f) {
 	}
 
 	if (s->stack != NULL)
-		free(s->stack);
-	free(s);
+		mm_free(s->stack);
+	mm_free(s);
 }
 
 void stack_debug(Stack* s, debug_func func) {

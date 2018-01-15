@@ -1,0 +1,9 @@
+' wrong iterator variable
+
+scope
+	dim i as integer
+
+	for count as integer = 1 to 100 step 10
+		print count;
+	next i
+end scope

@@ -1,0 +1,8 @@
+' step value missing
+
+scope
+	dim i as integer
+
+	for i = 1 to 13 step
+	next
+end scope

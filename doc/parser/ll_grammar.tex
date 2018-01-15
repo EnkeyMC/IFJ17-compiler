@@ -12,9 +12,7 @@
 \begin{document}
 %###############################################################################
 %###############################################################################
-\section{CHANGE LOG v1.8}
-Prazdný soubor = syntaktická chyba.
-\section{LL Grammar IFJ17 (v1.8)}
+\section{LL Grammar IFJ17 (v2.0)}
 \begin{eqnarray}
 Line		&	\rightarrow		& GlobalStmt\quad ScopeStmt\quad  LineEnd	 \\
 %###############################################################################
@@ -86,17 +84,22 @@ IfStmtElse&   \rightarrow &\textbf{ELSE}\quad  \textbf{EOL}\quad StmtSeq\quad  \
 &	|	&\textcolor{green1}{\varepsilon}  \\
 %###############################################################################
 DoStmt&    \rightarrow	  & \textbf{DO} \quad DoStmtEnd   \\
-DoStmtEnd&	 \rightarrow  &  TestType \quad  Expression \quad \textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}	\\
-&	 | &\textcolor{green1}{\textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}\quad TestType \quad  Expression} \\
-TestType & \rightarrow	&	\textbf{WHILE}\quad \\
+DoStmtEnd&	 \rightarrow  &  TestTypeStart \quad  Expression \quad \textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}	\\
+&	 | &\textcolor{green1}{\textbf{EOL} \quad StmtSeq \quad \textbf{LOOP}\quad TestTypeEnd} \\
+TestTypeStart & \rightarrow	&	\textbf{WHILE}\\
 		&		|		& \textcolor{green1}{\textbf{UNTIL}} \\
+\textcolor{green1}{TestTypeEnd} & \rightarrow	&	\textcolor{green1}{\textbf{WHILE}\quad Expression} \\
+&		|		& \textcolor{green1}{\textbf{UNTIL}\quad Expression} \\
+&	|	&\textcolor{green1}{\varepsilon}  \\
 %###############################################################################
-\textcolor{green1}{ExitStmt} & \rightarrow & \textcolor{green1}{\textbf{EXIT}\quad LoopType}	\\
+\textcolor{green1}{ExitStmt} & \rightarrow & \textcolor{green1}{\textbf{EXIT}\quad LoopType\quad LoopTypeEnd}	\\
 %###############################################################################
-\textcolor{green1}{ContinueStmt} & \rightarrow & \textcolor{green1}{\textbf{CONTINUE}\quad LoopType}	\\
+\textcolor{green1}{ContinueStmt} & \rightarrow & \textcolor{green1}{\textbf{CONTINUE}\quad LoopType\quad LoopTypeEnd}	\\
 %###############################################################################
-\textcolor{green1}{Looptype} & \rightarrow & \textcolor{green1}{\textbf{DO}}\\
+\textcolor{green1}{LoopType} & \rightarrow & \textcolor{green1}{\textbf{DO}}\\
 &	|		&	\textcolor{green1}{\textbf{FOR}}   \\
+\textcolor{green1}{LoopTypeEnd} & \rightarrow & \textcolor{green1}{\textbf{,}\quad LoopType \quad LoopTypeEnd}\\
+&	|		&	\textcolor{green1}{\varepsilon}   \\
 %###############################################################################
 \textcolor{green1}{ForStmt} &	 \rightarrow	&  \textcolor{green1}{\textbf{FOR}\quad \textbf{ID}\quad TypeOpt\quad `=`\quad Expression\quad \textbf{TO}\quad Expression\quad StepOpt\quad \textbf{EOL}\quad StmtSeq\quad \textbf{NEXT}\quad IdOpt\quad} \\
 \textcolor{green1}{TypeOpt} & \rightarrow  & \textcolor{green1}{\textbf{AS}\quad Type} \\

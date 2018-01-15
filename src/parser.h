@@ -24,13 +24,16 @@ typedef struct parser_t {
     DLList* sem_an_stack;  /// Stack of semantic analyzers
     DLList* sym_tab_stack;  /// Stack of local symbol tables
     HashTable* sym_tab_global;  /// Global symbol table
-    HashTable* sym_tab_functions;  /// Functions symbol table3
+    HashTable* sym_tab_functions;  /// Functions symbol table
+    DLList* il_override;  /// If this variable is not NULL get_current_il_list will return it
+    bool static_var_decl;  /// Indicates if static variable is currently being defined
+	bool step_found; /// Indicates whether for loop has explicitly specified step value
 } Parser;
 
 /**
  * Init parser
  * @param scanner initialized Scanner object
- * @return new parser object, NULL on allocation error
+ * @return new parser object
  */
 Parser* parser_init(Scanner* scanner);
 
@@ -46,11 +49,5 @@ void parser_free(Parser* parser);
  * @return error (success) code
  */
 int parse(Parser* parser);
-
-/**
- * Generates unique identifier
- * @return identifier, NULL on error
- */
-char* generate_uid();
 
 #endif //IFJ17_COMPILER_PARSER_H

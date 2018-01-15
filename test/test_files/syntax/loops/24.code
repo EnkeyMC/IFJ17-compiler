@@ -1,0 +1,9 @@
+' iterator variable should not be visible
+
+scope
+	for i as double = 3.4 to 6.4 step 1
+		print i;
+	next i
+
+	i = i + 1.0
+end scope

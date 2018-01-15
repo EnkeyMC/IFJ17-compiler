@@ -42,7 +42,7 @@ typedef struct dllist_t {
 /**
  * Initialize list
  * @param free_data funtion for data dealloction, can be NULL
- * @return new list, NULL on allocation error
+ * @return new list
  */
 DLList* dllist_init(free_data_f free_data);
 
@@ -64,33 +64,29 @@ DLList* dllist_copy(DLList *l);
  * Insert item on the first position in the list
  * @param l List
  * @param data generic data to insert
- * @return true on success, false otherwise
  */
-bool dllist_insert_first(DLList *l, void *data);
+void dllist_insert_first(DLList *l, void *data);
 
 /**
  * Insert item on the last position in the list
  * @param l List
  * @param data generic data to insert
- * @return true on success, false otherwise
  */
-bool dllist_insert_last(DLList *l, void *data);
+void dllist_insert_last(DLList *l, void *data);
 
 /**
  * Insert item after active item, no effect if list is not active
  * @param l List
  * @param data generic data to insert
- * @return true on success, false otherwise
  */
-bool dllist_post_insert(DLList *l, void *data);
+void dllist_post_insert(DLList *l, void *data);
 
 /**
  * Insert item before active item, no effect if list is not active
  * @param l List
  * @param data generic data to insert
- * @return true on success, false otherwise
  */
-bool dllist_pre_insert(DLList *l, void *data);
+void dllist_pre_insert(DLList *l, void *data);
 
 /**
  * Is list empty

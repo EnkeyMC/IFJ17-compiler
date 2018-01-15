@@ -36,7 +36,7 @@ typedef struct {
  * @param nrows number of rows in table
  * @param ncols number of columns in table
  * @param dominant_value dominant value of the table
- * @return new sparse table object, NULL on allocation error
+ * @return new sparse table object
  */
 SparseTable* sparse_table_init(unsigned int nrows, unsigned int ncols, int dominant_value);
 
@@ -60,7 +60,7 @@ int sparse_table_get(SparseTable* stab, unsigned int row, unsigned int column);
  * @param row row index
  * @param column column index
  * @param value value to set
- * @return true on success, false otherwise (allocation error or row or column out of bounds)
+ * @return true, false if row or column is out of bounds
  */
 bool sparse_table_set(SparseTable* stab, unsigned int row, unsigned int column, int value);
 

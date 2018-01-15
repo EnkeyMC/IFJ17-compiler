@@ -10,21 +10,16 @@
 #include <malloc.h>
 #include <assert.h>
 #include "sparse_table.h"
+#include "memory_manager.h"
 
 SparseTable* sparse_table_init(unsigned int nrows, unsigned int ncols, int dominant_value) {
-	SparseTable* stab = (SparseTable*) malloc(sizeof(SparseTable));
-	if (stab == NULL)
-		return NULL;
+	SparseTable* stab = (SparseTable*) mm_malloc(sizeof(SparseTable));
 
 	stab->nrows = nrows;
 	stab->ncols = ncols;
 	stab->dominant_value = dominant_value;
 
-	stab->table = (SparseTableListItem**) malloc(sizeof(SparseTableListItem*) * nrows);
-	if (stab->table == NULL) {
-		free(stab);
-		return NULL;
-	}
+	stab->table = (SparseTableListItem**) mm_malloc(sizeof(SparseTableListItem*) * nrows);
 
 	for (unsigned int i = 0; i < nrows; i++) {
 		stab->table[i] = NULL;
@@ -42,13 +37,13 @@ void sparse_table_free(SparseTable* stab) {
 			while (stab->table[i] != NULL) {
 				tmp = stab->table[i];
 				stab->table[i] = tmp->next;
-				free(tmp);
+				mm_free(tmp);
 			}
 		}
 
-		free(stab->table);
+		mm_free(stab->table);
 	}
-	free(stab);
+	mm_free(stab);
 }
 
 int sparse_table_get(SparseTable* stab, unsigned int row, unsigned int column) {
@@ -74,9 +69,8 @@ int sparse_table_get(SparseTable* stab, unsigned int row, unsigned int column) {
 bool sparse_table_set(SparseTable* stab, unsigned int row, unsigned int column, int value) {
 	assert(stab != NULL);
 
-	if (row >= stab->nrows || column >= stab->ncols) {
+	if (row >= stab->nrows || column >= stab->ncols)
 		return false;
-	}
 
 	SparseTableListItem* last_item = stab->table[row];
 
@@ -92,21 +86,18 @@ bool sparse_table_set(SparseTable* stab, unsigned int row, unsigned int column, 
 			tmp = last_item->next;
 		} while (tmp != NULL);
 
-		last_item->next = (SparseTableListItem*) malloc(sizeof(SparseTableListItem));
-		if (last_item->next == NULL)
-			return false;
+		last_item->next = (SparseTableListItem*) mm_malloc(sizeof(SparseTableListItem));
 
 		last_item->next->next = NULL;
 		last_item->next->value = value;
 		last_item->next->column = column;
 	} else {
-		stab->table[row] = (SparseTableListItem*) malloc(sizeof(SparseTableListItem));
-		if (stab->table[row] == NULL)
-			return false;
+		stab->table[row] = (SparseTableListItem*) mm_malloc(sizeof(SparseTableListItem));
 
 		stab->table[row]->next = NULL;
 		stab->table[row]->value = value;
 		stab->table[row]->column = column;
 	}
+
 	return true;
 }

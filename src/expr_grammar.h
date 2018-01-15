@@ -37,7 +37,7 @@ typedef enum {
 // LITERAL or IDENETIFIER
 	PT_INDEX_CONST,
 	PT_INDEX_ID,
-// BITWISE OPERATOS
+// BOOLEAN OPERATOS
 	PT_INDEX_NOT,
 	PT_INDEX_AND,
 	PT_INDEX_OR,
@@ -74,7 +74,7 @@ extern struct expr_grammar_t {
 /**
  * Initialize operator-precedence grammar
  */
-bool expr_grammar_init();
+void expr_grammar_init();
 
 /**
  * Free expression grammar

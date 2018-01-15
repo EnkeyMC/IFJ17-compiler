@@ -10,12 +10,10 @@
 #include <malloc.h>
 #include <assert.h>
 #include "dllist.h"
+#include "memory_manager.h"
 
 DLList* dllist_init(free_data_f free_data) {
-	DLList* l = (DLList*) malloc(sizeof(DLList));
-	if (l == NULL) {
-		return NULL;
-	}
+	DLList* l = (DLList*) mm_malloc(sizeof(DLList));
 
 	l->first = NULL;
 	l->last = NULL;
@@ -37,42 +35,30 @@ void dllist_free(DLList *l) {
 		}
 	}
 
-	free(l);
+	mm_free(l);
 }
 
 DLList* dllist_copy(DLList *l) {
 	assert(l != NULL);
 
 	DLList *l_copy = dllist_init(l->free_data);
-	if (l_copy == NULL)
-		return NULL;
 
 	dllist_activate_first(l);
 	if (dllist_active(l)) {
-		if (! dllist_insert_first(l_copy, dllist_get_active(l))) {
-			free(l_copy);
-			return NULL;
-		}
+		dllist_insert_first(l_copy, dllist_get_active(l));
 		dllist_succ(l);
 		while (dllist_active(l)) {
-			if (! dllist_insert_last(l_copy, dllist_get_active(l))) {
-				dllist_free(l_copy);
-				return NULL;
-			}
-
+			dllist_insert_last(l_copy, dllist_get_active(l));
 			dllist_succ(l);
 		}
 	}
 	return l_copy;
 }
 
-bool dllist_insert_first(DLList *l, void *data) {
+void dllist_insert_first(DLList *l, void *data) {
 	assert(l != NULL);
 
-	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
-	if (new_item == NULL) {
-		return false;
-	}
+	DLListItem* new_item = (DLListItem*) mm_malloc(sizeof(DLListItem));
 
 	new_item->data = data;
 	new_item->prev = NULL;
@@ -86,16 +72,12 @@ bool dllist_insert_first(DLList *l, void *data) {
 	}
 
 	l->first = new_item;
-	return true;
 }
 
-bool dllist_insert_last(DLList *l, void *data) {
+void dllist_insert_last(DLList *l, void *data) {
 	assert(l != NULL);
 
-	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
-	if (new_item == NULL) {
-		return false;
-	}
+	DLListItem* new_item = (DLListItem*) mm_malloc(sizeof(DLListItem));
 
 	new_item->data = data;
 	new_item->next = NULL;
@@ -109,19 +91,15 @@ bool dllist_insert_last(DLList *l, void *data) {
 	}
 
 	l->last = new_item;
-	return true;
 }
 
-bool dllist_post_insert(DLList *l, void *data) {
+void dllist_post_insert(DLList *l, void *data) {
 	assert(l != NULL);
 
 	if (l->active == NULL)
-		return false;
+		return;
 
-	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
-	if (new_item == NULL) {
-		return false;
-	}
+	DLListItem* new_item = (DLListItem*) mm_malloc(sizeof(DLListItem));
 
 	new_item->data = data;
 	new_item->next = l->active->next;
@@ -134,20 +112,15 @@ bool dllist_post_insert(DLList *l, void *data) {
 	}
 
 	l->active->next = new_item;
-
-	return true;
 }
 
-bool dllist_pre_insert(DLList *l, void *data) {
+void dllist_pre_insert(DLList *l, void *data) {
 	assert(l != NULL);
 
 	if (l->active == NULL)
-		return false;
+		return;
 
-	DLListItem* new_item = (DLListItem*) malloc(sizeof(DLListItem));
-	if (new_item == NULL) {
-		return false;
-	}
+	DLListItem* new_item = (DLListItem*) mm_malloc(sizeof(DLListItem));
 
 	new_item->data = data;
 	new_item->next = l->active;
@@ -160,8 +133,6 @@ bool dllist_pre_insert(DLList *l, void *data) {
 	}
 
 	l->active->prev = new_item;
-
-	return true;
 }
 
 bool dllist_empty(DLList *l) {
@@ -221,7 +192,7 @@ void* dllist_delete_first(DLList *l) {
 	else
 		l->last = NULL;
 
-	free(to_delete);
+	mm_free(to_delete);
 	return data;
 }
 
@@ -243,7 +214,7 @@ void* dllist_delete_last(DLList *l) {
 	else
 		l->first = NULL;
 
-	free(to_delete);
+	mm_free(to_delete);
 	return data;	
 }
 
@@ -279,7 +250,7 @@ void* dllist_delete_and_succ(DLList *l) {
 
 	l->active = l->active->next;
 
-	free(to_delete);
+	mm_free(to_delete);
 	return data;
 }
 
@@ -315,7 +286,7 @@ void* dllist_delete_and_pred(DLList *l) {
 
 	l->active = l->active->prev;
 
-	free(to_delete);
+	mm_free(to_delete);
 	return data;
 }
 

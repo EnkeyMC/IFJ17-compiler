@@ -14,17 +14,14 @@
 #include "expr_grammar.h"
 #include "error_code.h"
 #include "debug.h"
+#include "memory_manager.h"
 
 ExtStack* ext_stack_init() {
 	ExtStack* s = dllist_init(ext_stack_item_free);
-	if (s == NULL)
-		return NULL;
 
 	// Right after init push '$' on the stack
-	if (ext_stack_push(s, EXPR_END_MARKER, NULL))
-		return s;
-	else
-		return NULL;
+	ext_stack_push(s, EXPR_END_MARKER, NULL);
+	return s;
 }
 
 bool ext_stack_expr_on_top(ExtStack *s) {
@@ -50,7 +47,7 @@ unsigned ext_stack_top(ExtStack* s) {
 	return item->type_id;
 }
 
-bool ext_stack_shift(ExtStack* s, Token* token) {
+void ext_stack_shift(ExtStack* s, Token* token) {
 	assert(token != NULL);
 	dllist_activate_first(s);	
 	stack_item* item = (stack_item*) dllist_get_active(s);
@@ -61,31 +58,20 @@ bool ext_stack_shift(ExtStack* s, Token* token) {
 	}
 
 	// allocate memory for handle marker
-	stack_item* handle_marker = (stack_item *) malloc(sizeof(stack_item));
-	if (handle_marker == NULL)
-		return false;
+	stack_item* handle_marker = (stack_item *) mm_malloc(sizeof(stack_item));
 	handle_marker->type_id = EXPR_HANDLE_MARKER;
 	handle_marker->token = NULL;
 
 	// insert handle marker right after topmost terminal found in the previous loop
-	if (! dllist_pre_insert(s, handle_marker)) {
-		ext_stack_item_free(handle_marker);
-		return false;
-	}
+	dllist_pre_insert(s, handle_marker);
 
 	// Allocate memory for token
-	stack_item* token_ptr = (stack_item*) malloc(sizeof(stack_item));
-	if (token_ptr == NULL)
-		return false;
+	stack_item* token_ptr = (stack_item*) mm_malloc(sizeof(stack_item));
 	token_ptr->type_id = token->id;
 	token_ptr->token = token_copy(token);
-	if (token_ptr->token == NULL) {
-		ext_stack_item_free(token_ptr);
-		return false;
-	}
 
 	// finally insert token on the top of the stack (top == FIRST)
-	return dllist_insert_first(s, token_ptr);
+	dllist_insert_first(s, token_ptr);
 }
 
 /**
@@ -128,8 +114,6 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 
 		if (rule->sem_action != NULL) {
 			sem_an = sem_an_init(rule->sem_action);
-			if (sem_an == NULL)
-				return EXIT_INTERN_ERROR;
 		}
 
 		int ret_val = EXIT_SUCCESS;
@@ -158,38 +142,27 @@ int ext_stack_reduce(ExtStack* s, Parser* parser) {
 
 		// Push current semantic analyzer on stack
 		if (sem_an != NULL) {
-			if (!sem_stack_push(parser->sem_an_stack, sem_an)) {
-				free(sem_an);
-				return EXIT_INTERN_ERROR;
-			}
+			sem_stack_push(parser->sem_an_stack, sem_an);
 		}
 
 		// Push non_terminal found by find_rule()
-		if (ext_stack_push(s, rule->for_nt, NULL))
-			return EXIT_SUCCESS;
-		else
-			return EXIT_INTERN_ERROR;
+		ext_stack_push(s, rule->for_nt, NULL);
+		return EXIT_SUCCESS;
 	}
 }
 
-bool ext_stack_push(ExtStack* s, unsigned type_id, Token* token) {
-	stack_item* item = (stack_item*) malloc(sizeof(stack_item));
-	if (item == NULL)
-		return false;
+void ext_stack_push(ExtStack* s, unsigned type_id, Token* token) {
+	stack_item* item = (stack_item*) mm_malloc(sizeof(stack_item));
 	item->type_id = type_id;
 	item->token = token_copy(token);
-	if (item->token == NULL && token != NULL) {
-		ext_stack_item_free(item);
-		return false;
-	}
 
 	// Top of the stack is the first item in the list
-	return dllist_insert_first(s, item);
+	dllist_insert_first(s, item);
 }
 
 void ext_stack_item_free(void* item) {
 	token_free(((stack_item*) item)->token);
-	free(item);
+	mm_free(item);
 }
 
 void ext_stack_free(ExtStack* s) {

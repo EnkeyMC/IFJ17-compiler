@@ -19,12 +19,14 @@ protected:
 	FILE* test_file;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		scanner = scanner_init();
 	}
 
 	virtual void TearDown() {
 		fclose(test_file);
 		scanner_free(scanner);
+		mem_manager_free();
 	}
 
 	void SetInputFile(const char *file) {
@@ -73,7 +75,7 @@ TEST_F(ScannerTestFixture, ErrBase02) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_INT
 	);
 
 	token_free(token);
@@ -87,7 +89,7 @@ TEST_F(ScannerTestFixture, ErrBase03) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_INT
 	);
 
 	token_free(token);
@@ -101,7 +103,7 @@ TEST_F(ScannerTestFixture, ErrBase04) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_INT
 	);
 
 	token_free(token);
@@ -185,7 +187,7 @@ TEST_F(ScannerTestFixture, ErrReal04) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_REAL
 	);
 
 	token_free(token);
@@ -199,7 +201,7 @@ TEST_F(ScannerTestFixture, ErrReal05) {
 	ASSERT_NE(token, nullptr);
 	EXPECT_EQ(
 		token->id,
-		LEX_ERROR
+		TOKEN_REAL
 	);
 
 	token_free(token);
@@ -459,6 +461,50 @@ TEST_F(ScannerTestFixture, ParseString) {
 	ASSERT_EQ(token->id, TOKEN_STRING);
 	EXPECT_STREQ(token->data.str, "\\092\\010\\032Test\\009two");
 	token_free(token);
+
+	// EOL
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOL);
+
+	// EOF
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_EOF);
+}
+
+TEST_F(ScannerTestFixture, EmptyStringConcat) {
+	SetInputFile("test_files/scanner/empty_string.fbc");
+
+	// length
+	Token *token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_IDENTIFIER);
+	EXPECT_STREQ(token->data.str, "length");
+	token_free(token);
+
+	// (
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_LPAR);
+
+	// ""
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_STRING);
+	EXPECT_STREQ(token->data.str, "");
+	token_free(token);
+
+	// (
+	token = scanner_get_token(scanner);
+
+	ASSERT_NE(token, nullptr);
+	ASSERT_EQ(token->id, TOKEN_RPAR);
 
 	// EOL
 	token = scanner_get_token(scanner);

@@ -1,3 +1,8 @@
+v2.5	27/11/2017
+--------------------------------------------------------------------------------
+	-	Removed LEX_ERROR final states introduced in previous version
+	-	Binary,octal, hexa are now final states
+--------------------------------------------------------------------------------
 v2.4	9/11/2017
 --------------------------------------------------------------------------------
 	-	Fixed number escape sequences in string literals

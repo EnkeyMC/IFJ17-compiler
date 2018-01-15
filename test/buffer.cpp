@@ -7,11 +7,13 @@ protected:
 	Buffer* buffer = nullptr;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		buffer = buffer_init(0);
 	}
 
 	virtual void TearDown() {
 		EXPECT_NO_FATAL_FAILURE(buffer_free(buffer));
+		mem_manager_free();
 	}
 };
 
@@ -26,10 +28,7 @@ TEST_F(BufferDataTestFixture, AppendChar) {
 
 	unsigned int i = 0;
 	for ( ; i < num_of_chars; i++) {
-		EXPECT_EQ(
-			buffer_append_c(buffer, s[i]),
-			true
-		) << "Function should insert all chars\n";
+		buffer_append_c(buffer, s[i]);
 	}
 
 	EXPECT_STREQ(
@@ -45,10 +44,7 @@ TEST_F(BufferDataTestFixture, AppendStr) {
 	const char* str[num_of_str] = { "str_to_append_1, ", "str_to_append_2, ", "str_to_append_3, ", "str_to_append_4\n" };
 
 	for (auto &s : str) {
-		EXPECT_EQ(
-			buffer_append_str(buffer, s),
-			true
-		) << "Function should insert all strings\n";
+		buffer_append_str(buffer, s);
 	}
 
 	EXPECT_STREQ(
@@ -63,10 +59,7 @@ TEST_F(BufferDataTestFixture, SetStr) {
 	const char* str[num_of_str] = { "str11", "str22", "str33", "str44" };
 
 	for (auto &s : str) {
-		EXPECT_EQ(
-			buffer_set_str(buffer, s),
-			true
-		) << "Function should insert all strings\n";
+		buffer_set_str(buffer, s);
 
 		EXPECT_STREQ(
 				buffer->str,
@@ -83,10 +76,7 @@ TEST_F(BufferDataTestFixture, BufferClear) {
 		buffer_append_str(buffer, s);
 	}
 
-	EXPECT_EQ(
-			buffer_clear(buffer),
-			true
-	) << "Clearing the buffer should success\n";
+	buffer_clear(buffer);
 
 	EXPECT_EQ(
 			buffer->len,

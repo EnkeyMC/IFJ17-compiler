@@ -56,3 +56,5 @@ dkms.conf
 
 # CMake
 cmake-build-debug/
+
+src/xomach00.zip

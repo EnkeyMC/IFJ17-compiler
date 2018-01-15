@@ -14,12 +14,14 @@ protected:
 	HashTable* hash_table = nullptr;
 
 	virtual void SetUp() {
+		mem_manager_init();
 		hash_table = htab_init(8);
 		foreach_cnt = 0;
 	}
 
 	virtual void TearDown() {
-		EXPECT_NO_FATAL_FAILURE(htab_free(hash_table));
+		EXPECT_NO_FATAL_FAILURE(htab_var_free(hash_table));
+		mem_manager_init();
 	}
 };
 
@@ -30,29 +32,24 @@ protected:
 	const char* keys[n_samples] = {"test1", "test2", "test3", "test4", "test5"};
 
 	virtual void SetUp() {
+		mem_manager_init();
 		foreach_cnt = 0;
 		hash_table = htab_init(n_samples);
 
 		// Insert items
 		for (auto &key : keys) {
-			htab_lookup(hash_table, key);
+			htab_var_insert(hash_table, key);
 		}
 	}
 
 	virtual void TearDown() {
-		EXPECT_NO_FATAL_FAILURE(htab_free(hash_table));
+		EXPECT_NO_FATAL_FAILURE(htab_var_free(hash_table));
+		mem_manager_free();
 	}
 };
 
 TEST_F(HashTableTestFixture, Initialization) {
 	EXPECT_NE(hash_table, nullptr) << "Initialized hash table is not null";
-}
-
-TEST_F(HashTableTestFixture, SizeEmpty) {
-	EXPECT_EQ(
-		htab_size(hash_table),
-		(unsigned) 0
-	) << "Size is not 0";
 }
 
 TEST_F(HashTableTestFixture, InsertItems) {
@@ -61,23 +58,18 @@ TEST_F(HashTableTestFixture, InsertItems) {
 
 	// Test function
 	ASSERT_EQ(
-		htab_lookup(nullptr, "null"),
+		htab_var_insert(nullptr, "null"),
 		nullptr
 	) << "No item should be created with nullptr passed as table";
 
 	// Insert items
 	for (auto &key : keys) {
 		EXPECT_NE(
-			htab_lookup(hash_table, key),
+			htab_var_insert(hash_table, key),
 		nullptr
 		) << "Function should return item ptr";
 	}
 
-	// Check size
-	EXPECT_EQ(
-		htab_size(hash_table),
-		n_samples
-	) << "Hash table should have " << n_samples << " items";
 }
 
 TEST_F(HashTableTestFixture, MemoryDeallocation) {
@@ -121,21 +113,21 @@ TEST_F(HashTableWithDataTestFixture, FindValidItem) {
 }
 
 TEST_F(HashTableWithDataTestFixture, RemoveInvalidItem) {
-	EXPECT_FALSE(htab_remove(hash_table, "invalid")) << "Invalid key should return false";
+	EXPECT_FALSE(htab_var_remove(hash_table, "invalid")) << "Invalid key should return false";
 }
 
 TEST_F(HashTableWithDataTestFixture, DeleteValidItem) {
-	EXPECT_TRUE(htab_remove(hash_table, keys[2])) << "Deleting valid key should return true";
+	EXPECT_TRUE(htab_var_remove(hash_table, keys[2])) << "Deleting valid key should return true";
 }
 
 TEST_F(HashTableTestFixture, RemoveOnEmptyTable) {
-	ASSERT_FALSE(htab_remove(hash_table, "nokey")) << "Empty table should return false";
+	ASSERT_FALSE(htab_var_remove(hash_table, "nokey")) << "Empty table should return false";
 }
 
 
 TEST_F(HashTableTestFixture, InvalidRemove) {
-	ASSERT_FALSE(htab_remove(nullptr, "nokey")) << "Null table should return false";
-	ASSERT_FALSE(htab_remove(hash_table, nullptr)) << "Null key should return false";
+	ASSERT_FALSE(htab_var_remove(nullptr, "nokey")) << "Null table should return false";
+	ASSERT_FALSE(htab_var_remove(hash_table, nullptr)) << "Null key should return false";
 }
 
 TEST_F(HashTableTestFixture, ForeachInvalid) {

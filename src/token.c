@@ -13,6 +13,11 @@
 #include "token.h"
 #include "error_code.h"
 #include "debug.h"
+#include "memory_manager.h"
+
+Token* token_init() {
+	return (Token*) mm_malloc(sizeof(Token));
+}
 
 void token_free(Token* token) {
 	if (token == NULL)
@@ -20,8 +25,8 @@ void token_free(Token* token) {
 
 	if (token->id == TOKEN_IDENTIFIER || token->id == TOKEN_STRING)
 		if (token->data.str != NULL)
-			free(token->data.str);
-	free(token);
+			mm_free(token->data.str);
+	mm_free(token);
 }
 
 unsigned int get_token_column_value(token_e token) {
@@ -32,21 +37,13 @@ Token* token_copy(Token* token) {
 	if (token == NULL)
 		return NULL;
 
-	Token* copy = (Token*) malloc(sizeof(Token));
-	if (copy == NULL) {
-		return NULL;
-	}
-
+	Token* copy = token_init();
 	copy->id = token->id;
 
 	switch (token->id) {
 		case TOKEN_STRING:
 		case TOKEN_IDENTIFIER:
-			copy->data.str = (char*) malloc(sizeof(char) * (strlen(token->data.str) + 1));
-			if (copy->data.str == NULL) {
-				free(copy);
-				return NULL;
-			}
+			copy->data.str = (char*) mm_malloc(sizeof(char) * (strlen(token->data.str) + 1));
 			strcpy(copy->data.str, token->data.str);
 			break;
 		case TOKEN_INT:
@@ -72,8 +69,7 @@ Token token_make(token_e type, union token_data data) {
 Token token_make_str(const char* string) {
 	Token token;
 	token.id = TOKEN_STRING;
-	char* copy = (char*) malloc(sizeof(char) * (strlen(string) + 1));
-	if (copy == NULL) exit(EXIT_INTERN_ERROR);  // I do not have time to make proper exit, sorry
+	char* copy = (char*) mm_malloc(sizeof(char) * (strlen(string) + 1));
 
 	strcpy(copy, string);
 

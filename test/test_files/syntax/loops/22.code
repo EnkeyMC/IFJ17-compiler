@@ -1,0 +1,12 @@
+' wrong continue syntax
+
+scope
+	dim a as integer = 1
+	dim b as integer = 2
+
+	for i as integer = a to b
+		do
+			continue for, do
+		loop
+	next
+end scope

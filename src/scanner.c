@@ -16,6 +16,7 @@
 #include "scanner.h"
 #include "fsm.h"
 #include "buffer.h"
+#include "memory_manager.h"
 
 #define READ_CHAR() getc(scanner->stream);
 #define STR_IS(keyword) strcmp(str, keyword) == 0
@@ -24,15 +25,9 @@
 
 
 Scanner* scanner_init() {
-	Scanner* scanner = (Scanner*) malloc(sizeof(Scanner));
-	if (scanner == NULL)
-		return NULL;
+	Scanner* scanner = (Scanner*) mm_malloc(sizeof(Scanner));
 
 	scanner->buffer = buffer_init(BUFFER_CHUNK);
-	if (scanner->buffer == NULL) {
-		free(scanner);
-		return NULL;
-	}
 
 	scanner->stream = stdin;
 	scanner->backlog_token = NULL;
@@ -43,22 +38,19 @@ Scanner* scanner_init() {
 void scanner_free(Scanner* scanner) {
 	assert(scanner != NULL);
 	buffer_free(scanner->buffer);
-	free(scanner->backlog_token);
-	free(scanner);
+	token_free(scanner->backlog_token);
+	mm_free(scanner);
 }
 
-static bool str_duplicate(char ** str_dst, const char* str_src) {
+static void str_duplicate(char ** str_dst, const char* str_src) {
 	assert(str_dst != NULL);
 	assert(str_src != NULL);
-
+	// TODO move to utils
 	// Allocate memory for string
-	*str_dst = (char*) malloc(sizeof(char) * (strlen(str_src) + 1));
-	if (*str_dst == NULL) {
-		return false;
-	}
+	*str_dst = (char*) mm_malloc(sizeof(char) * (strlen(str_src) + 1));
+
 	// Copy string to token
 	strcpy(*str_dst, str_src);
-	return true;
 }
 
 static token_e get_string_token(const char* str) {
@@ -146,11 +138,7 @@ char* convert_white_char(const char* str) {
 		}
 		buffer_append_str(buffer, esc_seq);
  	}
-	esc_str = (char*) malloc(sizeof(char)*(buffer->len+1));
-	if (esc_str == NULL) {
-		buffer_free(buffer);
-		return  NULL;
-	}
+	esc_str = (char*) mm_malloc(sizeof(char)*(buffer->len+1));
 	strcpy(esc_str, buffer->str);
 	buffer_free(buffer);
 
@@ -167,14 +155,10 @@ Token* scanner_get_token(Scanner* scanner) {
 		return backlog;
 	}
 
-	if (!buffer_clear(scanner->buffer)) {
-		return NULL;
-	}
+	buffer_clear(scanner->buffer);
 
 	int ch;
-	Token* token = (Token*) malloc(sizeof(Token));
-	if (token == NULL)
-		return NULL;
+	Token* token = token_init();
 	token->id = LEX_ERROR;
 	token->data.str = NULL;
 
@@ -451,10 +435,7 @@ Token* scanner_get_token(Scanner* scanner) {
 				token->id = get_string_token(scanner->buffer->str);
 
 				if (token->id == TOKEN_IDENTIFIER) {
-					if (!str_duplicate(&token->data.str, scanner->buffer->str)) {
-						free(token);
-						return NULL;
-					}
+					str_duplicate(&token->data.str, scanner->buffer->str);
 				}
 
 				return token;
@@ -474,10 +455,6 @@ Token* scanner_get_token(Scanner* scanner) {
 			else if (ch == 'e' || ch == 'E') {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(exponent);
-			}
-			else if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
-				token->id = LEX_ERROR;
-				return token;
 			}
 			else {
 				ungetc(ch, scanner->stream);
@@ -542,11 +519,7 @@ Token* scanner_get_token(Scanner* scanner) {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(real);
 			}
-
-			if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
-				token->id = LEX_ERROR;
-				return token;
-			} else {
+			else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_REAL;
 
@@ -561,11 +534,7 @@ Token* scanner_get_token(Scanner* scanner) {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(real_exp);
 			}
-
-			if ((ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
-				token->id = LEX_ERROR;
-				return token;
-			} else {
+			else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_REAL;
 
@@ -667,10 +636,6 @@ Token* scanner_get_token(Scanner* scanner) {
 		STATE(string_end) {
 			token->id = TOKEN_STRING;
 			token->data.str = convert_white_char(scanner->buffer->str);
-			if (token->data.str == NULL) {
-				free(token);
-				return NULL;
-			}
 			return token;
 		}
 
@@ -720,7 +685,8 @@ Token* scanner_get_token(Scanner* scanner) {
 			}
 			else {
 				ungetc(ch, scanner->stream);
-				token->id = LEX_ERROR;
+				token->id = TOKEN_INT;
+				token->data.i = 0;
 				return token;
 			}
 		}
@@ -733,7 +699,8 @@ Token* scanner_get_token(Scanner* scanner) {
 			}
 			else {
 				ungetc(ch, scanner->stream);
-				token->id = LEX_ERROR;
+				token->id = TOKEN_INT;
+				token->data.i = 0;
 				return token;
 			}
 		}
@@ -746,7 +713,8 @@ Token* scanner_get_token(Scanner* scanner) {
 			}
 			else {
 				ungetc(ch, scanner->stream);
-				token->id = LEX_ERROR;
+				token->id = TOKEN_INT;
+				token->data.i = 0;
 				return token;
 			}
 		}
@@ -756,9 +724,6 @@ Token* scanner_get_token(Scanner* scanner) {
 			if (ch == '0' || ch == '1') {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_bin);
-			} if ((ch >= '2' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
-				token->id = LEX_ERROR;
-				return token;
 			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
@@ -773,9 +738,6 @@ Token* scanner_get_token(Scanner* scanner) {
 			if ('0' <= ch && ch <= '7') {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_octal);
-			} if ((ch >= '8' && ch <= '9') || (ch >= 'a' && ch <= 'z') || (ch >= 'A' && ch <= 'Z')) {
-				token->id = LEX_ERROR;
-				return token;
 			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
@@ -790,9 +752,6 @@ Token* scanner_get_token(Scanner* scanner) {
 			if (('0' <= ch && ch <= '9') || ('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F')) {
 				APPEND_LOWER_TO_BUFFER(ch);
 				NEXT_STATE(int_hexa);
-			} if ((ch >= 'g' && ch <= 'z') || (ch >= 'G' && ch <= 'Z')) {
-				token->id = LEX_ERROR;
-				return token;
 			} else {
 				ungetc(ch, scanner->stream);
 				token->id = TOKEN_INT;
@@ -802,8 +761,5 @@ Token* scanner_get_token(Scanner* scanner) {
 			}
 		}
 	}
-
-	token_free(token);
-	return NULL;
 }
 

@@ -1,0 +1,8 @@
+' bad step value type
+
+scope
+	dim s as string = !"a"
+
+	for i as integer = 1 to 2 step s
+	next
+end scope

@@ -15,12 +15,17 @@
 
 #define SEM_VALUE_TOKEN(value) ((SemValue){.value_type = VTYPE_TOKEN, {.token = (value)}})
 
+#define EXPR_VALUE_VAR "EXPR_VALUE"
+
 /**
  * Enumeration of semantic states
  */
 typedef enum {
 	SEM_STATE_START,
 	SEM_STATE_VAR_TYPE,
+    SEM_STATE_VAR_ID,
+    SEM_STATE_VAR_ID_STATIC,
+    SEM_STATE_VAR_ID_SHARED,
 	SEM_STATE_ASSIGN,
 	SEM_STATE_FUNC_RETURN_TYPE,
 	SEM_STATE_DECLARED_VAR_TYPE,
@@ -28,7 +33,8 @@ typedef enum {
 	SEM_STATE_FUNC_END,
 	SEM_STATE_EOL,
 	SEM_STATE_SCOPE_END,
-	SEM_STATE_DO_LOOP,
+	SEM_STATE_DO_LOOP_TEST_START,
+	SEM_STATE_DO_LOOP_TEST_END,
 	SEM_STATE_DO_TEST_TYPE,
 	SEM_STATE_DO_WHILE,
 	SEM_STATE_DO_WHILE_END,
@@ -50,7 +56,8 @@ typedef enum {
 	SEM_STATE_OPERATOR,
 	SEM_STATE_OPERAND,
 	SEM_STATE_LIST,
-	SEM_STATE_FUNC_ID
+	SEM_STATE_FUNC_ID,
+	SEM_STATE_NEXT_LOOP_TYPE
 } sem_state_e;
 
 // Forward declarations
@@ -59,12 +66,25 @@ struct parser_t;
 struct token_t;
 struct htab_item_t;
 
+typedef struct if_val_t {
+    char* if_id;  // If ID
+    char* elseif_id;  // Current elseif ID
+} IfValue;
+
+typedef struct for_val_t {
+    struct htab_item_t* iterator;  // FOR LOOP iterator variable ID
+    char* uid;  // Current FOR LOOP ID
+	char* endval_id;	// End value identifier
+	char* step_id;	// Step value identifier
+} ForValue;
 
 typedef enum {
 	VTYPE_TOKEN,
 	VTYPE_ID,
 	VTYPE_LIST,
-	VTYPE_EXPR
+	VTYPE_EXPR,
+    VTYPE_IF,
+    VTYPE_FOR
 } value_type_e;
 
 typedef struct sem_value_t {
@@ -74,6 +94,8 @@ typedef struct sem_value_t {
 		struct htab_item_t* id;
 		DLList* list;
 		int expr_type;	/// Should be token_e but can't include token.h
+        IfValue if_val;
+		ForValue for_val;
 	};
 } SemValue;
 
@@ -99,7 +121,7 @@ typedef struct sem_analyzer_t {
 /**
  * Initialize semantic analyzer with sem_action and SEM_STATE_START state
  * @param sem_action Semantic action function
- * @return new SemAnalyzer object, NULL on error
+ * @return new SemAnalyzer object
  */
 SemAnalyzer* sem_an_init(semantic_action_f sem_action);
 
@@ -118,7 +140,7 @@ SemValue* sem_value_init();
 /**
  * Deep copy semantic value, but only move VTYPE_LIST
  * @param value semantic value
- * @return deep copy of value, NULL on error
+ * @return deep copy of value
  */
 SemValue* sem_value_copy(const SemValue* value);
 
@@ -169,9 +191,8 @@ void* sem_stack_pop(DLList *s);
  * Push item to a top of the stack
  * @param s valid Stack object
  * @param item to push to stack
- * @return true on success, false on allocation error
  */
-bool sem_stack_push(DLList *s, void* item);
+void sem_stack_push(DLList *s, void* item);
 
 // ------------------
 // SEMANTIC FUNCTIONS

@@ -13,16 +13,17 @@
 
 #include "grammar.h"
 #include "token.h"
+#include "memory_manager.h"
 
-/// Add epsilon rule to grammar, cleanup on failure
-#define ADD_EPSILON_RULE(nt)  if (!grammar_add_epsilon_rule(curr_idx++, nt)) { grammar_free(); return false; }
-/// Add rule to grammar, cleanup on failure
-#define ADD_RULE(nt, ...) if (!grammar_add_rule(curr_idx++, nt, NULL, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
-/// Add rule with semantic action, cleanup on failure
-#define ADD_SEMANTIC_RULE(nt, sem_action, ...) if (!grammar_add_rule(curr_idx++, nt, sem_action, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)) { grammar_free(); return false; }
+/// Add epsilon rule to grammar
+#define ADD_EPSILON_RULE(nt)  grammar_add_epsilon_rule(curr_idx++, nt)
+/// Add rule to grammar
+#define ADD_RULE(nt, ...) grammar_add_rule(curr_idx++, nt, NULL, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)
+/// Add rule with semantic action
+#define ADD_SEMANTIC_RULE(nt, sem_action, ...) grammar_add_rule(curr_idx++, nt, sem_action, NUM_ARGS(__VA_ARGS__), __VA_ARGS__)
 
-/// Set table value, cleanup on failure
-#define TABLE_SET(row, column, value) if (!sparse_table_set(grammar.LL_table, row, get_token_column_value(column), value)) { grammar_free(); return false; }
+/// Set table value
+#define TABLE_SET(row, column, value) sparse_table_set(grammar.LL_table, row, get_token_column_value(column), value)
 
 
 struct grammar_t grammar;
@@ -37,44 +38,26 @@ static void array_reverse(unsigned* array, int length) {
 	}
 }
 
-static bool grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
+static void grammar_add_epsilon_rule(int idx, non_terminal_e nt) {
 	assert(idx < NUM_OF_RULES);
 
-	Rule* rule = (Rule*) malloc(sizeof(Rule));
-	if (rule == NULL) {
-		return false;
-	}
+	Rule* rule = (Rule*) mm_malloc(sizeof(Rule));
 
-	rule->production = (unsigned*) malloc(sizeof(unsigned));
-	if (rule->production == NULL) {
-		free(rule);
-		return false;
-	}
+	rule->production = (unsigned*) mm_malloc(sizeof(unsigned));
 
 	rule->production[0] = END_OF_RULE;
 	rule->for_nt = nt;
 	rule->sem_action = NULL;
 
 	grammar.rules[idx] = rule;
-
-	return true;
 }
 
-static bool grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_action, int va_num, ...) {
+static void grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_action, int va_num, ...) {
 	assert(idx < NUM_OF_RULES);
 
-	Rule* rule = (Rule*) malloc(sizeof(Rule));
-	if (rule == NULL) {
-		return false;
-	}
+	Rule* rule = (Rule*) mm_malloc(sizeof(Rule));
 
-
-	rule->production = (unsigned*) malloc(sizeof(unsigned) * (va_num + 1));
-
-	if (rule->production == NULL) {
-		free(rule);
-		return false;
-	}
+	rule->production = (unsigned*) mm_malloc(sizeof(unsigned) * (va_num + 1));
 
 	va_list va_args;
 	va_start(va_args, va_num);
@@ -91,23 +74,19 @@ static bool grammar_add_rule(int idx, non_terminal_e nt, semantic_action_f sem_a
 	va_end(va_args);
 
 	grammar.rules[idx] = rule;
-
-	return true;
 }
 
 void rule_free(Rule* rule) {
 	if (rule != NULL) {
 		if (rule->production != NULL)
-			free(rule->production);
-		free(rule);
+			mm_free(rule->production);
+		mm_free(rule);
 	}
 }
 
-bool grammar_init() {
+void grammar_init() {
 	// LL table init
 	grammar.LL_table = sparse_table_init(NT_ENUM_SIZE, END_OF_TERMINALS - TERMINALS_START, 0);
-	if (grammar.LL_table == NULL)
-		return false;
 
 	int curr_idx = 0;
 	grammar.rules[curr_idx++] = NULL;  // First index needs to be empty
@@ -135,8 +114,8 @@ bool grammar_init() {
 	ADD_RULE(NT_STMT_SEQ, NT_INNER_STMT, TOKEN_EOL, NT_STMT_SEQ);
 	ADD_EPSILON_RULE(NT_STMT_SEQ);
 	ADD_SEMANTIC_RULE(NT_VAR_DECL, sem_var_decl, TOKEN_KW_DIM, NT_VAR_DEF);
-	ADD_RULE(NT_VAR_DECL, TOKEN_KW_STATIC, NT_VAR_DEF);
-	ADD_RULE(NT_SHARED_VAR, TOKEN_KW_DIM, TOKEN_KW_SHARED, NT_VAR_DEF);
+	ADD_SEMANTIC_RULE(NT_VAR_DECL, sem_var_decl, TOKEN_KW_STATIC, NT_VAR_DEF);
+	ADD_SEMANTIC_RULE(NT_SHARED_VAR, sem_var_decl, TOKEN_KW_DIM, TOKEN_KW_SHARED, NT_VAR_DEF);
 	ADD_RULE(NT_VAR_DEF, TOKEN_IDENTIFIER, TOKEN_KW_AS, NT_TYPE, NT_INIT_OPT);
 	ADD_RULE(NT_INIT_OPT, TOKEN_EQUAL, NT_EXPRESSION);
 	ADD_EPSILON_RULE(NT_INIT_OPT);
@@ -164,14 +143,19 @@ bool grammar_init() {
 	ADD_RULE(NT_IF_STMT_ELSE, TOKEN_KW_ELSE, TOKEN_EOL, NT_STMT_SEQ);
 	ADD_EPSILON_RULE(NT_IF_STMT_ELSE);
 	ADD_SEMANTIC_RULE(NT_DO_STMT, sem_do_loop, TOKEN_KW_DO, NT_DO_STMT_END);
-	ADD_RULE(NT_DO_STMT_END, NT_TEST_TYPE, NT_EXPRESSION, TOKEN_EOL, NT_STMT_SEQ, TOKEN_KW_LOOP);
-	ADD_RULE(NT_DO_STMT_END, TOKEN_EOL, NT_STMT_SEQ, TOKEN_KW_LOOP, NT_TEST_TYPE, NT_EXPRESSION);
-	ADD_RULE(NT_TEST_TYPE, TOKEN_KW_WHILE);
-	ADD_RULE(NT_TEST_TYPE, TOKEN_KW_UNTIL);
-	ADD_SEMANTIC_RULE(NT_EXIT_STMT, sem_exit, TOKEN_KW_EXIT, NT_LOOP_TYPE);
-	ADD_SEMANTIC_RULE(NT_CONTINUE_STMT, sem_continue, TOKEN_KW_CONTINUE, NT_LOOP_TYPE);
+	ADD_RULE(NT_DO_STMT_END, NT_TEST_TYPE_START, NT_EXPRESSION, TOKEN_EOL, NT_STMT_SEQ, TOKEN_KW_LOOP);
+	ADD_RULE(NT_DO_STMT_END, TOKEN_EOL, NT_STMT_SEQ, TOKEN_KW_LOOP, NT_TEST_TYPE_END);
+	ADD_RULE(NT_TEST_TYPE_START, TOKEN_KW_WHILE);
+	ADD_RULE(NT_TEST_TYPE_START, TOKEN_KW_UNTIL);
+	ADD_RULE(NT_TEST_TYPE_END, TOKEN_KW_WHILE, NT_EXPRESSION);
+	ADD_RULE(NT_TEST_TYPE_END, TOKEN_KW_UNTIL, NT_EXPRESSION);
+	ADD_EPSILON_RULE(NT_TEST_TYPE_END);
+	ADD_SEMANTIC_RULE(NT_EXIT_STMT, sem_exit, TOKEN_KW_EXIT, NT_LOOP_TYPE, NT_LOOP_TYPE_END);
+	ADD_SEMANTIC_RULE(NT_CONTINUE_STMT, sem_continue, TOKEN_KW_CONTINUE, NT_LOOP_TYPE, NT_LOOP_TYPE_END);
 	ADD_RULE(NT_LOOP_TYPE, TOKEN_KW_DO);
 	ADD_RULE(NT_LOOP_TYPE, TOKEN_KW_FOR);
+	ADD_RULE(NT_LOOP_TYPE_END, TOKEN_COMMA, NT_LOOP_TYPE, NT_LOOP_TYPE_END);
+	ADD_EPSILON_RULE(NT_LOOP_TYPE_END);
 	ADD_SEMANTIC_RULE(NT_FOR_STMT, sem_for_loop, TOKEN_KW_FOR, TOKEN_IDENTIFIER, NT_TYPE_OPT, TOKEN_EQUAL, NT_EXPRESSION, TOKEN_KW_TO, NT_EXPRESSION, NT_STEP_OPT, TOKEN_EOL, NT_STMT_SEQ, TOKEN_KW_NEXT, NT_ID_OPT);
 	ADD_RULE(NT_TYPE_OPT, TOKEN_KW_AS, NT_TYPE);
 	ADD_EPSILON_RULE(NT_TYPE_OPT);
@@ -197,7 +181,7 @@ bool grammar_init() {
 	// LINE_END
 	TABLE_SET(NT_LINE_END, TOKEN_EOL, 2);
 	TABLE_SET(NT_LINE_END, TOKEN_EOF, 3);
-	// GLOBAS_STMT
+	// GLOBAL_STMT
 	TABLE_SET(NT_GLOBAL_STMT, TOKEN_KW_DECLARE, 4);
 	TABLE_SET(NT_GLOBAL_STMT, TOKEN_KW_DIM, 6);
 	TABLE_SET(NT_GLOBAL_STMT, TOKEN_KW_FUNCTION, 5);
@@ -297,38 +281,41 @@ bool grammar_init() {
 	TABLE_SET(NT_DO_STMT_END, TOKEN_KW_WHILE, 53);
 	TABLE_SET(NT_DO_STMT_END, TOKEN_KW_UNTIL, 53);
 	TABLE_SET(NT_DO_STMT_END, TOKEN_EOL, 54);
-	// TEST_TYPE
-	TABLE_SET(NT_TEST_TYPE, TOKEN_KW_WHILE, 55);
-	TABLE_SET(NT_TEST_TYPE, TOKEN_KW_UNTIL, 56);
+	// TEST_TYPE_START
+	TABLE_SET(NT_TEST_TYPE_START, TOKEN_KW_WHILE, 55);
+	TABLE_SET(NT_TEST_TYPE_START, TOKEN_KW_UNTIL, 56);
+	// TEST_TYPE_END
+	TABLE_SET(NT_TEST_TYPE_END, TOKEN_KW_WHILE, 57);
+	TABLE_SET(NT_TEST_TYPE_END, TOKEN_KW_UNTIL, 58);
+	TABLE_SET(NT_TEST_TYPE_END, TOKEN_EOL, 59);
 	// EXIT_STMT
-	TABLE_SET(NT_EXIT_STMT, TOKEN_KW_EXIT, 57);
+	TABLE_SET(NT_EXIT_STMT, TOKEN_KW_EXIT, 60);
 	// CONTINUE_STMT
-	TABLE_SET(NT_CONTINUE_STMT, TOKEN_KW_CONTINUE, 58);
+	TABLE_SET(NT_CONTINUE_STMT, TOKEN_KW_CONTINUE, 61);
 	// LOOP_TYPE
-	TABLE_SET(NT_LOOP_TYPE, TOKEN_KW_DO, 59);
-	TABLE_SET(NT_LOOP_TYPE, TOKEN_KW_FOR, 60);
+	TABLE_SET(NT_LOOP_TYPE, TOKEN_KW_DO, 62);
+	TABLE_SET(NT_LOOP_TYPE, TOKEN_KW_FOR, 63);
+	// LOOP_TYPE_END
+	TABLE_SET(NT_LOOP_TYPE_END, TOKEN_COMMA, 64);
+	TABLE_SET(NT_LOOP_TYPE_END, TOKEN_EOL, 65);
 	// FOR_STMT
-	TABLE_SET(NT_FOR_STMT, TOKEN_KW_FOR, 61);
+	TABLE_SET(NT_FOR_STMT, TOKEN_KW_FOR, 66);
 	// TYPE_OPT
-	TABLE_SET(NT_TYPE_OPT, TOKEN_KW_AS, 62);
-	TABLE_SET(NT_TYPE_OPT, TOKEN_EQUAL, 63);
+	TABLE_SET(NT_TYPE_OPT, TOKEN_KW_AS, 67);
+	TABLE_SET(NT_TYPE_OPT, TOKEN_EQUAL, 68);
 	// STEP_OPT
-	TABLE_SET(NT_STEP_OPT, TOKEN_KW_STEP, 64);
-	TABLE_SET(NT_STEP_OPT, TOKEN_EOL, 65);
+	TABLE_SET(NT_STEP_OPT, TOKEN_KW_STEP, 69);
+	TABLE_SET(NT_STEP_OPT, TOKEN_EOL, 70);
 	// ID_OPT
-	TABLE_SET(NT_ID_OPT, TOKEN_IDENTIFIER, 66);
-	TABLE_SET(NT_ID_OPT, TOKEN_EOL, 67);
+	TABLE_SET(NT_ID_OPT, TOKEN_IDENTIFIER, 71);
+	TABLE_SET(NT_ID_OPT, TOKEN_EOL, 72);
 	// ASSIGN_OPERATOR
-	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_EQUAL, 68);
-	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_SUB_ASIGN, 69);
-	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_ADD_ASIGN, 70);
-	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_MUL_ASIGN, 71);
-	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_DIVI_ASIGN, 72);
-	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_DIVR_ASIGN, 73);
-
-
-
-	return true;
+	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_EQUAL, 73);
+	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_SUB_ASIGN, 74);
+	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_ADD_ASIGN, 75);
+	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_MUL_ASIGN, 76);
+	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_DIVI_ASIGN, 77);
+	TABLE_SET(NT_ASSIGN_OPERATOR, TOKEN_DIVR_ASIGN, 78);
 }
 
 void grammar_free() {

@@ -35,7 +35,7 @@ typedef struct {
  * Allocate new buffer of given size, size has to be at least 1 for binary zero.
  * Size is automatically clamped to at least 1
  * @param size
- * @return new Buffer, NULL on allocation error
+ * @return new Buffer
  */
 Buffer* buffer_init(size_t size);
 
@@ -49,32 +49,28 @@ void buffer_free(Buffer* b);
  * Append one character to buffer
  * @param b buffer
  * @param c character to append
- * @return true on success
  */
-bool buffer_append_c(Buffer* b, char c);
+void buffer_append_c(Buffer* b, char c);
 
 /**
  * Append string to buffer
  * @param b buffer
  * @param str string to append
- * @return true on success
  */
-bool buffer_append_str(Buffer* b, const char* str);
+void buffer_append_str(Buffer* b, const char* str);
 
 /**
  * Reallocates buffer to default size and sets length to 0
  * @param b buffer
- * @return true on success
  */
-bool buffer_clear(Buffer* b);
+void buffer_clear(Buffer* b);
 
 /**
  * Copies given string to buffer
  * @param b buffer
  * @param str string to copy
- * @return true on success
  */
-bool buffer_set_str(Buffer* b, const char* str);
+void buffer_set_str(Buffer* b, const char* str);
 
 /**
  * Debug print for buffer
